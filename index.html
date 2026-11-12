@@ -1,0 +1,865 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Trader Holic | منصة المتداول</title>
+<meta name="description" content="Trader Holic — الأخبار الاقتصادية المهمة، أسعار الذهب والفضة والبتكوين لحظياً، أوقات الجلسات، العطل، وحاسبة حجم اللوت.">
+<meta name="theme-color" content="#0D1014">
+<meta property="og:title" content="Trader Holic | منصة المتداول">
+<meta property="og:description" content="كل اللي يحتاجه المتداول في مكان واحد: الأخبار المهمة، الأسعار اللحظية، الجلسات، العطل وحاسبة اللوت.">
+<meta property="og:image" content="assets/emblem.jpg">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Montserrat:wght@600;700;800;900&display=swap">
+<style>
+/* Trader Holic platform — one dark brand look (matches the course posters).
+   Layout: sticky brand bar + section chips, live ticker, hero status cards,
+   then stacked sections (news calendar, sessions, prices/chart, market news, holidays, lot calculator, course, contact). */
+:root{
+  --bg:#0D1014; --bg-2:#0A0C0F; --surface:#151A20; --surface-2:#1B2129; --line:#262D36; --line-2:#323A45;
+  --fg:#FFFFFF; --muted:#A9B1BB; --dim:#7E8893;
+  --green:#3DCB4F; --green-ink:#0D1014; --green-soft:#12201A; --green-line:#2A5A33;
+  --orange:#E0715B; --orange-soft:#221614; --gold:#E8C547; --red:#F05252;
+  --ar:'IBM Plex Sans Arabic','Segoe UI',Tahoma,sans-serif;
+  --en:'Montserrat','Segoe UI',Arial,sans-serif;
+  --r-lg:22px; --r-md:16px; --r-sm:12px;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{scroll-behavior:smooth;scroll-padding-top:120px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--ar);font-size:16px;line-height:1.65;
+  background-image:linear-gradient(#FFFFFF05 1px,transparent 1px),linear-gradient(90deg,#FFFFFF05 1px,transparent 1px);background-size:56px 56px;-webkit-font-smoothing:antialiased}
+img{max-width:100%;display:block}
+a{color:var(--green)}
+.en{font-family:var(--en);direction:ltr;unicode-bidi:isolate}
+.container{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+:focus-visible{outline:2px solid var(--orange);outline-offset:3px;border-radius:6px}
+
+/* ---------- header ---------- */
+.stripe{height:4px;display:flex}.stripe span:first-child{flex:1;background:var(--orange)}.stripe span:last-child{flex:3;background:var(--green)}
+.topbar{position:sticky;top:0;z-index:50;background:rgba(13,16,20,.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top,0px)}
+.topbar .row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:12px}
+.logo{direction:ltr;display:inline-flex;flex-direction:column;align-items:flex-end;gap:6px;text-decoration:none;color:var(--fg)}
+.logo .w{display:flex;align-items:flex-end;font-family:var(--en);font-size:26px;font-weight:700;line-height:.74;letter-spacing:1.5px}
+.logo svg{margin:0 1px -6px 0}
+.logo .h{font-family:var(--en);font-size:10px;font-weight:700;letter-spacing:6px;margin-right:-6px;color:var(--orange)}
+.clock{display:flex;align-items:center;gap:10px;padding:8px 14px;border:1px solid var(--line);border-radius:999px;background:var(--surface)}
+.clock .t{font-family:var(--en);font-weight:800;font-size:16px;font-variant-numeric:tabular-nums;direction:ltr}
+.clock small{color:var(--dim);font-size:12px;font-weight:600}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 4px rgba(61,203,79,.18)}
+.dot.off{background:var(--dim);box-shadow:none}
+.nav{display:flex;gap:8px;overflow-x:auto;padding-bottom:12px;scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+.nav a{flex-shrink:0;text-decoration:none;color:var(--muted);font-weight:600;font-size:14px;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);min-height:38px;display:inline-flex;align-items:center}
+.nav a:hover{color:var(--fg);border-color:var(--line-2)}
+.nav a.cta{background:var(--green);color:var(--green-ink);border-color:var(--green);font-weight:700}
+
+/* ticker */
+.ticker{border-bottom:1px solid var(--line);background:var(--bg-2);min-height:46px}
+
+/* ---------- hero ---------- */
+.hero{padding-block:44px 20px;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:36px;align-items:center}
+@media (max-width:860px){.hero{grid-template-columns:minmax(0,1fr);padding-top:28px}}
+.eyebrow{margin:0;display:inline-flex;align-items:center;gap:10px;color:var(--orange);font-weight:700;font-size:15px}
+.eyebrow::before{content:"";width:28px;height:2px;background:var(--orange)}
+.hero h1{margin:12px 0 14px;font-size:clamp(34px,6vw,56px);line-height:1.15;font-weight:700;text-wrap:balance}
+.hero h1 span{color:var(--green)}
+.hero p.lead{margin:0;color:var(--muted);font-size:18px;max-width:52ch}
+.hero-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font:inherit;font-weight:700;font-size:16px;text-decoration:none;border-radius:999px;padding:12px 22px;min-height:48px;cursor:pointer;border:1.5px solid var(--green);background:var(--green);color:var(--green-ink)}
+.btn.ghost{background:transparent;color:var(--fg);border-color:var(--line-2)}
+.btn:hover{filter:brightness(1.06)}
+.status{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.scard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:16px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.scard.wide{grid-column:1/-1}
+.scard .k{font-size:13px;font-weight:600;color:var(--dim)}
+.scard .v{font-size:20px;font-weight:700;line-height:1.35}
+.scard .s{font-size:14px;color:var(--muted)}
+.pill{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:700;padding:4px 10px;border-radius:999px;background:var(--green-soft);color:var(--green);border:1px solid var(--green-line);width:fit-content}
+.pill.off{background:var(--surface-2);color:var(--muted);border-color:var(--line)}
+.pill.warn{background:var(--orange-soft);color:#F4B3A5;border-color:#5A3029}
+
+/* ---------- sections ---------- */
+section.block{padding-block:40px}
+.shead{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.shead h2{margin:0;font-size:clamp(26px,4vw,34px);line-height:1.25;font-weight:700;text-wrap:balance}
+.shead .sub{margin:6px 0 0;color:var(--muted);max-width:62ch}
+.shead .tag{font-family:var(--en);font-size:12px;font-weight:800;letter-spacing:3px;color:var(--green);direction:ltr}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden}
+.panel.pad{padding:18px}
+.seg{display:inline-flex;flex-wrap:wrap;gap:4px;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:4px}
+.seg button{font:inherit;font-weight:700;font-size:14px;color:var(--muted);background:none;border:0;border-radius:999px;padding:8px 14px;min-height:40px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--surface-2);color:var(--fg);box-shadow:inset 0 0 0 1px var(--line-2)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin:14px 0 0;padding:0;list-style:none;font-size:14px;color:var(--muted)}
+.legend li{display:flex;align-items:center;gap:8px}
+.legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.widget{min-height:200px}
+.wfallback{padding:18px;color:var(--dim);font-size:14px}
+
+/* sessions */
+.sessions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:760px){.sessions{grid-template-columns:minmax(0,1fr)}}
+.sess{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:18px;display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden}
+.sess.open{border-color:var(--green-line);background:linear-gradient(180deg,#14231A 0%,var(--surface) 70%)}
+.sess .top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.sess h3{margin:0;font-size:22px}
+.sess .city{font-size:14px;color:var(--dim);font-weight:600}
+.sess .hours{font-family:var(--en);font-weight:800;font-size:20px;direction:ltr;text-align:right;font-variant-numeric:tabular-nums}
+.sess .cd{font-size:14px;color:var(--muted)}
+.sess .cd b{font-family:var(--en);color:var(--fg);font-variant-numeric:tabular-nums}
+.sess .bar{position:absolute;inset:0 0 auto 0;height:3px}
+.timeline{margin-top:16px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:18px 18px 12px}
+.tl-rows{direction:ltr;display:flex;flex-direction:column;gap:8px;position:relative}
+.tl-row{display:grid;grid-template-columns:64px 1fr;gap:10px;align-items:center}
+.tl-row span{font-size:13px;color:var(--muted);font-weight:600;text-align:left;direction:rtl}
+.tl-track{position:relative;height:22px;background:var(--bg);border-radius:6px;overflow:hidden}
+.tl-seg{position:absolute;top:0;bottom:0;border-radius:6px;opacity:.9}
+.tl-axis{direction:ltr;display:grid;grid-template-columns:64px 1fr;gap:10px;margin-top:6px}
+.tl-axis .ticks{display:flex;justify-content:space-between;font-family:var(--en);font-size:11px;color:var(--dim);font-variant-numeric:tabular-nums}
+.tl-now{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--fg);box-shadow:0 0 0 3px rgba(255,255,255,.12);z-index:2}
+.tl-overlap{position:absolute;top:0;bottom:0;background:repeating-linear-gradient(45deg,rgba(255,255,255,.18) 0 4px,transparent 4px 8px)}
+.note{margin:12px 0 0;font-size:14px;color:var(--dim)}
+.banner{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:var(--r-sm);background:var(--orange-soft);border:1px solid #5A3029;color:#F4C3B8;font-weight:600;margin-bottom:14px}
+
+/* prices */
+.prices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:860px){.prices{grid-template-columns:minmax(0,1fr)}}
+.price{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden;min-height:200px}
+.chartbox{margin-top:12px;height:560px}
+@media (max-width:600px){.chartbox{height:440px}}
+
+/* holidays */
+.hol{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (max-width:760px){.hol{grid-template-columns:minmax(0,1fr)}}
+.hitem{display:grid;grid-template-columns:76px minmax(0,1fr);gap:14px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:12px 14px}
+.hitem.soon{border-color:#5A3029;background:linear-gradient(90deg,var(--surface) 60%,#24171499)}
+.hdate{display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);border-radius:12px;padding:8px 4px;text-align:center}
+.hdate b{font-family:var(--en);font-size:24px;line-height:1;font-weight:800}
+.hdate span{font-size:12px;color:var(--muted);font-weight:600;margin-top:4px}
+.hinfo{min-width:0;display:flex;flex-direction:column;gap:4px}
+.hinfo .n{font-weight:700;font-size:16px}
+.hinfo .m{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px;color:var(--muted)}
+.flag{font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;border:1px solid var(--line-2);color:var(--fg);background:var(--surface-2)}
+.flag.us{border-color:#2C4A73}.flag.uk{border-color:#5A3B73}.flag.eu{border-color:#2C5A73}.flag.cn{border-color:#73302C}
+.more{margin-top:14px}
+
+/* calculator */
+.calc{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:16px;align-items:start}
+@media (max-width:860px){.calc{grid-template-columns:minmax(0,1fr)}}
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.tile{font:inherit;color:var(--fg);background:var(--bg);border:1.5px solid var(--line);border-radius:var(--r-md);padding:12px 6px;min-height:44px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px}
+.tile .ic{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--en);font-weight:900;font-size:13px;color:var(--green-ink)}
+.tile b{font-size:16px}.tile small{font-family:var(--en);font-size:11px;font-weight:700;letter-spacing:1px;color:var(--dim)}
+.tile[aria-pressed="true"]{border-color:var(--green);background:var(--green-soft)}.tile[aria-pressed="true"] small{color:var(--green)}
+.form{display:flex;flex-direction:column;gap:16px}
+.field{display:flex;flex-direction:column;gap:7px}
+.field label,.field .lab{font-weight:700;font-size:15px}
+.field .hint{font-size:13px;color:var(--dim);margin:0}
+.inbox{position:relative;display:flex;align-items:center}
+.inbox input{font:inherit;font-family:var(--en);font-weight:700;font-size:19px;color:var(--fg);background:var(--bg);border:1.5px solid var(--line);border-radius:14px;padding:12px 16px 12px 50px;min-height:50px;width:100%;direction:ltr;text-align:right;font-variant-numeric:tabular-nums}
+.inbox .unit{position:absolute;left:16px;font-family:var(--en);font-weight:800;font-size:14px;color:var(--dim);pointer-events:none}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:420px){.two{grid-template-columns:minmax(0,1fr)}}
+.result{border-radius:var(--r-lg);background:var(--green-soft);border:1.5px solid var(--green);padding:24px 18px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.result p{margin:0}
+.result .k{font-weight:700;color:var(--muted);font-size:15px}
+.result .lot{font-family:var(--en);font-size:clamp(54px,9vw,72px);font-weight:900;line-height:1.05;color:var(--green);direction:ltr;font-variant-numeric:tabular-nums}
+.result .lot small{font-size:.3em;font-weight:800;color:var(--muted);margin-left:8px}
+.stats{width:100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}
+.stat{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 6px;display:flex;flex-direction:column;gap:2px}
+.stat span{font-size:12px;color:var(--dim);font-weight:600}
+.stat strong{font-family:var(--en);font-size:15px;font-weight:800;direction:ltr;font-variant-numeric:tabular-nums}
+.warn{margin:12px 0 0;padding:12px 14px;border-radius:12px;background:var(--orange-soft);border:1px solid var(--orange);color:#F4B3A5;font-size:14px;font-weight:600}
+.formula{margin-top:12px;direction:ltr;font-family:var(--en);font-size:13px;font-weight:600;color:var(--muted);text-align:center;padding:10px;border:1px dashed var(--line-2);border-radius:12px;font-variant-numeric:tabular-nums;overflow-x:auto;white-space:nowrap}
+
+/* course */
+.course{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+.poster{position:relative;overflow:hidden;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:28px}
+.poster::before{content:"";position:absolute;inset:0 0 auto 0;height:4px;background:linear-gradient(90deg,var(--orange) 25%,var(--green) 25%)}
+.poster h3{margin:6px 0 4px;font-size:clamp(28px,4.4vw,40px);line-height:1.2}
+.poster h3 span{color:var(--green)}
+.date-chip{display:inline-flex;align-items:center;gap:10px;margin-top:14px;padding:10px 18px;border-radius:999px;border:1.5px solid var(--green);color:var(--green);font-family:var(--en);font-weight:800;letter-spacing:3px;font-size:15px;direction:ltr}
+.mods{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 16px;margin:22px 0 0;padding:0;list-style:none}
+@media (max-width:520px){.mods{grid-template-columns:minmax(0,1fr)}}
+.mods li{display:flex;gap:12px;align-items:baseline;padding:10px 0;border-bottom:1px solid var(--line);font-weight:600}
+.mods li b{font-family:var(--en);font-weight:900;color:transparent;-webkit-text-stroke:1.1px var(--green);font-size:20px;min-width:30px}
+.mods li.r b{-webkit-text-stroke-color:var(--orange)}
+.outcomes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:20px}
+@media (max-width:520px){.outcomes{grid-template-columns:minmax(0,1fr)}}
+.oc{display:flex;gap:10px;align-items:flex-start;padding:12px;border-radius:12px;background:var(--bg);border:1px solid var(--line);font-size:15px;font-weight:600}
+.oc svg{flex-shrink:0;margin-top:2px}
+.gallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:560px){.gallery{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.gallery figcaption{font-size:11px;padding:6px 8px}}
+.gallery figure{margin:0;border-radius:var(--r-md);overflow:hidden;border:1px solid var(--line);background:var(--surface)}
+.gallery img{width:100%;aspect-ratio:4/5;object-fit:cover;object-position:top}
+.gallery figcaption{padding:8px 12px;font-size:13px;color:var(--muted);font-weight:600}
+.gallery button{all:unset;cursor:zoom-in;display:block}
+.gallery button:focus-visible{outline:2px solid var(--orange)}
+
+/* contact */
+.contact{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px;align-items:center;background:var(--green-soft);border:1.5px solid var(--green);border-radius:var(--r-lg);padding:26px}
+@media (max-width:760px){.contact{grid-template-columns:minmax(0,1fr);text-align:center;justify-items:center}}
+.contact h2{margin:0 0 6px;font-size:clamp(24px,4vw,32px)}
+.contact p{margin:0;color:var(--muted)}
+.phone{font-family:var(--en);font-weight:900;font-size:clamp(26px,5vw,34px);letter-spacing:2px;direction:ltr;user-select:all}
+.cbtns{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+@media (max-width:760px){.cbtns{justify-content:center}}
+
+footer.site{border-top:1px solid var(--line);margin-top:40px;padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var(--dim);font-size:13px}
+footer.site .row{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.disclaimer{max-width:70ch;line-height:1.7}
+
+/* lightbox */
+dialog{border:0;padding:0;background:transparent;max-width:min(92vw,560px)}
+dialog::backdrop{background:rgba(0,0,0,.82)}
+dialog img{border-radius:14px;max-height:86vh;width:auto;margin:0 auto}
+dialog form{text-align:center;margin-top:10px}
+</style>
+</head>
+<body>
+
+<div class="stripe" aria-hidden="true"><span></span><span></span></div>
+
+<header class="topbar">
+  <div class="container">
+    <div class="row">
+      <a class="logo" href="#top" aria-label="Trader Holic — الرئيسية">
+        <span class="w"><span>TR</span><svg aria-hidden="true" width="21" height="27" viewBox="0 0 58 76"><path d="M6 74 L29 5 L52 59" fill="none" stroke="#3DCB4F" stroke-width="10" stroke-linejoin="miter"/></svg><span>DER</span></span>
+        <span class="h">HOLIC</span>
+      </a>
+      <div class="clock" title="الوقت الحالي بتوقيت الكويت">
+        <span class="dot" id="mktDot" aria-hidden="true"></span>
+        <span class="t" id="clockT">--:--:--</span>
+        <small>الكويت</small>
+      </div>
+    </div>
+    <nav class="nav" aria-label="أقسام الموقع">
+      <a href="#calendar">الأخبار المهمة</a>
+      <a href="#sessions">الجلسات</a>
+      <a href="#prices">الأسعار والشارت</a>
+      <a href="#news">آخر الأخبار</a>
+      <a href="#holidays">العطل</a>
+      <a href="#calculator">حاسبة اللوت</a>
+      <a href="#course" class="cta">الدورة</a>
+    </nav>
+  </div>
+</header>
+
+<div class="ticker" id="ticker" aria-label="أسعار لحظية"></div>
+
+<main id="top">
+  <div class="container">
+
+    <!-- HERO -->
+    <section class="hero" aria-labelledby="heroTitle">
+      <div>
+        <p class="eyebrow">منصة المتداول</p>
+        <h1 id="heroTitle">كل اللي تحتاجه <span>قبل ما تدخل الصفقة</span></h1>
+        <p class="lead">الأخبار الاقتصادية المهمة، أسعار الذهب والفضة والبتكوين لحظياً، أوقات الجلسات، العطل اللي تأثر على السيولة، وحاسبة حجم اللوت. كلها تتحدّث تلقائياً.</p>
+        <div class="hero-actions">
+          <a class="btn" href="#calendar">أخبار اليوم المهمة</a>
+          <a class="btn ghost" href="#calculator">احسب حجم اللوت</a>
+        </div>
+      </div>
+      <div class="status" aria-live="polite">
+        <div class="scard wide">
+          <span class="k">حالة السوق الآن</span>
+          <span class="v" id="stMarket">—</span>
+          <span class="s" id="stMarketSub"></span>
+        </div>
+        <div class="scard">
+          <span class="k">الجلسة القادمة</span>
+          <span class="v" id="stNext">—</span>
+          <span class="s" id="stNextSub"></span>
+        </div>
+        <div class="scard">
+          <span class="k">أقرب عطلة مؤثرة</span>
+          <span class="v" id="stHol">—</span>
+          <span class="s" id="stHolSub"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ECONOMIC CALENDAR -->
+    <section class="block" id="calendar" aria-labelledby="calTitle">
+      <div class="shead">
+        <div>
+          <span class="tag">ECONOMIC CALENDAR</span>
+          <h2 id="calTitle">الأخبار الاقتصادية المهمة</h2>
+          <p class="sub">التقويم يتحدّث لحظياً، والأوقات تظهر بتوقيت جهازك. الأخبار <b style="color:var(--red)">عالية التأثير</b> هي اللي تحرّك الذهب والفضة والبتكوين بقوة، مثل الفائدة الأمريكية والوظائف والتضخم.</p>
+        </div>
+        <div class="seg" role="group" aria-label="مستوى أهمية الأخبار">
+          <button type="button" data-imp="1" aria-pressed="true">عالية التأثير فقط</button>
+          <button type="button" data-imp="0,1" aria-pressed="false">متوسطة وعالية</button>
+          <button type="button" data-imp="-1,0,1" aria-pressed="false">الكل</button>
+        </div>
+      </div>
+      <div class="panel"><div class="widget" id="calWidget" style="height:640px"></div></div>
+      <ul class="legend" aria-label="الدول المعروضة">
+        <li><i style="background:#3B82F6"></i>أمريكا (الأهم للذهب والبتكوين)</li>
+        <li><i style="background:#38BDF8"></i>منطقة اليورو</li>
+        <li><i style="background:#A78BFA"></i>بريطانيا</li>
+        <li><i style="background:#F87171"></i>الصين</li>
+        <li><i style="background:#FBBF24"></i>اليابان</li>
+      </ul>
+      <p class="note">نصيحة: تجنّب الدخول قبل الخبر عالي التأثير بـ 15 دقيقة وبعده بـ 15 دقيقة، لأن السبريد يتسع والحركة تكون عشوائية.</p>
+    </section>
+
+    <!-- SESSIONS -->
+    <section class="block" id="sessions" aria-labelledby="sesTitle">
+      <div class="shead">
+        <div>
+          <span class="tag">MARKET SESSIONS</span>
+          <h2 id="sesTitle">أوقات الجلسات بتوقيت الكويت</h2>
+          <p class="sub">الأوقات تتعدّل تلقائياً مع التوقيت الصيفي والشتوي في لندن ونيويورك. أقوى سيولة وقت <b>التداخل بين أوروبا وأمريكا</b>.</p>
+        </div>
+      </div>
+      <div id="weekendBanner" class="banner" hidden>
+        <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        <span id="weekendText"></span>
+      </div>
+      <div class="sessions" id="sessCards"></div>
+      <div class="timeline" aria-label="خط زمني لجلسات اليوم بتوقيت الكويت">
+        <div class="tl-rows" id="tlRows"></div>
+        <div class="tl-axis"><span></span><div class="ticks"><span>00</span><span>03</span><span>06</span><span>09</span><span>12</span><span>15</span><span>18</span><span>21</span><span>24</span></div></div>
+      </div>
+      <p class="note">البتكوين يتداول 24 ساعة طول الأسبوع، أما الذهب والفضة فيقفلون من فجر السبت لين ليلة الاثنين بتوقيت الكويت.</p>
+    </section>
+
+    <!-- PRICES -->
+    <section class="block" id="prices" aria-labelledby="prTitle">
+      <div class="shead">
+        <div>
+          <span class="tag">LIVE PRICES</span>
+          <h2 id="prTitle">الأسعار والشارت</h2>
+          <p class="sub">أسعار لحظية، وشارت كامل تقدر تغيّر فيه الفريم والأداة.</p>
+        </div>
+        <div class="seg" role="group" aria-label="الأداة في الشارت">
+          <button type="button" data-chart="OANDA:XAUUSD" aria-pressed="true">الذهب</button>
+          <button type="button" data-chart="OANDA:XAGUSD" aria-pressed="false">الفضة</button>
+          <button type="button" data-chart="BITSTAMP:BTCUSD" aria-pressed="false">البتكوين</button>
+        </div>
+      </div>
+      <div class="prices">
+        <div class="price" id="pGold"></div>
+        <div class="price" id="pSilver"></div>
+        <div class="price" id="pBtc"></div>
+      </div>
+      <div class="panel chartbox"><div class="widget" id="chartWidget" style="height:100%"></div></div>
+    </section>
+
+    <!-- NEWS -->
+    <section class="block" id="news" aria-labelledby="nwTitle">
+      <div class="shead">
+        <div>
+          <span class="tag">LATEST NEWS</span>
+          <h2 id="nwTitle">آخر الأخبار</h2>
+          <p class="sub">أخبار عاجلة تتحدّث تلقائياً من مصادر عالمية. اضغط على أي خبر عشان تقرأه كامل.</p>
+        </div>
+        <div class="seg" role="group" aria-label="نوع الأخبار">
+          <button type="button" data-news="gold" aria-pressed="true">الذهب</button>
+          <button type="button" data-news="crypto" aria-pressed="false">البتكوين والكريبتو</button>
+          <button type="button" data-news="all" aria-pressed="false">الأسواق العالمية</button>
+        </div>
+      </div>
+      <div class="panel"><div class="widget" id="newsWidget" style="height:620px"></div></div>
+    </section>
+
+    <!-- HOLIDAYS -->
+    <section class="block" id="holidays" aria-labelledby="hoTitle">
+      <div class="shead">
+        <div>
+          <span class="tag">MARKET HOLIDAYS</span>
+          <h2 id="hoTitle">العطل اللي تأثر على السيولة</h2>
+          <p class="sub">في العطل الرسمية تقل السيولة وتتسع الفروقات وتصير الحركة غير طبيعية. القائمة تعرض العطل الجاية فقط وتتحدّث مع الوقت.</p>
+        </div>
+        <div class="seg" role="group" aria-label="تصفية العطل حسب الدولة">
+          <button type="button" data-hf="all" aria-pressed="true">الكل</button>
+          <button type="button" data-hf="us" aria-pressed="false">أمريكا</button>
+          <button type="button" data-hf="eu" aria-pressed="false">أوروبا وبريطانيا</button>
+          <button type="button" data-hf="cn" aria-pressed="false">الصين</button>
+        </div>
+      </div>
+      <div class="hol" id="holList"></div>
+      <div class="more"><button type="button" class="btn ghost" id="holMore">عرض كل العطل</button></div>
+      <p class="note">المصادر: تقويم بورصة نيويورك الرسمي (NYSE)، العطل الرسمية في بريطانيا ومنطقة اليورو، وجدول العطل الرسمي الصادر من مجلس الدولة الصيني.</p>
+    </section>
+
+    <!-- CALCULATOR -->
+    <section class="block" id="calculator" aria-labelledby="clTitle">
+      <div class="shead">
+        <div>
+          <span class="tag">LOT CALCULATOR</span>
+          <h2 id="clTitle">حاسبة حجم اللوت</h2>
+          <p class="sub">حدّد رأس مالك والمبلغ اللي تقبل تخاطر فيه، وتطلع لك الحاسبة حجم اللوت المناسب.</p>
+        </div>
+      </div>
+      <div class="calc">
+        <form class="panel pad form" id="calcForm" novalidate>
+          <div class="field">
+            <span class="lab" id="instLab">الأداة</span>
+            <div class="tiles" role="group" aria-labelledby="instLab">
+              <button class="tile" type="button" data-inst="XAU" aria-pressed="true"><span class="ic" style="background:#E8C547">Au</span><b>ذهب</b><small>XAU/USD</small></button>
+              <button class="tile" type="button" data-inst="XAG" aria-pressed="false"><span class="ic" style="background:#C9D0D8">Ag</span><b>فضة</b><small>XAG/USD</small></button>
+              <button class="tile" type="button" data-inst="BTC" aria-pressed="false"><span class="ic" style="background:#F2A23C">₿</span><b>بتكوين</b><small>BTC/USD</small></button>
+            </div>
+          </div>
+          <div class="field">
+            <label for="balance">رأس المال</label>
+            <div class="inbox"><input id="balance" type="number" inputmode="decimal" min="0" step="any" value="10000"><span class="unit">$</span></div>
+          </div>
+          <div class="field">
+            <label for="risk">المخاطرة في الصفقة</label>
+            <div class="seg" role="group" aria-label="طريقة إدخال المخاطرة">
+              <button type="button" data-rmode="usd" aria-pressed="true">بالدولار $</button>
+              <button type="button" data-rmode="pct" aria-pressed="false">بالنسبة %</button>
+            </div>
+            <div class="inbox"><input id="risk" type="number" inputmode="decimal" min="0" step="any" value="100"><span class="unit" id="riskUnit">$</span></div>
+            <p class="hint" id="riskHint"></p>
+          </div>
+          <div class="field">
+            <span class="lab">وقف الخسارة</span>
+            <div class="seg" role="group" aria-label="طريقة إدخال وقف الخسارة">
+              <button type="button" data-smode="dist" aria-pressed="true">المسافة بالدولار</button>
+              <button type="button" data-smode="price" aria-pressed="false">سعر الدخول والوقف</button>
+            </div>
+            <div id="distBox" class="field">
+              <div class="inbox"><input id="dist" type="number" inputmode="decimal" min="0" step="any" value="5" aria-label="مسافة وقف الخسارة بالدولار"><span class="unit">$</span></div>
+              <p class="hint" id="distHint"></p>
+            </div>
+            <div id="priceBox" class="two" hidden>
+              <div class="field"><label for="entry" style="font-size:14px;font-weight:600">سعر الدخول</label><div class="inbox"><input id="entry" type="number" inputmode="decimal" min="0" step="any" value="2650"></div></div>
+              <div class="field"><label for="stop" style="font-size:14px;font-weight:600">سعر الوقف</label><div class="inbox"><input id="stop" type="number" inputmode="decimal" min="0" step="any" value="2645"></div></div>
+            </div>
+          </div>
+        </form>
+        <div>
+          <div class="result" aria-live="polite">
+            <p class="k">حجم اللوت المناسب</p>
+            <p class="lot"><span id="outLot">0.20</span><small>LOT</small></p>
+            <div class="stats">
+              <div class="stat"><span>المخاطرة الفعلية</span><strong id="outRisk">$100.00</strong></div>
+              <div class="stat"><span>من رأس المال</span><strong id="outPct">1.00%</strong></div>
+              <div class="stat"><span>مسافة الوقف</span><strong id="outDist">$5.00</strong></div>
+            </div>
+          </div>
+          <p class="warn" id="warn" hidden></p>
+          <div class="formula" id="formula"></div>
+          <p class="note">الحاسبة على العقود المعتمدة: الذهب 100 أونصة، الفضة 5000 أونصة، البتكوين 1 BTC لكل لوت. اللوت مقرّب للأسفل لأقرب 0.01.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- COURSE -->
+    <section class="block" id="course" aria-labelledby="coTitle">
+      <div class="shead">
+        <div>
+          <span class="tag">THE COURSE</span>
+          <h2 id="coTitle">دورة Trader Holic</h2>
+          <p class="sub">دورة لشرح التداول في الأسواق المالية وفهم سيكولوجية الاستثمار.</p>
+        </div>
+      </div>
+      <div class="course">
+        <article class="poster">
+          <p class="eyebrow">دورة تدريبية</p>
+          <h3>فنُّ قراءة السوق<br><span>وحكمةُ اتخاذ القرار</span></h3>
+          <span class="date-chip" id="courseDate">DECEMBER 2026</span>
+          <ul class="mods">
+            <li><b>01</b>تحديد القمم والقيعان باستخدام النسب</li>
+            <li><b>02</b>تحديد النسب المقارنة الداخلية</li>
+            <li><b>03</b>تحديد تغيّر الاتجاه والاستمرار</li>
+            <li><b>04</b>التحيّز في السوق</li>
+            <li><b>05</b>مناطق الخطأ</li>
+            <li class="r"><b>06</b>حساب حجم اللوت وإعداد الصفقة</li>
+            <li class="r"><b>07</b>تدوين الصفقات: صور + أسباب الدخول والخروج</li>
+          </ul>
+          <div class="outcomes">
+            <div class="oc"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3DCB4F" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>نظام تداول شخصي (الاتجاه العام + نموذج التنفيذ)</div>
+            <div class="oc"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3DCB4F" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>دليل استراتيجيات يناسب أسلوبك</div>
+            <div class="oc"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3DCB4F" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>القدرة على تكبير حسابك والتداول باحترافية</div>
+            <div class="oc"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3DCB4F" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>عقلية تداول منضبطة وتحكّم كامل بعواطفك</div>
+          </div>
+          <div class="hero-actions">
+            <a class="btn" id="waBtn" href="https://wa.me/96599980548?text=%D8%A7%D9%84%D8%B3%D9%84%D8%A7%D9%85%20%D8%B9%D9%84%D9%8A%D9%83%D9%85%D8%8C%20%D8%A3%D8%A8%D9%8A%20%D8%A3%D8%B3%D8%AC%D9%84%20%D9%81%D9%8A%20%D8%AF%D9%88%D8%B1%D8%A9%20Trader%20Holic" target="_blank" rel="noopener">سجّل عبر واتساب</a>
+            <a class="btn ghost" href="#contact">تواصل معنا</a>
+          </div>
+        </article>
+        <div class="gallery">
+          <figure><button type="button" data-zoom="assets/emblem.jpg" aria-label="تكبير شعار Trader Holic"><img src="assets/emblem.jpg" alt="شعار Trader Holic" loading="lazy"></button><figcaption>Trader Holic</figcaption></figure>
+          <figure><button type="button" data-zoom="assets/course-story.jpg" aria-label="تكبير بوستر موعد الدورة"><img src="assets/course-story.jpg" alt="بوستر موعد الدورة" loading="lazy"></button><figcaption>موعد الدورة</figcaption></figure>
+          <figure><button type="button" data-zoom="assets/before-course.jpg" aria-label="تكبير إرشادات ما قبل الدورة"><img src="assets/before-course.jpg" alt="إرشادات ما قبل الدورة" loading="lazy"></button><figcaption>قبل انطلاق الدورة</figcaption></figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section class="block" id="contact" aria-labelledby="ctTitle">
+      <div class="contact">
+        <div>
+          <h2 id="ctTitle">للتسجيل والاستفسار</h2>
+          <p>تواصل خاص عبر واتساب أو اتصال مباشر.</p>
+          <div class="cbtns">
+            <a class="btn" href="https://wa.me/96599980548" target="_blank" rel="noopener">واتساب</a>
+            <a class="btn ghost" href="tel:+96599980548">اتصال</a>
+            <button class="btn ghost" type="button" id="copyPhone">نسخ الرقم</button>
+          </div>
+        </div>
+        <div class="phone" aria-label="رقم التواصل">9998 0548</div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer class="site">
+  <div class="container row">
+    <p class="disclaimer">المحتوى في هذا الموقع لأغراض تعليمية فقط وليس توصية بالشراء أو البيع. التداول في الأسواق المالية ينطوي على مخاطر عالية. الأسعار والأخبار والتقويم مقدّمة من TradingView.</p>
+    <p class="en">© <span id="yr">2026</span> TRADER HOLIC</p>
+  </div>
+</footer>
+
+<dialog id="lightbox" aria-label="عرض الصورة">
+  <img id="lbImg" src="" alt="">
+  <form method="dialog"><button class="btn ghost" type="submit">إغلاق</button></form>
+</dialog>
+
+<script>
+/* ============ SETTINGS — عدّل هنا ============ */
+const SETTINGS = {
+  courseDate: 'DECEMBER 2026',   // موعد الدفعة القادمة
+  whatsapp: '96599980548'
+};
+
+/* ============ TradingView widgets ============ */
+const TV_BASE='https://s3.tradingview.com/external-embedding/';
+function tv(el, file, config){
+  if(!el) return;
+  el.innerHTML='';
+  const wrap=document.createElement('div');wrap.className='tradingview-widget-container';wrap.style.height='100%';wrap.style.width='100%';
+  const w=document.createElement('div');w.className='tradingview-widget-container__widget';w.style.height='100%';w.style.width='100%';
+  const s=document.createElement('script');s.type='text/javascript';s.async=true;s.src=TV_BASE+file;s.innerHTML=JSON.stringify(config);
+  s.onerror=()=>{el.innerHTML='<p class="wfallback">تعذّر تحميل البيانات الحين. تأكد من اتصالك بالإنترنت وحدّث الصفحة.</p>';};
+  wrap.append(w,s);el.appendChild(wrap);
+}
+const LOC='ar_AE';
+
+tv(document.getElementById('ticker'),'embed-widget-ticker-tape.js',{
+  symbols:[
+    {proName:'OANDA:XAUUSD',title:'الذهب'},
+    {proName:'OANDA:XAGUSD',title:'الفضة'},
+    {proName:'BITSTAMP:BTCUSD',title:'البتكوين'},
+    {proName:'BITSTAMP:ETHUSD',title:'الإيثيريوم'},
+    {proName:'CAPITALCOM:DXY',title:'مؤشر الدولار'},
+    {proName:'FX:EURUSD',title:'EUR/USD'},
+    {proName:'TVC:USOIL',title:'النفط'}
+  ],
+  showSymbolLogo:true,isTransparent:true,displayMode:'adaptive',colorTheme:'dark',locale:LOC
+});
+
+function loadCalendar(imp){
+  tv(document.getElementById('calWidget'),'embed-widget-events.js',{
+    colorTheme:'dark',isTransparent:true,width:'100%',height:'100%',locale:LOC,
+    importanceFilter:imp,countryFilter:'us,eu,gb,cn,jp'
+  });
+}
+loadCalendar('1');
+
+function mini(id,symbol){
+  tv(document.getElementById(id),'embed-widget-mini-symbol-overview.js',{
+    symbol,width:'100%',height:'100%',locale:LOC,dateRange:'1D',colorTheme:'dark',isTransparent:true,autosize:true,largeChartUrl:'',chartOnly:false,noTimeScale:false,
+    trendLineColor:'rgba(61,203,79,1)',underLineColor:'rgba(61,203,79,0.18)',underLineBottomColor:'rgba(61,203,79,0)'
+  });
+}
+mini('pGold','OANDA:XAUUSD');mini('pSilver','OANDA:XAGUSD');mini('pBtc','BITSTAMP:BTCUSD');
+
+function loadChart(symbol){
+  tv(document.getElementById('chartWidget'),'embed-widget-advanced-chart.js',{
+    autosize:true,symbol,interval:'60',timezone:'Asia/Kuwait',theme:'dark',style:'1',locale:LOC,
+    backgroundColor:'rgba(21,26,32,1)',gridColor:'rgba(255,255,255,0.04)',allow_symbol_change:true,
+    hide_volume:true,calendar:false,support_host:'https://www.tradingview.com'
+  });
+}
+loadChart('OANDA:XAUUSD');
+
+const NEWS={
+  gold:{feedMode:'symbol',symbol:'OANDA:XAUUSD'},
+  crypto:{feedMode:'market',market:'crypto'},
+  all:{feedMode:'all_symbols'}
+};
+function loadNews(k){
+  tv(document.getElementById('newsWidget'),'embed-widget-timeline.js',Object.assign({
+    isTransparent:true,displayMode:'regular',width:'100%',height:'100%',colorTheme:'dark',locale:LOC
+  },NEWS[k]));
+}
+loadNews('gold');
+
+function segGroup(attr,fn){
+  const btns=[...document.querySelectorAll('[data-'+attr+']')];
+  btns.forEach(b=>b.addEventListener('click',()=>{
+    btns.forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
+    fn(b.dataset[attr.replace(/-([a-z])/g,(m,c)=>c.toUpperCase())]);
+  }));
+}
+segGroup('imp',loadCalendar);
+segGroup('chart',loadChart);
+segGroup('news',loadNews);
+
+/* ============ Time helpers ============ */
+const KW_OFFSET=3*60; // Kuwait is UTC+3, no daylight saving
+function partsIn(tz,date){
+  const p={};new Intl.DateTimeFormat('en-US',{timeZone:tz,hourCycle:'h23',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',weekday:'short'})
+    .formatToParts(date).forEach(x=>p[x.type]=x.value);
+  return p;
+}
+function tzOffsetMin(tz,date){
+  const p=partsIn(tz,date);
+  const asUTC=Date.UTC(+p.year,+p.month-1,+p.day,+p.hour%24,+p.minute,+p.second);
+  return Math.round((asUTC-date.getTime())/60000);
+}
+function zonedToUtc(y,m,d,h,tz){
+  const guess=Date.UTC(y,m-1,d,h);
+  let off=tzOffsetMin(tz,new Date(guess));let t=guess-off*60000;
+  const off2=tzOffsetMin(tz,new Date(t));if(off2!==off)t=guess-off2*60000;
+  return t;
+}
+const kwFmt=t=>{const d=new Date(t+KW_OFFSET*60000);return String(d.getUTCHours()).padStart(2,'0')+':'+String(d.getUTCMinutes()).padStart(2,'0');};
+const kwDayName=t=>new Intl.DateTimeFormat('ar',{timeZone:'Asia/Kuwait',weekday:'long'}).format(new Date(t));
+function dur(ms){const m=Math.max(0,Math.round(ms/60000));const h=Math.floor(m/60),mm=m%60;return h>0?(h+' س '+mm+' د'):(mm+' د');}
+
+/* ============ Sessions ============ */
+const SESSIONS=[
+  {id:'asia',name:'آسيا',city:'طوكيو',tz:'Asia/Tokyo',open:9,close:18,color:'#E8C547'},
+  {id:'europe',name:'أوروبا',city:'لندن',tz:'Europe/London',open:8,close:17,color:'#3DCB4F'},
+  {id:'us',name:'أمريكا',city:'نيويورك',tz:'America/New_York',open:8,close:17,color:'#E0715B'}
+];
+function instances(s,now){
+  const seen=new Set(),out=[];
+  for(let k=-2;k<=4;k++){
+    const p=partsIn(s.tz,new Date(now+k*864e5));
+    const key=p.year+p.month+p.day;if(seen.has(key))continue;seen.add(key);
+    if(p.weekday==='Sat'||p.weekday==='Sun')continue;
+    out.push({open:zonedToUtc(+p.year,+p.month,+p.day,s.open,s.tz),close:zonedToUtc(+p.year,+p.month,+p.day,s.close,s.tz)});
+  }
+  return out.sort((a,b)=>a.open-b.open);
+}
+// Spot FX / metals week: Sunday 17:00 New York → Friday 17:00 New York
+function fxOpen(now){
+  const p=partsIn('America/New_York',new Date(now));const h=+p.hour%24;
+  if(p.weekday==='Sat')return false;
+  if(p.weekday==='Fri'&&h>=17)return false;
+  if(p.weekday==='Sun'&&h<17)return false;
+  return true;
+}
+function nextFxOpen(now){
+  for(let k=0;k<4;k++){const p=partsIn('America/New_York',new Date(now+k*864e5));
+    if(p.weekday==='Sun'){const t=zonedToUtc(+p.year,+p.month,+p.day,17,'America/New_York');if(t>now)return t;}}
+  return null;
+}
+
+const cards=document.getElementById('sessCards');
+cards.innerHTML=SESSIONS.map(s=>`
+  <article class="sess" id="s-${s.id}">
+    <span class="bar" style="background:${s.color}"></span>
+    <div class="top"><div><h3>${s.name}</h3><span class="city">${s.city}</span></div><span class="pill off" data-st>مغلقة</span></div>
+    <div class="hours" data-h>--:-- – --:--</div>
+    <div class="cd" data-cd></div>
+  </article>`).join('');
+const tlRows=document.getElementById('tlRows');
+tlRows.innerHTML=SESSIONS.map(s=>`<div class="tl-row"><span>${s.name}</span><div class="tl-track" data-tl="${s.id}"></div></div>`).join('')+
+  `<div class="tl-row"><span>التداخل</span><div class="tl-track" data-tl="overlap"></div></div>`;
+
+function renderSessions(){
+  const now=Date.now();
+  const kwMid=(()=>{const d=new Date(now+KW_OFFSET*60000);return Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate())-KW_OFFSET*60000;})();
+  const dayEnd=kwMid+864e5;
+  const fx=fxOpen(now);
+  let openNames=[],nextOpen=null;
+  const todays={};
+  SESSIONS.forEach(s=>{
+    const inst=instances(s,now);
+    const cur=inst.find(i=>now>=i.open&&now<i.close);
+    const nxt=inst.find(i=>i.open>now);
+    const el=document.getElementById('s-'+s.id);
+    const ref=cur||nxt||inst[inst.length-1];
+    el.querySelector('[data-h]').textContent=kwFmt(ref.open)+' – '+kwFmt(ref.close);
+    const st=el.querySelector('[data-st]');
+    if(cur){
+      el.classList.add('open');st.className='pill';st.textContent='مفتوحة الآن';
+      el.querySelector('[data-cd]').innerHTML='تقفل بعد <b>'+dur(cur.close-now)+'</b>';
+      openNames.push(s.name);
+    }else{
+      el.classList.remove('open');st.className='pill off';st.textContent='مغلقة';
+      el.querySelector('[data-cd]').innerHTML=nxt?('تفتح بعد <b>'+dur(nxt.open-now)+'</b>'+(nxt.open-now>864e5*0.75?' · '+kwDayName(nxt.open):'')):'';
+    }
+    if(nxt&&(!nextOpen||nxt.open<nextOpen.t))nextOpen={t:nxt.open,name:s.name};
+    // timeline segments for the Kuwait calendar day
+    const segs=[];
+    inst.forEach(i=>{const a=Math.max(i.open,kwMid),b=Math.min(i.close,dayEnd);if(b>a)segs.push([a,b]);});
+    todays[s.id]=segs;
+    const tr=tlRows.querySelector(`[data-tl="${s.id}"]`);
+    tr.innerHTML=segs.map(([a,b])=>`<span class="tl-seg" style="left:${(a-kwMid)/864e5*100}%;width:${(b-a)/864e5*100}%;background:${s.color}"></span>`).join('');
+  });
+  // overlap Europe × US
+  const ov=[];(todays.europe||[]).forEach(([a,b])=>(todays.us||[]).forEach(([c,d])=>{const x=Math.max(a,c),y=Math.min(b,d);if(y>x)ov.push([x,y]);}));
+  tlRows.querySelector('[data-tl="overlap"]').innerHTML=ov.map(([a,b])=>`<span class="tl-seg tl-overlap" style="left:${(a-kwMid)/864e5*100}%;width:${(b-a)/864e5*100}%"></span>`).join('');
+  // now marker
+  tlRows.querySelectorAll('.tl-now').forEach(n=>n.remove());
+  tlRows.querySelectorAll('.tl-track').forEach(tr=>{const n=document.createElement('span');n.className='tl-now';n.style.left=((now-kwMid)/864e5*100)+'%';tr.appendChild(n);});
+
+  // weekend banner + hero status
+  const wb=document.getElementById('weekendBanner');
+  const dot=document.getElementById('mktDot');
+  if(!fx){
+    const no=nextFxOpen(now);
+    wb.hidden=false;
+    document.getElementById('weekendText').textContent='سوق الذهب والفضة مغلق لعطلة نهاية الأسبوع'+(no?'، ويفتح '+kwDayName(no)+' الساعة '+kwFmt(no)+' بتوقيت الكويت (بعد '+dur(no-now)+').':'.')+' البتكوين شغّال 24/7.';
+    dot.classList.add('off');
+    setStatus('السوق مغلق (عطلة نهاية الأسبوع)','البتكوين فقط يتداول الحين');
+  }else{
+    wb.hidden=true;dot.classList.remove('off');
+    if(openNames.length){
+      const ovNow=ov.some(([a,b])=>now>=a&&now<b);
+      setStatus('مفتوحة: '+openNames.join(' + '),ovNow?'وقت التداخل: أعلى سيولة في اليوم':'السوق نشط');
+    }else setStatus('بين الجلسات','سيولة منخفضة نسبياً');
+  }
+  if(nextOpen){document.getElementById('stNext').textContent=nextOpen.name+' · '+kwFmt(nextOpen.t);document.getElementById('stNextSub').textContent='بعد '+dur(nextOpen.t-now);}
+}
+function setStatus(v,s){document.getElementById('stMarket').textContent=v;document.getElementById('stMarketSub').textContent=s;}
+
+function tickClock(){
+  const d=new Date(Date.now()+KW_OFFSET*60000);
+  document.getElementById('clockT').textContent=[d.getUTCHours(),d.getUTCMinutes(),d.getUTCSeconds()].map(n=>String(n).padStart(2,'0')).join(':');
+}
+tickClock();renderSessions();
+setInterval(tickClock,1000);setInterval(renderSessions,30000);
+
+/* ============ Holidays ============ */
+// c: us | uk | eu | cn  — e: optional end date (inclusive)
+const HOLIDAYS=[
+  {d:'2026-11-26',c:'us',n:'عيد الشكر (Thanksgiving)',k:'السوق الأمريكي مغلق'},
+  {d:'2026-11-27',c:'us',n:'اليوم التالي لعيد الشكر',k:'إغلاق مبكر 1:00 ظهراً بتوقيت نيويورك'},
+  {d:'2026-12-24',c:'us',n:'ليلة الكريسماس',k:'إغلاق مبكر 1:00 ظهراً بتوقيت نيويورك'},
+  {d:'2026-12-25',c:'us',n:'الكريسماس',k:'السوق الأمريكي مغلق'},
+  {d:'2026-12-25',c:'eu',n:'الكريسماس',k:'أوروبا وبريطانيا مغلقة'},
+  {d:'2026-12-28',c:'uk',n:'Boxing Day (بديل)',k:'بريطانيا مغلقة'},
+  {d:'2027-01-01',c:'us',n:'رأس السنة الميلادية',k:'السوق الأمريكي مغلق'},
+  {d:'2027-01-01',c:'eu',n:'رأس السنة الميلادية',k:'أوروبا وبريطانيا مغلقة'},
+  {d:'2027-01-01',e:'2027-01-03',c:'cn',n:'رأس السنة الميلادية',k:'الصين في عطلة'},
+  {d:'2027-01-18',c:'us',n:'يوم مارتن لوثر كينغ',k:'السوق الأمريكي مغلق'},
+  {d:'2027-02-05',e:'2027-02-13',c:'cn',n:'رأس السنة الصينية (عيد الربيع)',k:'الأسواق الصينية مغلقة · سيولة آسيوية ضعيفة'},
+  {d:'2027-02-15',c:'us',n:'يوم الرؤساء',k:'السوق الأمريكي مغلق'},
+  {d:'2027-03-26',c:'us',n:'الجمعة العظيمة',k:'السوق الأمريكي مغلق'},
+  {d:'2027-03-26',c:'eu',n:'الجمعة العظيمة',k:'أوروبا وبريطانيا مغلقة'},
+  {d:'2027-03-29',c:'eu',n:'إثنين الفصح',k:'أوروبا وبريطانيا مغلقة'},
+  {d:'2027-04-03',e:'2027-04-05',c:'cn',n:'عيد تشينغ مينغ',k:'الصين في عطلة'},
+  {d:'2027-05-01',e:'2027-05-05',c:'cn',n:'عيد العمال',k:'الصين في عطلة'},
+  {d:'2027-05-03',c:'uk',n:'عطلة بداية مايو',k:'بريطانيا مغلقة'},
+  {d:'2027-05-31',c:'us',n:'يوم الذكرى (Memorial Day)',k:'السوق الأمريكي مغلق'},
+  {d:'2027-05-31',c:'uk',n:'عطلة الربيع',k:'بريطانيا مغلقة'},
+  {d:'2027-06-09',c:'cn',n:'مهرجان قوارب التنين',k:'الصين في عطلة'},
+  {d:'2027-06-18',c:'us',n:'جونتينث (بديل)',k:'السوق الأمريكي مغلق'},
+  {d:'2027-07-05',c:'us',n:'يوم الاستقلال (بديل)',k:'السوق الأمريكي مغلق'},
+  {d:'2027-08-30',c:'uk',n:'عطلة الصيف',k:'بريطانيا مغلقة'},
+  {d:'2027-09-06',c:'us',n:'عيد العمال الأمريكي',k:'السوق الأمريكي مغلق'},
+  {d:'2027-09-15',c:'cn',n:'مهرجان منتصف الخريف',k:'الصين في عطلة'},
+  {d:'2027-10-01',e:'2027-10-07',c:'cn',n:'العيد الوطني (الأسبوع الذهبي)',k:'الأسواق الصينية مغلقة أسبوع كامل'},
+  {d:'2027-11-25',c:'us',n:'عيد الشكر (Thanksgiving)',k:'السوق الأمريكي مغلق'},
+  {d:'2027-11-26',c:'us',n:'اليوم التالي لعيد الشكر',k:'إغلاق مبكر 1:00 ظهراً بتوقيت نيويورك'},
+  {d:'2027-12-24',c:'us',n:'الكريسماس (بديل)',k:'السوق الأمريكي مغلق'},
+  {d:'2027-12-27',c:'uk',n:'الكريسماس (بديل)',k:'بريطانيا مغلقة'},
+  {d:'2027-12-28',c:'uk',n:'Boxing Day (بديل)',k:'بريطانيا مغلقة'}
+];
+const FLAG={us:'أمريكا',uk:'بريطانيا',eu:'أوروبا وبريطانيا',cn:'الصين'};
+const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+let holFilter='all',holAll=false;
+function kwToday(){const d=new Date(Date.now()+KW_OFFSET*60000);return d.toISOString().slice(0,10);}
+function upcoming(){const t=kwToday();return HOLIDAYS.filter(h=>(h.e||h.d)>=t);}
+function daysUntil(iso){const t=kwToday();return Math.round((Date.parse(iso)-Date.parse(t))/864e5);}
+function renderHolidays(){
+  let list=upcoming();
+  if(holFilter!=='all')list=list.filter(h=>holFilter==='eu'?(h.c==='eu'||h.c==='uk'):h.c===holFilter);
+  const shown=holAll?list:list.slice(0,8);
+  const box=document.getElementById('holList');
+  box.innerHTML=shown.length?shown.map(h=>{
+    const [y,m,d]=h.d.split('-').map(Number);const du=daysUntil(h.d);
+    const range=h.e?(' – '+Number(h.e.slice(8))+' '+MONTHS[Number(h.e.slice(5,7))-1]):'';
+    const soon=du<=7;
+    const when=du<=0?'اليوم':du===1?'بكرة':'بعد '+du+' يوم';
+    return `<div class="hitem${soon?' soon':''}"><div class="hdate"><b>${d}</b><span>${MONTHS[m-1]} ${y}</span></div>
+      <div class="hinfo"><span class="n">${h.n}</span><span class="m"><span class="flag ${h.c==='uk'?'uk':h.c}">${FLAG[h.c]}</span>${h.k}${range?' · لين'+range:''}</span>
+      <span class="m">${soon?'<span class="pill warn">'+when+'</span>':when}</span></div></div>`;
+  }).join(''):'<p class="note">ما فيه عطل جاية في هالقائمة.</p>';
+  const more=document.getElementById('holMore');
+  more.hidden=list.length<=8;more.textContent=holAll?'عرض أقل':'عرض كل العطل ('+list.length+')';
+  // hero card: nearest US/EU/UK closure
+  const next=upcoming()[0];
+  if(next){document.getElementById('stHol').textContent=next.n;document.getElementById('stHolSub').textContent=FLAG[next.c]+' · '+(daysUntil(next.d)<=0?'اليوم':'بعد '+daysUntil(next.d)+' يوم');}
+}
+segGroup('hf',v=>{holFilter=v;holAll=false;renderHolidays();});
+document.getElementById('holMore').addEventListener('click',()=>{holAll=!holAll;renderHolidays();});
+renderHolidays();
+
+/* ============ Lot calculator ============ */
+(function(){
+  const $=id=>document.getElementById(id);
+  const INST={
+    XAU:{contract:100,dist:5,entry:2650,stop:2645,pip:0.1},
+    XAG:{contract:5000,dist:0.2,entry:31.5,stop:31.3,pip:0.01},
+    BTC:{contract:1,dist:500,entry:95000,stop:94500,pip:null}
+  };
+  const st={inst:'XAU',rmode:'usd',smode:'dist'};
+  const fmt=(n,d=2)=>n.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+  const num=id=>parseFloat($(id).value);
+  function press(attr,val){document.querySelectorAll('[data-'+attr+']').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset[attr]===val)));}
+  document.querySelectorAll('[data-inst]').forEach(b=>b.addEventListener('click',()=>{
+    st.inst=b.dataset.inst;press('inst',st.inst);const c=INST[st.inst];
+    $('dist').value=c.dist;$('entry').value=c.entry;$('stop').value=c.stop;calc();
+  }));
+  document.querySelectorAll('[data-rmode]').forEach(b=>b.addEventListener('click',()=>{
+    if(st.rmode===b.dataset.rmode)return;
+    const bal=num('balance'),r=num('risk');
+    if(isFinite(bal)&&bal>0&&isFinite(r))$('risk').value=b.dataset.rmode==='pct'?+(r/bal*100).toFixed(2):+(bal*r/100).toFixed(2);
+    st.rmode=b.dataset.rmode;press('rmode',st.rmode);$('riskUnit').textContent=st.rmode==='usd'?'$':'%';calc();
+  }));
+  document.querySelectorAll('[data-smode]').forEach(b=>b.addEventListener('click',()=>{
+    st.smode=b.dataset.smode;press('smode',st.smode);$('distBox').hidden=st.smode!=='dist';$('priceBox').hidden=st.smode!=='price';calc();
+  }));
+  function calc(){
+    const c=INST[st.inst],bal=num('balance'),rIn=num('risk');
+    const dist=st.smode==='dist'?num('dist'):Math.abs(num('entry')-num('stop'));
+    const riskUsd=st.rmode==='usd'?rIn:bal*rIn/100;const pct=bal>0?riskUsd/bal*100:NaN;
+    $('riskHint').textContent=st.rmode==='usd'?(isFinite(pct)?'= '+fmt(pct)+'% من رأس المال':''):(isFinite(riskUsd)?'= $'+fmt(riskUsd):'');
+    $('distHint').textContent='الفرق بين سعر الدخول ووقف الخسارة'+(c.pip&&isFinite(dist)&&dist>0?' · $'+fmt(dist)+' = '+fmt(dist/c.pip,0)+' نقطة':'');
+    const w=$('warn');w.hidden=true;
+    if([bal,riskUsd,dist].some(x=>!isFinite(x)||x<=0)){
+      ['outLot','outRisk','outPct','outDist'].forEach(i=>$(i).textContent='—');$('formula').textContent='—';
+      w.hidden=false;w.textContent=dist===0?'سعر الدخول يساوي سعر الوقف. أدخل وقف خسارة مختلف.':'أدخل أرقام أكبر من صفر في رأس المال والمخاطرة ووقف الخسارة.';return;
+    }
+    const lot=Math.floor(riskUsd/(dist*c.contract)*100+1e-9)/100,actual=lot*dist*c.contract;
+    $('outLot').textContent=fmt(lot);$('outRisk').textContent='$'+fmt(actual);$('outPct').textContent=fmt(actual/bal*100)+'%';$('outDist').textContent='$'+fmt(dist);
+    $('formula').textContent=fmt(riskUsd)+' ÷ ('+fmt(dist)+' × '+c.contract+') = '+fmt(lot)+' lot';
+    if(lot===0){w.hidden=false;w.textContent='المخاطرة أقل من أصغر لوت (0.01). قلّل مسافة الوقف أو زد المخاطرة.';}
+    else if(pct>2){w.hidden=false;w.textContent='تنبيه: مخاطرتك '+fmt(pct)+'% من رأس المال. تأكد إنها ضمن خطة إدارة المخاطر حقتك.';}
+  }
+  $('calcForm').addEventListener('input',calc);$('calcForm').addEventListener('submit',e=>e.preventDefault());calc();
+})();
+
+/* ============ Misc ============ */
+document.getElementById('courseDate').textContent=SETTINGS.courseDate;
+document.getElementById('yr').textContent=new Date().getFullYear();
+document.getElementById('copyPhone').addEventListener('click',async e=>{
+  const b=e.currentTarget;try{await navigator.clipboard.writeText('+'+SETTINGS.whatsapp);b.textContent='تم النسخ ✓';}catch(_){b.textContent='+965 9998 0548';}
+  setTimeout(()=>b.textContent='نسخ الرقم',2200);
+});
+const lb=document.getElementById('lightbox');
+document.querySelectorAll('[data-zoom]').forEach(b=>b.addEventListener('click',()=>{
+  const img=document.getElementById('lbImg');img.src=b.dataset.zoom;img.alt=b.getAttribute('aria-label').replace('تكبير ','');
+  if(lb.showModal)lb.showModal();
+}));
+lb.addEventListener('click',e=>{if(e.target===lb)lb.close();});
+</script>
+</body>
+</html>

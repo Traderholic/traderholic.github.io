@@ -1,2 +1,3 @@
-# traderholic.github.io
-Traderholic
+# Trader Holic
+
+منصة المتداول — https://traderholic.github.io
