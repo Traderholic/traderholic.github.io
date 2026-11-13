@@ -59,7 +59,12 @@ a{color:var(--green)}
 .nav a.cta{background:var(--green);color:var(--green-ink);border-color:var(--green);font-weight:700}
 
 /* ticker */
-.ticker{border-bottom:1px solid var(--line);background:var(--bg-2);min-height:46px}
+.ticker{border-bottom:1px solid var(--line);background:var(--bg-2);min-height:46px;display:flex;align-items:stretch}
+.ticker-live{flex-shrink:0;display:flex;align-items:center;gap:8px;padding:0 14px;font-family:var(--en);font-size:11px;font-weight:800;letter-spacing:3px;color:var(--green);background:var(--green-soft);border-left:1px solid var(--green-line)}
+.ticker-live .dot{width:7px;height:7px}
+.ticker-tape{flex:1;min-width:0}
+/* TradingView frames are light documents; keep the frame's colour-scheme light so transparent widgets stay transparent on our dark page */
+.tradingview-widget-container,.tradingview-widget-container iframe{color-scheme:light}
 
 /* ---------- hero ---------- */
 .hero{padding-block:44px 20px;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:36px;align-items:center}
@@ -319,7 +324,7 @@ a.scard{text-decoration:none;color:inherit}
     <nav class="nav" aria-label="أقسام الموقع">
       <a href="#calendar">الأخبار المهمة</a>
       <a href="#sessions">الجلسات</a>
-      <a href="#prices">الأسعار والشارت</a>
+      <a href="#prices">Prices &amp; Charts</a>
       <a href="#news">آخر الأخبار</a>
       <a href="#holidays">العطل</a>
       <a href="#calculator">حاسبة اللوت</a>
@@ -328,7 +333,7 @@ a.scard{text-decoration:none;color:inherit}
   </div>
 </header>
 
-<div class="ticker" id="ticker" aria-label="أسعار لحظية"></div>
+<div class="ticker" aria-label="أسعار لحظية"><span class="ticker-live" dir="ltr"><span class="dot" aria-hidden="true"></span>LIVE</span><div class="ticker-tape" id="ticker"></div></div>
 
 <main id="top">
   <div class="container">
@@ -425,8 +430,8 @@ a.scard{text-decoration:none;color:inherit}
     <section class="block" id="prices" aria-labelledby="prTitle">
       <div class="shead">
         <div>
-          <span class="tag">LIVE PRICES</span>
-          <h2 id="prTitle">الأسعار والشارت</h2>
+          <span class="tag">MARKETS</span>
+          <h2 id="prTitle" dir="ltr" style="font-family:var(--en);font-weight:800;text-align:right">Live Prices &amp; Charts</h2>
           <p class="sub">أسعار لحظية، وشارت كامل تقدر تغيّر فيه الفريم والأداة.</p>
         </div>
         <div class="seg" role="group" aria-label="الأداة في الشارت">
@@ -655,7 +660,8 @@ mini('pGold','OANDA:XAUUSD');mini('pSilver','OANDA:XAGUSD');mini('pBtc','BITSTAM
 function loadChart(symbol){
   tv(document.getElementById('chartWidget'),'embed-widget-advanced-chart.js',{
     autosize:true,symbol,interval:'60',timezone:'Asia/Kuwait',theme:'dark',style:'1',locale:LOC,
-    backgroundColor:'rgba(21,26,32,1)',gridColor:'rgba(255,255,255,0.04)',allow_symbol_change:true,
+    backgroundColor:'rgba(21,26,32,1)',gridColor:'rgba(255,255,255,0.05)',allow_symbol_change:true,
+    toolbar_bg:'#151A20',enable_publishing:false,
     hide_volume:true,calendar:false,support_host:'https://www.tradingview.com'
   });
 }
