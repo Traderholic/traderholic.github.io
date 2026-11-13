@@ -65,7 +65,8 @@ function parseRss(xml, fallbackSource) {
 const gnews = q => `https://news.google.com/rss/search?q=${encodeURIComponent(q)}&hl=ar&gl=SA&ceid=SA%3Aar`;
 const FEEDS = {
   gold: {
-    primary: [gnews('(الذهب OR "أسعار الذهب" OR "سعر الذهب" OR الفضة) when:2d')],
+    primary: [gnews('(الذهب OR الفضة) (أوقية OR الأوقية OR الأونصة OR "المعدن الأصفر" OR الفيدرالي OR الدولار OR "المعدن النفيس" OR "الملاذ الآمن") when:2d')],
+    exclude: /عيار|جنيه|جنيها|ريال|درهم|دينار|ليرة|الليرة|بالأسواق المحلية|محلات|الصاغة|المصوغات|سبيكة|سبائك|الجرام|للجرام|بالجرام/,
     fallback: [{ url: 'https://www.fxstreet.com/rss/news', source: 'FXStreet', filter: /gold|xau|silver|xag/i }]
   },
   crypto: {
@@ -91,6 +92,8 @@ async function news() {
         catch (e) { console.log('news fallback', key, String(e.message || e)); }
       }
     }
+    if (cfg.exclude) items = items.filter(x => !cfg.exclude.test(x.t));
+    items.forEach(x => { x.s = (x.s || '').replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/$/, ''); });
     const seen = new Set();
     items = items.filter(x => Date.parse(x.d) >= cutoff && Date.parse(x.d) <= Date.now() + 600000)
       .sort((a, b) => b.d.localeCompare(a.d))
