@@ -70,13 +70,18 @@ const num = s => { const m = String(s ?? '').replace(/,/g, '').match(/-?\d+(\.\d
 const near = (a, b) => a != null && b != null && Math.abs(a - b) <= Math.max(0.051, Math.abs(a) * 0.006);
 function fmtActual(v, ff, tv) {
   const ref = ff.p || ff.f || '';
-  let x = v;
-  const fp = num(ff.p), tp = tv.previous;
-  if (fp != null && tp != null && tp !== 0 && !near(fp, tp)) {
-    for (const k of [1000, 0.001, 1000000, 0.000001]) if (near(fp, tp * k)) { x = v * k; break; }
-  }
-  const dm = ref.match(/\.(\d+)/); const dec = dm ? dm[1].length : (Number.isInteger(x) ? 0 : Math.min(3, String(x).split('.')[1]?.length || 0));
+  const refN = num(ff.f) ?? num(ff.p);
   const suffix = ref ? (ref.match(/[%KMBT]$/i)?.[0] || '') : (tv.unit === '%' ? '%' : (tv.scale || ''));
+  let x = v;
+  // Counts can come in different units (e.g. 19750 vs 19.8K): rescale by powers of 1000, never for percentages.
+  if (refN != null && refN !== 0 && x !== 0 && suffix !== '%') {
+    let bestK = 1, bestD = Infinity;
+    for (const k of [1, 1000, 0.001, 1e6, 1e-6]) { const d = Math.abs(Math.log10(Math.abs(x * k) / Math.abs(refN))); if (d < bestD) { bestD = d; bestK = k; } }
+    x = x * bestK;
+  }
+  // Sanity: a result wildly off the forecast/previous scale is a bad match, so drop it.
+  if (refN != null && Math.abs(x) > 25 * Math.max(Math.abs(refN), 1)) return null;
+  const dm = ref.match(/\.(\d+)/); const dec = dm ? dm[1].length : (Number.isInteger(x) ? 0 : Math.min(3, String(x).split('.')[1]?.length || 0));
   return x.toFixed(dec) + suffix;
 }
 function matchTV(ff, tvList, used) {
@@ -90,6 +95,8 @@ function matchTV(ff, tvList, used) {
     const tt = toks(tv.title);
     if (isCore(tv.title) !== fc) continue;
     const tper = period(tt); if (fper && tper && fper !== tper) continue;
+    const prevOk0 = near(num(ff.p), tv.previous);
+    if (fper && !tper && !prevOk0) continue;
     const P = new Set(['mom', 'yoy', 'qoq']);
     const fa = [...ft].filter(w => !P.has(w)), ta = [...tt].filter(w => !P.has(w));
     const inter = fa.filter(w => ta.includes(w)).length;
@@ -133,7 +140,7 @@ async function calendar() {
     try {
       const tv = await fetchTV(now - 3 * 86400000 - 3600000, now + 3600000);
       const used = new Set(); let n = 0;
-      for (const e of need) { const m = matchTV(e, tv, used); if (m) { used.add(m.id); e.a = fmtActual(m.actual, e, m); n++; console.log('actual', e.c, e.t, '=>', m.title, e.a); } }
+      for (const e of need) { const m = matchTV(e, tv, used); const a = m && fmtActual(m.actual, e, m); if (a) { used.add(m.id); e.a = a; n++; console.log('actual', e.c, e.t, '=>', m.title, e.a); } }
       console.log('actuals matched', n, 'of', need.length);
     } catch (err) { console.log('actuals', String(err.message || err)); }
   }
