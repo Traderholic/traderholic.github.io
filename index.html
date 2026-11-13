@@ -354,6 +354,45 @@ a.scard{text-decoration:none;color:inherit}
   .cal-dh{padding:10px 12px}
 }
 
+
+/* ---------- calendar: expandable news with impact guide ---------- */
+.cal-item{border-top:1px solid #1C222A}
+.cal-day .cal-item:first-of-type{border-top:0}
+.cal-item>summary{list-style:none;cursor:pointer}
+.cal-item>summary::-webkit-details-marker{display:none}
+.cal-item>summary:focus-visible{outline:2px solid var(--orange);outline-offset:-2px}
+.cal-item .cal-row{border-top:0}
+.cal-item .chev{width:28px;height:28px;display:grid;place-items:center;border-radius:8px;color:var(--dim);transition:transform .2s}
+.cal-item[open] .chev{transform:rotate(180deg);color:var(--green)}
+.cal-row{grid-template-columns:62px 56px minmax(0,1fr) auto 28px}
+.fpv{display:flex;gap:6px}
+.fpv span{display:flex;flex-direction:column;align-items:center;min-width:64px;padding:4px 8px;border-radius:8px;background:var(--bg);border:1px solid var(--line)}
+.fpv small{font-size:10px;font-weight:700;color:var(--dim);line-height:1.3}
+.fpv b{font-family:var(--en);font-size:14px;font-weight:800;color:var(--fg);direction:ltr;font-variant-numeric:tabular-nums}
+.fpv .fc b{color:#FFD24A}
+.cal-more{padding:4px 16px 18px 16px;display:flex;flex-direction:column;gap:12px}
+.cal-more .what{margin:0;font-size:14px;color:var(--muted);line-height:1.7}
+.scen{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (max-width:640px){.scen{grid-template-columns:minmax(0,1fr)}}
+.scen>div{border-radius:12px;padding:12px 14px;background:var(--bg);border:1px solid var(--line)}
+.scen h4{margin:0 0 10px;font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px}
+.scen h4 .ar{font-family:var(--en);font-weight:900}
+.scen .up h4{color:var(--green)}.scen .dn h4{color:var(--orange)}
+.fx{display:flex;flex-wrap:wrap;gap:6px}
+.fx span{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;font-size:13px;font-weight:700;border:1px solid var(--line-2);background:var(--surface)}
+.fx span i{font-style:normal;font-family:var(--en);font-weight:900}
+.fx .pos{color:var(--green);border-color:var(--green-line);background:var(--green-soft)}
+.fx .neg{color:#F48C78;border-color:#5A3029;background:var(--orange-soft)}
+.fx .neu{color:var(--muted)}
+.cal-more .caveat{margin:0;font-size:12px;color:var(--dim)}
+@media (max-width:640px){
+  .cal-row{grid-template-columns:54px minmax(0,1fr) 28px;row-gap:6px}
+  .cal-row .cur{grid-column:1;grid-row:2}
+  .cal-row .ttl{grid-column:2;grid-row:1/3}
+  .cal-row .fpv{grid-column:1/-1;grid-row:3;justify-content:flex-start}
+  .cal-row .chev{grid-column:3;grid-row:1}
+  .fpv span{flex:1}
+}
 /* ---------- news (own renderer, dark) ---------- */
 .newslist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
 @media (max-width:760px){.newslist{grid-template-columns:minmax(0,1fr)}}
@@ -459,7 +498,7 @@ a.scard{text-decoration:none;color:inherit}
         <div>
           <span class="tag">ECONOMIC CALENDAR</span>
           <h2 id="calTitle">الأخبار الاقتصادية المهمة</h2>
-          <p class="sub">كل الأوقات <b>بتوقيت الكويت</b>. الأخبار <b style="color:var(--red)">عالية التأثير</b> هي اللي تحرّك الذهب والفضة والبتكوين بقوة، مثل الفائدة الأمريكية والوظائف والتضخم.</p>
+          <p class="sub">كل الأوقات <b>بتوقيت الكويت</b>. الأخبار <b style="color:var(--red)">عالية التأثير</b> هي اللي تحرّك الذهب والفضة والبتكوين بقوة، مثل الفائدة الأمريكية والوظائف والتضخم.<br><b style="color:var(--green)">اضغط على أي خبر</b> عشان تشوف تأثيره على الذهب والدولار والبتكوين.</p>
         </div>
         <div class="seg" role="group" aria-label="مستوى أهمية الأخبار">
           <button type="button" data-imp="high" aria-pressed="true">عالية التأثير فقط</button>
@@ -1091,11 +1130,60 @@ function kwParts(t){const d=new Date(t+KW_OFFSET*60000);return{y:d.getUTCFullYea
 function ago(t){const m=Math.round((Date.now()-t)/60000);if(m<1)return'الحين';if(m<60)return'قبل '+m+' دقيقة';const h=Math.round(m/60);if(h<24)return'قبل '+h+(h===1?' ساعة':h===2?' ساعتين':h<=10?' ساعات':' ساعة');const d=Math.round(h/24);return d===1?'أمس':'قبل '+d+' أيام';}
 const esc=x=>String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
+
+/* ============ Impact guide for economic news ============ */
+const GUIDE=[
+  {k:'rate', re:/Funds Rate|Rate Decision|Interest Rate|Cash Rate|Bank Rate|Refinancing Rate|Policy Rate|Deposit Facility/i, up:'hawk',
+   what:'قرار سعر الفائدة. رفع الفائدة أو تثبيتها بنبرة متشددة يقوّي العملة ويضغط على الذهب والأصول عالية المخاطرة.'},
+  {k:'infl', re:/CPI|PCE|PPI|Inflation|Price Index|Employment Cost|Average Hourly Earnings/i, up:'hawk',
+   what:'مؤشر تضخم. إذا جاء أعلى من المتوقع يرتفع احتمال إبقاء الفائدة مرتفعة أو رفعها.'},
+  {k:'unemp', re:/Unemployment Rate/i, up:'weak',
+   what:'نسبة البطالة. ارتفاعها يعني ضعف سوق العمل ويرفع احتمال خفض الفائدة.'},
+  {k:'claims', re:/Claims/i, up:'weak',
+   what:'طلبات إعانة البطالة الأسبوعية. ارتفاعها إشارة ضعف في سوق العمل.'},
+  {k:'jobs', re:/Non-Farm|NFP|ADP|Employment Change|JOLTS|Job Openings|Payrolls/i, up:'hawk',
+   what:'قوة سوق العمل. أرقام أقوى من المتوقع تدعم بقاء الفائدة مرتفعة.'},
+  {k:'growth', re:/GDP|Retail Sales|ISM|PMI|Durable|Industrial Production|Confidence|Sentiment|Housing|Home Sales|Building Permits|Factory Orders|Empire State|Philly|Manufacturing|Services|Trade Balance|Spending/i, up:'hawk',
+   what:'مؤشر على قوة الاقتصاد والنمو. أرقام أقوى من المتوقع تقوّي العملة.'},
+  {k:'speech', re:/Speaks|Testif|Press Conference|Statement|Minutes|Meeting|Speech|Hearing/i, up:null,
+   what:'تصريحات أو محضر لمسؤول في البنك المركزي. ما فيه رقم متوقع، والسوق يتحرك حسب النبرة.'}
+];
+const CUR_AR={USD:'الدولار',EUR:'اليورو',GBP:'الجنيه',JPY:'الين',CNY:'اليوان'};
+function guideFor(e){
+  const g=GUIDE.find(x=>x.re.test(e.t))||{k:'other',up:'hawk',what:'خبر اقتصادي مؤثر على العملة.'};
+  const strong=g.up==='hawk';
+  // effects when the figure comes in ABOVE forecast
+  let up;
+  if(e.c==='USD'){
+    up=strong?[['الدولار','pos'],['الذهب','neg'],['البتكوين','neg']]:[['الدولار','neg'],['الذهب','pos'],['البتكوين','pos']];
+  }else{
+    const cur=CUR_AR[e.c]||e.c;
+    up=strong?[[cur,'pos'],['الدولار (غير مباشر)','neg'],['الذهب (طفيف)','pos'],['البتكوين (محدود)','neu']]
+              :[[cur,'neg'],['الدولار (غير مباشر)','pos'],['الذهب (طفيف)','neg'],['البتكوين (محدود)','neu']];
+  }
+  const flip=x=>x.map(([n,c])=>[n,c==='pos'?'neg':c==='neg'?'pos':'neu']);
+  return {g,up,down:flip(up)};
+}
+function chips(list){return '<div class="fx">'+list.map(([n,c])=>`<span class="${c}">${n} <i>${c==='pos'?'▲':c==='neg'?'▼':'–'}</i></span>`).join('')+'</div>';}
+function guideHtml(e){
+  const {g,up,down}=guideFor(e);
+  let body=`<p class="what">${g.what}</p>`;
+  if(g.up===null){
+    const hawk=e.c==='USD'?[['الدولار','pos'],['الذهب','neg'],['البتكوين','neg']]:[[CUR_AR[e.c]||e.c,'pos'],['الدولار (غير مباشر)','neg'],['الذهب (طفيف)','pos']];
+    body+=`<div class="scen"><div class="up"><h4><span class="ar">▲</span>نبرة متشددة (Hawkish)</h4>${chips(hawk)}</div><div class="dn"><h4><span class="ar">▼</span>نبرة متساهلة (Dovish)</h4>${chips(hawk.map(([n,c])=>[n,c==='pos'?'neg':c==='neg'?'pos':'neu']))}</div></div>`;
+  }else{
+    body+=`<div class="scen"><div class="up"><h4><span class="ar">▲</span>إذا جاء أعلى من المتوقع${e.f?' ('+esc(e.f)+')':''}</h4>${chips(up)}</div><div class="dn"><h4><span class="ar">▼</span>إذا جاء أقل من المتوقع</h4>${chips(down)}</div></div>`;
+  }
+  body+='<p class="caveat">هذا هو التأثير المعتاد للخبر. السوق أحياناً يتحرك عكس المتوقع إذا كان الخبر مسعّر مسبقاً، فانتظر التأكيد.</p>';
+  return body;
+}
+
 /* ============ Economic calendar ============ */
 let CAL=[],calImp='high';
 const IMP={High:'hi',Medium:'md',Low:'lo',Holiday:'ho'};
 function renderCalendar(){
   const box=document.getElementById('calList');
+  const openKeys=new Set([...box.querySelectorAll('details[open]')].map(d=>d.dataset.k));
   if(!CAL.length){box.innerHTML='<p class="wfallback">التقويم يتحدّث الحين، ارجع بعد دقائق.</p>';return;}
   const now=Date.now(),todayKey=(p=>p.y+'-'+p.m+'-'+p.d)(kwParts(now));
   const startToday=Date.parse(new Date(now+KW_OFFSET*60000).toISOString().slice(0,10)+'T00:00:00Z')-KW_OFFSET*60000;
@@ -1108,7 +1196,10 @@ function renderCalendar(){
   box.innerHTML=groups.map(g=>`<div class="cal-day"><div class="cal-dh"><span class="cal-date"><b>${g.p.d}</b><span>${AR_MONTHS[g.p.m]}</span></span><span class="dname">${AR_DAYS[g.p.wd]}</span>${g.k===todayKey?'<span class="today">اليوم</span>':''}<span class="cnt">${g.items.length===1?'خبر واحد':g.items.length===2?'خبرين':g.items.length+(g.items.length<11?' أخبار':' خبر')}</span></div>`+
     g.items.map(e=>{const p=kwParts(e.ts),cls=['cal-row',IMP[e.i]||'lo'];if(e.ts<now-5*60000)cls.push('past');if(nextHi&&e===nextHi)cls.push('next');
       const soon=(e.ts>now&&e.ts-now<3*3600000)?`<span class="soon">بعد ${dur(e.ts-now)}</span>`:'';
-      return `<div class="${cls.join(' ')}"><span class="tm">${e.i==='Holiday'?'—':p.hh+':'+p.mm}</span><span class="cur"><i class="imp ${IMP[e.i]||'lo'}" aria-label="${e.i}"></i>${esc(e.c)}</span><span class="ttl">${esc(e.t)}${soon}</span><span class="fp">${e.f?'<span>Fcst <b>'+esc(e.f)+'</b></span>':''}${e.p?'<span>Prev <b>'+esc(e.p)+'</b></span>':''}</span></div>`;}).join('')+`</div>`).join('');
+      const fpv=e.i==='Holiday'?'':`<span class="fpv"><span class="fc"><small>المتوقع</small><b>${e.f?esc(e.f):'—'}</b></span><span><small>السابق</small><b>${e.p?esc(e.p):'—'}</b></span></span>`;
+      const row=`<span class="tm">${e.i==='Holiday'?'—':p.hh+':'+p.mm}</span><span class="cur"><i class="imp ${IMP[e.i]||'lo'}" aria-label="${e.i}"></i>${esc(e.c)}</span><span class="ttl">${esc(e.t)}${soon}</span>${fpv}`;
+      if(e.i==='Holiday')return `<div class="${cls.join(' ')}">${row}<span></span></div>`;
+      return `<details class="cal-item" data-k="${esc(e.d+e.t)}"${openKeys.has(e.d+e.t)?' open':''}><summary class="${cls.join(' ')}">${row}<span class="chev" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></summary><div class="cal-more">${guideHtml(e)}</div></details>`;}).join('')+`</div>`).join('');
   // hero card
   if(nextHi){const p=kwParts(nextHi.ts);document.getElementById('stNews').textContent=nextHi.c+' · '+nextHi.t;
     document.getElementById('stNewsSub').textContent=AR_DAYS[p.wd]+' '+p.hh+':'+p.mm+' بتوقيت الكويت · '+(nextHi.ts>now?'بعد '+dur(nextHi.ts-now):'الحين');}
