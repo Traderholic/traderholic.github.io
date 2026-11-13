@@ -120,8 +120,12 @@ section.block{padding-block:40px}
 .sess h3{margin:0;font-size:22px}
 .sess .city{font-size:14px;color:var(--dim);font-weight:600}
 .sess .hours{font-family:var(--en);font-weight:800;font-size:20px;direction:ltr;text-align:right;font-variant-numeric:tabular-nums}
-.sess .cd{font-size:14px;color:var(--muted)}
+.sess .cd{font-family:var(--en);direction:ltr;text-align:right;font-size:13px;font-weight:700;letter-spacing:1.5px;color:var(--dim)}
+.sess .cd b{letter-spacing:0;font-size:16px}
+.pill.en{font-family:var(--en);letter-spacing:2px;font-size:11px;font-weight:800}
+#stNextSub{font-family:var(--en);text-align:right}
 .sess .cd b{font-family:var(--en);color:var(--fg);font-variant-numeric:tabular-nums}
+.sess.open .cd b{color:var(--green)}
 .sess .bar{position:absolute;inset:0 0 auto 0;height:3px}
 .timeline{margin-top:16px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:18px 18px 12px}
 .tl-rows{direction:ltr;display:flex;flex-direction:column;gap:8px;position:relative}
@@ -248,11 +252,11 @@ footer.site .row{display:flex;justify-content:space-between;align-items:center;g
 .fed-main::after{content:"";position:absolute;inset:auto -60px -80px auto;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(61,203,79,.16),transparent 70%);pointer-events:none}
 .fed-when{margin:0;font-size:16px;color:var(--muted);font-weight:600}
 .fed-when b{color:var(--fg)}
-.cd{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:18px;direction:ltr}
-.cd div{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:14px 6px;text-align:center}
-.cd b{display:block;font-family:var(--en);font-weight:900;font-size:clamp(30px,6vw,46px);line-height:1;color:var(--fg);font-variant-numeric:tabular-nums}
-.cd span{display:block;margin-top:6px;font-size:12px;font-weight:700;color:var(--dim);direction:rtl}
-.cd div:first-child b{color:var(--green)}
+.fed-cd{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:18px;direction:ltr}
+.fed-cd div{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:14px 6px;text-align:center}
+.fed-cd b{display:block;font-family:var(--en);font-weight:900;font-size:clamp(30px,6vw,46px);line-height:1;color:var(--fg);font-variant-numeric:tabular-nums}
+.fed-cd span{display:block;margin-top:6px;font-size:12px;font-weight:700;color:var(--dim);direction:rtl}
+.fed-cd div:first-child b{color:var(--green)}
 .fed-tips{margin:18px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
 .fed-tips li{display:flex;gap:10px;font-size:15px;color:var(--muted)}
 .fed-tips li::before{content:"";width:6px;height:6px;margin-top:10px;border-radius:50%;background:var(--orange);flex-shrink:0}
@@ -486,7 +490,7 @@ a.scard{text-decoration:none;color:inherit}
       <div class="fed">
         <div class="fed-main">
           <p class="fed-when" id="fedWhen">—</p>
-          <div class="cd" aria-live="off">
+          <div class="fed-cd" aria-live="off">
             <div><b id="cdD">--</b><span>يوم</span></div>
             <div><b id="cdH">--</b><span>ساعة</span></div>
             <div><b id="cdM">--</b><span>دقيقة</span></div>
@@ -817,6 +821,8 @@ function zonedToUtc(y,m,d,h,tz){
 }
 const kwFmt=t=>{const d=new Date(t+KW_OFFSET*60000);return String(d.getUTCHours()).padStart(2,'0')+':'+String(d.getUTCMinutes()).padStart(2,'0');};
 const kwDayName=t=>new Intl.DateTimeFormat('ar',{timeZone:'Asia/Kuwait',weekday:'long'}).format(new Date(t));
+function durEn(ms){const m=Math.max(0,Math.round(ms/60000));const h=Math.floor(m/60),mm=m%60;return h>0?(h+'h '+String(mm).padStart(2,'0')+'m'):(mm+'m');}
+const kwDayEn=t=>new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Kuwait',weekday:'short'}).format(new Date(t));
 function dur(ms){const m=Math.max(0,Math.round(ms/60000));const h=Math.floor(m/60),mm=m%60;return h>0?(h+' س '+mm+' د'):(mm+' د');}
 
 /* ============ Sessions ============ */
@@ -853,7 +859,7 @@ const cards=document.getElementById('sessCards');
 cards.innerHTML=SESSIONS.map(s=>`
   <article class="sess" id="s-${s.id}">
     <span class="bar" style="background:${s.color}"></span>
-    <div class="top"><div><h3>${s.name}</h3><span class="city">${s.city}</span></div><span class="pill off" data-st>مغلقة</span></div>
+    <div class="top"><div><h3>${s.name}</h3><span class="city">${s.city}</span></div><span class="pill off en" data-st>CLOSED</span></div>
     <div class="hours" data-h>--:-- – --:--</div>
     <div class="cd" data-cd></div>
   </article>`).join('');
@@ -877,12 +883,12 @@ function renderSessions(){
     el.querySelector('[data-h]').textContent=kwFmt(ref.open)+' – '+kwFmt(ref.close);
     const st=el.querySelector('[data-st]');
     if(cur){
-      el.classList.add('open');st.className='pill';st.textContent='مفتوحة الآن';
-      el.querySelector('[data-cd]').innerHTML='تقفل بعد <b>'+dur(cur.close-now)+'</b>';
+      el.classList.add('open');st.className='pill en';st.textContent='OPEN';
+      el.querySelector('[data-cd]').innerHTML='CLOSES IN <b>'+durEn(cur.close-now)+'</b>';
       openNames.push(s.name);
     }else{
-      el.classList.remove('open');st.className='pill off';st.textContent='مغلقة';
-      el.querySelector('[data-cd]').innerHTML=nxt?('تفتح بعد <b>'+dur(nxt.open-now)+'</b>'+(nxt.open-now>864e5*0.75?' · '+kwDayName(nxt.open):'')):'';
+      el.classList.remove('open');st.className='pill off en';st.textContent='CLOSED';
+      el.querySelector('[data-cd]').innerHTML=nxt?('OPENS IN <b>'+durEn(nxt.open-now)+'</b>'+(nxt.open-now>864e5*0.75?' · '+kwDayEn(nxt.open).toUpperCase():'')):'';
     }
     if(nxt&&(!nextOpen||nxt.open<nextOpen.t))nextOpen={t:nxt.open,name:s.name};
     // timeline segments for the Kuwait calendar day
@@ -915,7 +921,7 @@ function renderSessions(){
       setStatus('مفتوحة: '+openNames.join(' + '),ovNow?'وقت التداخل: أعلى سيولة في اليوم':'السوق نشط');
     }else setStatus('بين الجلسات','سيولة منخفضة نسبياً');
   }
-  if(nextOpen){document.getElementById('stNext').textContent=nextOpen.name+' · '+kwFmt(nextOpen.t);document.getElementById('stNextSub').textContent='بعد '+dur(nextOpen.t-now);}
+  if(nextOpen){document.getElementById('stNext').textContent=nextOpen.name+' · '+kwFmt(nextOpen.t);document.getElementById('stNextSub').textContent='Opens in '+durEn(nextOpen.t-now);document.getElementById('stNextSub').dir='ltr';}
 }
 function setStatus(v,s){document.getElementById('stMarket').textContent=v;document.getElementById('stMarketSub').textContent=s;}
 
