@@ -136,15 +136,16 @@ section.block{padding-block:40px}
 .hol{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 @media (max-width:760px){.hol{grid-template-columns:minmax(0,1fr)}}
 .hitem{display:grid;grid-template-columns:76px minmax(0,1fr);gap:14px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:12px 14px}
-.hitem.soon{border-color:#5A3029;background:linear-gradient(90deg,var(--surface) 60%,#24171499)}
-.hdate{display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);border-radius:12px;padding:8px 4px;text-align:center}
-.hdate b{font-family:var(--en);font-size:24px;line-height:1;font-weight:800}
+.hitem.soon{border-color:#5A3029;background:linear-gradient(270deg,var(--surface) 55%,#2A1714)}
+.hdate{display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--green-soft);border:1px solid var(--green-line);border-radius:12px;padding:8px 4px;text-align:center}
+.hdate b{font-family:var(--en);font-size:24px;line-height:1;font-weight:900;color:var(--green)}
+.hitem.soon .hdate{background:#2A1714;border-color:#5A3029}.hitem.soon .hdate b{color:var(--orange)}
 .hdate span{font-size:12px;color:var(--muted);font-weight:600;margin-top:4px}
 .hinfo{min-width:0;display:flex;flex-direction:column;gap:4px}
 .hinfo .n{font-weight:700;font-size:16px}
 .hinfo .m{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px;color:var(--muted)}
 .flag{font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;border:1px solid var(--line-2);color:var(--fg);background:var(--surface-2)}
-.flag.us{border-color:#2C4A73}.flag.uk{border-color:#5A3B73}.flag.eu{border-color:#2C5A73}.flag.cn{border-color:#73302C}
+.flag.us{border-color:var(--orange);color:#F4B3A5;background:var(--orange-soft)}.flag.uk,.flag.eu{border-color:var(--green-line);color:var(--green);background:var(--green-soft)}.flag.cn{border-color:#5C4A1E;color:var(--gold);background:#1F1A0C}
 .more{margin-top:14px}
 
 /* calculator */
@@ -213,11 +214,89 @@ footer.site{border-top:1px solid var(--line);margin-top:40px;padding-block:28px 
 footer.site .row{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
 .disclaimer{max-width:70ch;line-height:1.7}
 
-/* lightbox */
-dialog{border:0;padding:0;background:transparent;max-width:min(92vw,560px)}
-dialog::backdrop{background:rgba(0,0,0,.82)}
-dialog img{border-radius:14px;max-height:86vh;width:auto;margin:0 auto}
-dialog form{text-align:center;margin-top:10px}
+
+/* ---------- THE 1% CLUB hero ---------- */
+.club{font-family:var(--en);text-align:left;min-width:0}
+.club-tag{margin:0;display:inline-flex;align-items:center;gap:10px;font-size:12px;font-weight:800;letter-spacing:4px;color:var(--orange)}
+.club-tag::before{content:"";width:28px;height:2px;background:var(--orange)}
+.club h1{margin:10px 0 12px;font-family:var(--en);font-weight:900;font-size:clamp(46px,8.4vw,92px);line-height:.95;letter-spacing:-1px;text-wrap:balance}
+.club h1 span{color:transparent;-webkit-text-stroke:2px var(--green);background:linear-gradient(180deg,rgba(61,203,79,.0) 40%,rgba(61,203,79,.22) 100%);-webkit-background-clip:text;background-clip:text;padding:0 4px}
+.club-lead{margin:0;font-size:clamp(17px,2.2vw,21px);line-height:1.5;color:var(--muted);font-weight:600}
+.club-lead b{color:var(--fg);font-weight:800}
+.club-pillars{list-style:none;margin:18px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.club-pillars li{font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;padding:7px 12px;border-radius:999px;border:1px solid var(--line-2);color:var(--fg);background:var(--surface)}
+.club-pillars li:nth-child(2){border-color:#5A3029;color:#F4B3A5}
+.club-pillars li:nth-child(3){border-color:var(--green-line);color:var(--green)}
+.quote{margin:22px 0 0;padding:20px 22px 16px;border-radius:var(--r-lg);background:var(--surface);border:1px solid var(--line);position:relative;overflow:hidden}
+.quote::before{content:"\201C";position:absolute;right:14px;top:-18px;font-family:Georgia,serif;font-size:130px;line-height:1;color:var(--green);opacity:.12}
+.quote-k{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:800;letter-spacing:3px;color:var(--dim)}
+.qdot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 0 4px rgba(61,203,79,.16);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 7px rgba(61,203,79,0)}}
+.quote-t{margin:12px 0 0;min-height:3.1em;font-size:clamp(18px,2.3vw,22px);line-height:1.45;font-weight:700;color:var(--fg)}
+.caret{display:inline-block;width:2px;height:1em;margin-left:3px;vertical-align:-.12em;background:var(--green);animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.quote-a{margin:10px 0 0;font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--green);opacity:0;transform:translateY(6px);transition:opacity .6s,transform .6s}
+.quote-a.on{opacity:1;transform:none}
+.quote-t.out{opacity:0;filter:blur(6px);transform:translateY(-6px);transition:opacity .5s,filter .5s,transform .5s}
+.quote-bar{margin-top:14px;height:2px;background:var(--line);border-radius:2px;overflow:hidden}
+.quote-bar span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--orange),var(--green))}
+@media (prefers-reduced-motion:reduce){.caret{display:none}}
+
+/* next high-impact card */
+a.scard{text-decoration:none;color:inherit}
+.news-next{border-color:#5A3029;background:linear-gradient(90deg,var(--surface) 55%,#2A1714)}
+.news-next .k{display:flex;align-items:center;gap:8px}
+.news-next .v{font-family:var(--en);font-size:18px}
+
+/* impact markers */
+.imp{display:inline-block;width:10px;height:10px;border-radius:3px;flex-shrink:0}
+.imp.hi{background:var(--red);box-shadow:0 0 0 3px rgba(240,82,82,.18)}
+.imp.md{background:#F2A23C}
+.imp.lo{background:#E8C547;opacity:.7}
+.imp.ho{background:var(--dim)}
+
+/* ---------- calendar (own renderer, dark) ---------- */
+.cal{max-height:720px;overflow:auto;overscroll-behavior:contain}
+.cal-day{border-bottom:1px solid var(--line)}
+.cal-day:last-child{border-bottom:0}
+.cal-dh{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:12px;padding:12px 16px;background:#11161C;border-bottom:1px solid var(--line)}
+.cal-date{display:inline-flex;align-items:baseline;gap:8px;padding:6px 14px;border-radius:10px;background:#FFD24A;color:#14110A;font-weight:800}
+.cal-date b{font-family:var(--en);font-size:20px;font-weight:900;line-height:1}
+.cal-date span{font-size:14px}
+.cal-dh .dname{font-weight:700;font-size:16px;color:var(--fg)}
+.cal-dh .today{font-size:12px;font-weight:800;padding:3px 10px;border-radius:999px;background:var(--green);color:var(--green-ink)}
+.cal-dh .cnt{margin-inline-start:auto;font-size:13px;color:var(--dim);font-weight:600}
+.cal-row{display:grid;grid-template-columns:62px 56px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 16px;border-top:1px solid #1C222A}
+.cal-row:first-of-type{border-top:0}
+.cal-row .tm{font-family:var(--en);font-weight:800;font-size:15px;direction:ltr;text-align:right;font-variant-numeric:tabular-nums}
+.cal-row .cur{display:flex;align-items:center;gap:6px;font-family:var(--en);font-weight:800;font-size:13px;color:var(--muted)}
+.cal-row .ttl{font-family:var(--en);direction:ltr;text-align:right;font-weight:600;font-size:15px;line-height:1.4;min-width:0}
+.cal-row .fp{display:flex;gap:10px;font-family:var(--en);font-size:12px;color:var(--dim);direction:ltr;white-space:nowrap}
+.cal-row .fp b{color:var(--muted);font-weight:700}
+.cal-row.hi .ttl{color:#FFFFFF}
+.cal-row.hi{background:linear-gradient(270deg,rgba(240,82,82,.08),transparent 60%)}
+.cal-row.past{opacity:.45}
+.cal-row.next{box-shadow:inset -3px 0 0 var(--green);background:linear-gradient(270deg,rgba(61,203,79,.10),transparent 70%)}
+.cal-row .soon{font-family:var(--ar);font-size:11px;font-weight:800;color:var(--green);margin-inline-start:6px}
+@media (max-width:640px){
+  .cal-row{grid-template-columns:54px minmax(0,1fr);row-gap:4px}
+  .cal-row .cur{grid-column:1;grid-row:2;font-size:12px}
+  .cal-row .ttl{grid-column:2;grid-row:1/3}
+  .cal-row .fp{grid-column:2;grid-row:3;justify-content:flex-end}
+  .cal-dh{padding:10px 12px}
+}
+
+/* ---------- news (own renderer, dark) ---------- */
+.newslist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+@media (max-width:760px){.newslist{grid-template-columns:minmax(0,1fr)}}
+.nitem{display:flex;flex-direction:column;gap:8px;padding:16px 18px;text-decoration:none;color:var(--fg);border-bottom:1px solid var(--line);border-left:1px solid var(--line);min-width:0}
+.nitem:hover{background:var(--surface-2)}
+.nitem .nt{font-size:16px;font-weight:700;line-height:1.6}
+.nitem .nm{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--dim);font-weight:600}
+.nitem .src{color:var(--green)}
+.nitem .new{font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;background:var(--orange);color:#1A0E0B}
+.nitem.lead{grid-column:1/-1;background:linear-gradient(90deg,var(--surface) 50%,#14231A)}
+.nitem.lead .nt{font-size:19px}
 </style>
 </head>
 <body>
@@ -256,14 +335,21 @@ dialog form{text-align:center;margin-top:10px}
 
     <!-- HERO -->
     <section class="hero" aria-labelledby="heroTitle">
-      <div>
-        <p class="eyebrow">منصة المتداول</p>
-        <h1 id="heroTitle">كل اللي تحتاجه <span>قبل ما تدخل الصفقة</span></h1>
-        <p class="lead">الأخبار الاقتصادية المهمة، أسعار الذهب والفضة والبتكوين لحظياً، أوقات الجلسات، العطل اللي تأثر على السيولة، وحاسبة حجم اللوت. كلها تتحدّث تلقائياً.</p>
-        <div class="hero-actions">
-          <a class="btn" href="#calendar">أخبار اليوم المهمة</a>
-          <a class="btn ghost" href="#calculator">احسب حجم اللوت</a>
-        </div>
+      <div class="club" dir="ltr" lang="en">
+        <p class="club-tag">TRADER HOLIC PRESENTS</p>
+        <h1 id="heroTitle">THE <span>1%</span> CLUB</h1>
+        <p class="club-lead">Most traders chase the market.<br><b>The 1% let it come to them.</b></p>
+        <ul class="club-pillars" aria-label="Principles">
+          <li>Read the structure</li>
+          <li>Respect the risk</li>
+          <li>Master yourself</li>
+        </ul>
+        <figure class="quote" aria-live="polite">
+          <figcaption class="quote-k"><span class="qdot" aria-hidden="true"></span>WISDOM FROM THE GREATS</figcaption>
+          <blockquote class="quote-t"><span id="quoteText"></span><span class="caret" aria-hidden="true"></span></blockquote>
+          <p class="quote-a" id="quoteAuthor"></p>
+          <div class="quote-bar" aria-hidden="true"><span id="quoteBar"></span></div>
+        </figure>
       </div>
       <div class="status" aria-live="polite">
         <div class="scard wide">
@@ -281,6 +367,11 @@ dialog form{text-align:center;margin-top:10px}
           <span class="v" id="stHol">—</span>
           <span class="s" id="stHolSub"></span>
         </div>
+        <a class="scard wide news-next" href="#calendar">
+          <span class="k"><i class="imp hi" aria-hidden="true"></i>الخبر القادم عالي التأثير</span>
+          <span class="v" id="stNews" dir="auto">—</span>
+          <span class="s" id="stNewsSub"></span>
+        </a>
       </div>
     </section>
 
@@ -290,21 +381,21 @@ dialog form{text-align:center;margin-top:10px}
         <div>
           <span class="tag">ECONOMIC CALENDAR</span>
           <h2 id="calTitle">الأخبار الاقتصادية المهمة</h2>
-          <p class="sub">التقويم يتحدّث لحظياً، والأوقات تظهر بتوقيت جهازك. الأخبار <b style="color:var(--red)">عالية التأثير</b> هي اللي تحرّك الذهب والفضة والبتكوين بقوة، مثل الفائدة الأمريكية والوظائف والتضخم.</p>
+          <p class="sub">كل الأوقات <b>بتوقيت الكويت</b>. الأخبار <b style="color:var(--red)">عالية التأثير</b> هي اللي تحرّك الذهب والفضة والبتكوين بقوة، مثل الفائدة الأمريكية والوظائف والتضخم.</p>
         </div>
         <div class="seg" role="group" aria-label="مستوى أهمية الأخبار">
-          <button type="button" data-imp="1" aria-pressed="true">عالية التأثير فقط</button>
-          <button type="button" data-imp="0,1" aria-pressed="false">متوسطة وعالية</button>
-          <button type="button" data-imp="-1,0,1" aria-pressed="false">الكل</button>
+          <button type="button" data-imp="high" aria-pressed="true">عالية التأثير فقط</button>
+          <button type="button" data-imp="med" aria-pressed="false">متوسطة وعالية</button>
+          <button type="button" data-imp="all" aria-pressed="false">الكل</button>
         </div>
       </div>
-      <div class="panel"><div class="widget" id="calWidget" style="height:640px"></div></div>
-      <ul class="legend" aria-label="الدول المعروضة">
-        <li><i style="background:#3B82F6"></i>أمريكا (الأهم للذهب والبتكوين)</li>
-        <li><i style="background:#38BDF8"></i>منطقة اليورو</li>
-        <li><i style="background:#A78BFA"></i>بريطانيا</li>
-        <li><i style="background:#F87171"></i>الصين</li>
-        <li><i style="background:#FBBF24"></i>اليابان</li>
+      <div class="panel cal" id="calList" aria-live="polite"><p class="wfallback">جاري تحميل التقويم…</p></div>
+      <ul class="legend" aria-label="مفتاح الألوان">
+        <li><i class="imp hi"></i>عالي التأثير</li>
+        <li><i class="imp md"></i>متوسط</li>
+        <li><i class="imp lo"></i>منخفض</li>
+        <li><i class="imp ho"></i>عطلة</li>
+        <li id="calUpdated" style="margin-inline-start:auto"></li>
       </ul>
       <p class="note">نصيحة: تجنّب الدخول قبل الخبر عالي التأثير بـ 15 دقيقة وبعده بـ 15 دقيقة، لأن السبريد يتسع والحركة تكون عشوائية.</p>
     </section>
@@ -358,15 +449,16 @@ dialog form{text-align:center;margin-top:10px}
         <div>
           <span class="tag">LATEST NEWS</span>
           <h2 id="nwTitle">آخر الأخبار</h2>
-          <p class="sub">أخبار عاجلة تتحدّث تلقائياً من مصادر عالمية. اضغط على أي خبر عشان تقرأه كامل.</p>
+          <p class="sub">أحدث العناوين من المصادر الإخبارية، تتحدّث تلقائياً كل ربع ساعة. اضغط على أي خبر عشان تقرأه من مصدره.</p>
         </div>
         <div class="seg" role="group" aria-label="نوع الأخبار">
-          <button type="button" data-news="gold" aria-pressed="true">الذهب</button>
+          <button type="button" data-news="gold" aria-pressed="true">الذهب والفضة</button>
           <button type="button" data-news="crypto" aria-pressed="false">البتكوين والكريبتو</button>
-          <button type="button" data-news="all" aria-pressed="false">الأسواق العالمية</button>
+          <button type="button" data-news="markets" aria-pressed="false">الاقتصاد والأسواق</button>
         </div>
       </div>
-      <div class="panel"><div class="widget" id="newsWidget" style="height:620px"></div></div>
+      <div class="panel newslist" id="newsList" aria-live="polite"><p class="wfallback">جاري تحميل الأخبار…</p></div>
+      <p class="note" id="newsUpdated"></p>
     </section>
 
     <!-- HOLIDAYS -->
@@ -488,11 +580,6 @@ dialog form{text-align:center;margin-top:10px}
             <a class="btn ghost" href="#contact">تواصل معنا</a>
           </div>
         </article>
-        <div class="gallery">
-          <figure><button type="button" data-zoom="assets/emblem.jpg" aria-label="تكبير شعار Trader Holic"><img src="assets/emblem.jpg" alt="شعار Trader Holic" loading="lazy"></button><figcaption>Trader Holic</figcaption></figure>
-          <figure><button type="button" data-zoom="assets/course-story.jpg" aria-label="تكبير بوستر موعد الدورة"><img src="assets/course-story.jpg" alt="بوستر موعد الدورة" loading="lazy"></button><figcaption>موعد الدورة</figcaption></figure>
-          <figure><button type="button" data-zoom="assets/before-course.jpg" aria-label="تكبير إرشادات ما قبل الدورة"><img src="assets/before-course.jpg" alt="إرشادات ما قبل الدورة" loading="lazy"></button><figcaption>قبل انطلاق الدورة</figcaption></figure>
-        </div>
       </div>
     </section>
 
@@ -516,15 +603,10 @@ dialog form{text-align:center;margin-top:10px}
 
 <footer class="site">
   <div class="container row">
-    <p class="disclaimer">المحتوى في هذا الموقع لأغراض تعليمية فقط وليس توصية بالشراء أو البيع. التداول في الأسواق المالية ينطوي على مخاطر عالية. الأسعار والأخبار والتقويم مقدّمة من TradingView.</p>
+    <p class="disclaimer">المحتوى في هذا الموقع لأغراض تعليمية فقط وليس توصية بالشراء أو البيع. التداول في الأسواق المالية ينطوي على مخاطر عالية. الأسعار والشارت من TradingView، والتقويم الاقتصادي من ForexFactory، وعناوين الأخبار من مصادرها عبر Google News.</p>
     <p class="en">© <span id="yr">2026</span> TRADER HOLIC</p>
   </div>
 </footer>
-
-<dialog id="lightbox" aria-label="عرض الصورة">
-  <img id="lbImg" src="" alt="">
-  <form method="dialog"><button class="btn ghost" type="submit">إغلاق</button></form>
-</dialog>
 
 <script>
 /* ============ SETTINGS — عدّل هنا ============ */
@@ -548,24 +630,19 @@ const LOC='ar_AE';
 
 tv(document.getElementById('ticker'),'embed-widget-ticker-tape.js',{
   symbols:[
-    {proName:'OANDA:XAUUSD',title:'الذهب'},
-    {proName:'OANDA:XAGUSD',title:'الفضة'},
-    {proName:'BITSTAMP:BTCUSD',title:'البتكوين'},
-    {proName:'BITSTAMP:ETHUSD',title:'الإيثيريوم'},
-    {proName:'CAPITALCOM:DXY',title:'مؤشر الدولار'},
-    {proName:'FX:EURUSD',title:'EUR/USD'},
-    {proName:'TVC:USOIL',title:'النفط'}
+    {proName:'BITSTAMP:BTCUSD',title:'Bitcoin'},
+    {proName:'OANDA:XAUUSD',title:'Gold'},
+    {proName:'OANDA:XAGUSD',title:'Silver'},
+    {proName:'FOREXCOM:SPXUSD',title:'S&P 500'},
+    {proName:'FOREXCOM:NSXUSD',title:'Nasdaq 100'},
+    {proName:'NASDAQ:NVDA',title:'NVIDIA'},
+    {proName:'NASDAQ:TSLA',title:'Tesla'},
+    {proName:'NASDAQ:SPCX',title:'SpaceX'},
+    {proName:'COINBASE:SOLUSD',title:'Solana'},
+    {proName:'BITSTAMP:ETHUSD',title:'Ethereum'}
   ],
   showSymbolLogo:true,isTransparent:true,displayMode:'adaptive',colorTheme:'dark',locale:LOC
 });
-
-function loadCalendar(imp){
-  tv(document.getElementById('calWidget'),'embed-widget-events.js',{
-    colorTheme:'dark',isTransparent:true,width:'100%',height:'100%',locale:LOC,
-    importanceFilter:imp,countryFilter:'us,eu,gb,cn,jp'
-  });
-}
-loadCalendar('1');
 
 function mini(id,symbol){
   tv(document.getElementById(id),'embed-widget-mini-symbol-overview.js',{
@@ -584,18 +661,6 @@ function loadChart(symbol){
 }
 loadChart('OANDA:XAUUSD');
 
-const NEWS={
-  gold:{feedMode:'symbol',symbol:'OANDA:XAUUSD'},
-  crypto:{feedMode:'market',market:'crypto'},
-  all:{feedMode:'all_symbols'}
-};
-function loadNews(k){
-  tv(document.getElementById('newsWidget'),'embed-widget-timeline.js',Object.assign({
-    isTransparent:true,displayMode:'regular',width:'100%',height:'100%',colorTheme:'dark',locale:LOC
-  },NEWS[k]));
-}
-loadNews('gold');
-
 function segGroup(attr,fn){
   const btns=[...document.querySelectorAll('[data-'+attr+']')];
   btns.forEach(b=>b.addEventListener('click',()=>{
@@ -603,9 +668,7 @@ function segGroup(attr,fn){
     fn(b.dataset[attr.replace(/-([a-z])/g,(m,c)=>c.toUpperCase())]);
   }));
 }
-segGroup('imp',loadCalendar);
 segGroup('chart',loadChart);
-segGroup('news',loadNews);
 
 /* ============ Time helpers ============ */
 const KW_OFFSET=3*60; // Kuwait is UTC+3, no daylight saving
@@ -847,6 +910,106 @@ renderHolidays();
   $('calcForm').addEventListener('input',calc);$('calcForm').addEventListener('submit',e=>e.preventDefault());calc();
 })();
 
+
+/* ============ THE 1% CLUB — rotating quotes ============ */
+const QUOTES=[
+  ['The stock market is a device for transferring money from the impatient to the patient.','Warren Buffett'],
+  ['Rule No. 1: Never lose money. Rule No. 2: Never forget Rule No. 1.','Warren Buffett'],
+  ['Be fearful when others are greedy, and greedy when others are fearful.','Warren Buffett'],
+  ['Risk comes from not knowing what you are doing.','Warren Buffett'],
+  ['The investor’s chief problem, and even his worst enemy, is likely to be himself.','Benjamin Graham'],
+  ['The elements of good trading are: cutting losses, cutting losses, and cutting losses.','Ed Seykota'],
+  ['Win or lose, everybody gets what they want out of the market.','Ed Seykota'],
+  ['Don’t focus on making money; focus on protecting what you have.','Paul Tudor Jones'],
+  ['Losers average losers.','Paul Tudor Jones'],
+  ['It’s not whether you’re right or wrong, but how much you make when you’re right and how much you lose when you’re wrong.','George Soros'],
+  ['The four most dangerous words in investing are: this time it’s different.','Sir John Templeton'],
+  ['There is nothing new in Wall Street. There can’t be, because speculation is as old as the hills.','Jesse Livermore'],
+  ['Know what you own, and know why you own it.','Peter Lynch'],
+  ['In investing, what is comfortable is rarely profitable.','Robert Arnott'],
+  ['The market can remain irrational longer than you can remain solvent.','John Maynard Keynes'],
+  ['Amateurs think about how much money they can make. Professionals think about how much they could lose.','Jack Schwager']
+];
+const QUOTE_EVERY=3*60*1000; // كل 3 دقائق
+(function quotes(){
+  const tEl=document.getElementById('quoteText'),aEl=document.getElementById('quoteAuthor'),bar=document.getElementById('quoteBar');
+  if(!tEl)return;
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let idx=Math.floor(Math.random()*QUOTES.length),timer=null;
+  function type(text,done){
+    if(reduce){tEl.textContent='“'+text+'”';done();return;}
+    const full='“'+text+'”';let i=0;tEl.textContent='';
+    (function step(){tEl.textContent=full.slice(0,++i);if(i<full.length)timer=setTimeout(step,22);else done();})();
+  }
+  function show(){
+    const [q,a]=QUOTES[idx];
+    const box=tEl.parentElement;aEl.classList.remove('on');box.classList.add('out');
+    setTimeout(()=>{box.classList.remove('out');type(q,()=>{aEl.textContent='— '+a;aEl.classList.add('on');});},reduce?0:500);
+    if(bar){bar.style.transition='none';bar.style.width='0';requestAnimationFrame(()=>requestAnimationFrame(()=>{bar.style.transition='width '+QUOTE_EVERY+'ms linear';bar.style.width='100%';}));}
+    idx=(idx+1)%QUOTES.length;
+  }
+  aEl.classList.remove('on');show();setInterval(()=>{clearTimeout(timer);show();},QUOTE_EVERY);
+})();
+
+/* ============ Shared formatting ============ */
+const AR_DAYS=['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+const AR_MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+function kwParts(t){const d=new Date(t+KW_OFFSET*60000);return{y:d.getUTCFullYear(),m:d.getUTCMonth(),d:d.getUTCDate(),wd:d.getUTCDay(),hh:String(d.getUTCHours()).padStart(2,'0'),mm:String(d.getUTCMinutes()).padStart(2,'0')};}
+function ago(t){const m=Math.round((Date.now()-t)/60000);if(m<1)return'الحين';if(m<60)return'قبل '+m+' دقيقة';const h=Math.round(m/60);if(h<24)return'قبل '+h+(h===1?' ساعة':h===2?' ساعتين':h<=10?' ساعات':' ساعة');const d=Math.round(h/24);return d===1?'أمس':'قبل '+d+' أيام';}
+const esc=x=>String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ============ Economic calendar ============ */
+let CAL=[],calImp='high';
+const IMP={High:'hi',Medium:'md',Low:'lo',Holiday:'ho'};
+function renderCalendar(){
+  const box=document.getElementById('calList');
+  if(!CAL.length){box.innerHTML='<p class="wfallback">التقويم يتحدّث الحين، ارجع بعد دقائق.</p>';return;}
+  const now=Date.now(),todayKey=(p=>p.y+'-'+p.m+'-'+p.d)(kwParts(now));
+  const startToday=Date.parse(new Date(now+KW_OFFSET*60000).toISOString().slice(0,10)+'T00:00:00Z')-KW_OFFSET*60000;
+  let list=CAL.filter(e=>e.ts>=startToday);
+  if(calImp==='high')list=list.filter(e=>e.i==='High'||e.i==='Holiday');
+  else if(calImp==='med')list=list.filter(e=>e.i!=='Low');
+  const nextHi=CAL.find(e=>e.i==='High'&&e.ts>=now-5*60000);
+  if(!list.length){box.innerHTML='<p class="wfallback">ما فيه أخبار بهالمستوى في الأيام الجاية.</p>';return;}
+  const groups=[];list.forEach(e=>{const p=kwParts(e.ts),k=p.y+'-'+p.m+'-'+p.d;let g=groups[groups.length-1];if(!g||g.k!==k){g={k,p,items:[]};groups.push(g);}g.items.push(e);});
+  box.innerHTML=groups.map(g=>`<div class="cal-day"><div class="cal-dh"><span class="cal-date"><b>${g.p.d}</b><span>${AR_MONTHS[g.p.m]}</span></span><span class="dname">${AR_DAYS[g.p.wd]}</span>${g.k===todayKey?'<span class="today">اليوم</span>':''}<span class="cnt">${g.items.length===1?'خبر واحد':g.items.length===2?'خبرين':g.items.length+(g.items.length<11?' أخبار':' خبر')}</span></div>`+
+    g.items.map(e=>{const p=kwParts(e.ts),cls=['cal-row',IMP[e.i]||'lo'];if(e.ts<now-5*60000)cls.push('past');if(nextHi&&e===nextHi)cls.push('next');
+      const soon=(e.ts>now&&e.ts-now<3*3600000)?`<span class="soon">بعد ${dur(e.ts-now)}</span>`:'';
+      return `<div class="${cls.join(' ')}"><span class="tm">${e.i==='Holiday'?'—':p.hh+':'+p.mm}</span><span class="cur"><i class="imp ${IMP[e.i]||'lo'}" aria-label="${e.i}"></i>${esc(e.c)}</span><span class="ttl">${esc(e.t)}${soon}</span><span class="fp">${e.f?'<span>Fcst <b>'+esc(e.f)+'</b></span>':''}${e.p?'<span>Prev <b>'+esc(e.p)+'</b></span>':''}</span></div>`;}).join('')+`</div>`).join('');
+  // hero card
+  if(nextHi){const p=kwParts(nextHi.ts);document.getElementById('stNews').textContent=nextHi.c+' · '+nextHi.t;
+    document.getElementById('stNewsSub').textContent=AR_DAYS[p.wd]+' '+p.hh+':'+p.mm+' بتوقيت الكويت · '+(nextHi.ts>now?'بعد '+dur(nextHi.ts-now):'الحين');}
+  else{document.getElementById('stNews').textContent='ما فيه أخبار قوية قريبة';document.getElementById('stNewsSub').textContent='';}
+}
+async function loadCalendarData(){
+  try{
+    const r=await fetch('data/calendar.json?v='+Math.floor(Date.now()/300000),{cache:'no-store'});if(!r.ok)throw 0;
+    const j=await r.json();CAL=(j.events||[]).map(e=>Object.assign(e,{ts:Date.parse(e.d)})).filter(e=>!isNaN(e.ts)).sort((a,b)=>a.ts-b.ts);
+    const u=document.getElementById('calUpdated');if(u&&j.updated)u.textContent='آخر تحديث: '+ago(Date.parse(j.updated));
+  }catch(_){CAL=[];}
+  renderCalendar();
+}
+segGroup('imp',v=>{calImp=v;renderCalendar();});
+loadCalendarData();setInterval(loadCalendarData,10*60000);setInterval(renderCalendar,60000);
+
+/* ============ News ============ */
+let NEWSDATA=null,newsKey='gold';
+function renderNews(){
+  const box=document.getElementById('newsList');
+  const items=(NEWSDATA&&NEWSDATA[newsKey])||[];
+  if(!items.length){box.innerHTML='<p class="wfallback">الأخبار تتحدّث الحين، ارجع بعد دقائق.</p>';return;}
+  box.innerHTML=items.slice(0,13).map((n,i)=>{const t=Date.parse(n.d),fresh=Date.now()-t<2*3600000;
+    return `<a class="nitem${i===0?' lead':''}" href="${esc(n.u)}" target="_blank" rel="noopener"><span class="nt" dir="auto">${esc(n.t)}</span><span class="nm">${fresh?'<span class="new">جديد</span>':''}<span class="src">${esc(n.s||'')}</span><span>${ago(t)}</span></span></a>`;}).join('');
+}
+async function loadNewsData(){
+  try{const r=await fetch('data/news.json?v='+Math.floor(Date.now()/300000),{cache:'no-store'});if(!r.ok)throw 0;NEWSDATA=await r.json();
+    const u=document.getElementById('newsUpdated');if(u&&NEWSDATA.updated)u.textContent='آخر تحديث للأخبار: '+ago(Date.parse(NEWSDATA.updated))+' · تتحدّث تلقائياً كل 15 دقيقة.';}
+  catch(_){NEWSDATA=null;}
+  renderNews();
+}
+segGroup('news',v=>{newsKey=v;renderNews();});
+loadNewsData();setInterval(loadNewsData,5*60000);
+
 /* ============ Misc ============ */
 document.getElementById('courseDate').textContent=SETTINGS.courseDate;
 document.getElementById('yr').textContent=new Date().getFullYear();
@@ -854,12 +1017,6 @@ document.getElementById('copyPhone').addEventListener('click',async e=>{
   const b=e.currentTarget;try{await navigator.clipboard.writeText('+'+SETTINGS.whatsapp);b.textContent='تم النسخ ✓';}catch(_){b.textContent='+965 9998 0548';}
   setTimeout(()=>b.textContent='نسخ الرقم',2200);
 });
-const lb=document.getElementById('lightbox');
-document.querySelectorAll('[data-zoom]').forEach(b=>b.addEventListener('click',()=>{
-  const img=document.getElementById('lbImg');img.src=b.dataset.zoom;img.alt=b.getAttribute('aria-label').replace('تكبير ','');
-  if(lb.showModal)lb.showModal();
-}));
-lb.addEventListener('click',e=>{if(e.target===lb)lb.close();});
 </script>
 </body>
 </html>
