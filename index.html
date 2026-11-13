@@ -10,6 +10,12 @@
 <meta property="og:description" content="كل اللي يحتاجه المتداول في مكان واحد: الأخبار المهمة، الأسعار اللحظية، الجلسات، العطل وحاسبة اللوت.">
 <meta property="og:image" content="assets/emblem.jpg">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Trader Holic">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Montserrat:wght@600;700;800;900&display=swap">
@@ -220,6 +226,59 @@ footer.site .row{display:flex;justify-content:space-between;align-items:center;g
 .disclaimer{max-width:70ch;line-height:1.7}
 
 
+
+/* ---------- high-impact news alert ---------- */
+.alert{display:flex;align-items:center;gap:12px;padding:10px 0;background:linear-gradient(90deg,#3A1512,#5A1F18);border-top:1px solid #7A2A20;color:#FFE3DD}
+.alert .container{display:flex;align-items:center;gap:12px;width:100%}
+.alert .siren{width:10px;height:10px;border-radius:50%;background:var(--red);flex-shrink:0;animation:siren 1.2s ease-in-out infinite}
+@keyframes siren{50%{box-shadow:0 0 0 8px rgba(240,82,82,0);opacity:.6}0%{box-shadow:0 0 0 0 rgba(240,82,82,.6)}}
+.alert .txt{flex:1;min-width:0;font-size:14px;font-weight:600;line-height:1.5}
+.alert .txt b{font-family:var(--en);font-weight:800;color:#FFFFFF}
+.alert .when{font-family:var(--en);font-weight:900;font-size:16px;color:#FFD24A;white-space:nowrap;font-variant-numeric:tabular-nums}
+.alert a{color:#FFFFFF;font-weight:700;font-size:13px;white-space:nowrap}
+.alert button{all:unset;cursor:pointer;width:32px;height:32px;display:grid;place-items:center;border-radius:8px;color:#FFE3DD}
+.alert button:hover{background:rgba(255,255,255,.08)}
+.alert button:focus-visible{outline:2px solid #FFD24A}
+@media (max-width:600px){.alert .txt{font-size:13px}.alert a{display:none}}
+
+/* ---------- FOMC countdown ---------- */
+.fed{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr);gap:16px}
+@media (max-width:860px){.fed{grid-template-columns:minmax(0,1fr)}}
+.fed-main{position:relative;overflow:hidden;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:26px}
+.fed-main::after{content:"";position:absolute;inset:auto -60px -80px auto;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(61,203,79,.16),transparent 70%);pointer-events:none}
+.fed-when{margin:0;font-size:16px;color:var(--muted);font-weight:600}
+.fed-when b{color:var(--fg)}
+.cd{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:18px;direction:ltr}
+.cd div{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:14px 6px;text-align:center}
+.cd b{display:block;font-family:var(--en);font-weight:900;font-size:clamp(30px,6vw,46px);line-height:1;color:var(--fg);font-variant-numeric:tabular-nums}
+.cd span{display:block;margin-top:6px;font-size:12px;font-weight:700;color:var(--dim);direction:rtl}
+.cd div:first-child b{color:var(--green)}
+.fed-tips{margin:18px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
+.fed-tips li{display:flex;gap:10px;font-size:15px;color:var(--muted)}
+.fed-tips li::before{content:"";width:6px;height:6px;margin-top:10px;border-radius:50%;background:var(--orange);flex-shrink:0}
+.fed-list{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:18px}
+.fed-list h3{margin:0 0 10px;font-size:16px;color:var(--muted)}
+.fed-list ol{list-style:none;margin:0;padding:0}
+.fed-list li{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid var(--line);font-size:15px}
+.fed-list li:first-child{border-top:0}
+.fed-list li.next{color:var(--green);font-weight:700}
+.fed-list .t{font-family:var(--en);font-weight:700;direction:ltr;color:var(--dim);font-variant-numeric:tabular-nums}
+.fed-live{display:none;margin-top:16px;padding:12px 14px;border-radius:12px;background:var(--orange-soft);border:1px solid #5A3029;color:#F4C3B8;font-weight:700}
+.fed-live.on{display:block}
+
+/* ---------- install as app ---------- */
+.app{display:grid;grid-template-columns:auto minmax(0,1fr);gap:22px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:24px}
+@media (max-width:640px){.app{grid-template-columns:minmax(0,1fr);text-align:center;justify-items:center}}
+.app img{width:96px;height:96px;border-radius:22px;box-shadow:0 10px 30px rgba(0,0,0,.45)}
+.app h2{margin:0 0 6px;font-size:clamp(22px,3.6vw,28px)}
+.app p{margin:0;color:var(--muted)}
+.steps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:16px}
+@media (max-width:640px){.steps{grid-template-columns:minmax(0,1fr);text-align:right;width:100%}}
+.step{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.step h3{margin:0 0 8px;font-size:15px;display:flex;align-items:center;gap:8px}
+.step ol{margin:0;padding-inline-start:20px;color:var(--muted);font-size:14px;line-height:1.8}
+.step.me{border-color:var(--green-line);background:var(--green-soft)}
+.app .installed{display:none;color:var(--green);font-weight:700;margin-top:12px}
 /* ---------- THE 1% CLUB hero ---------- */
 .club{font-family:var(--en);text-align:left;min-width:0}
 .club-tag{margin:0;display:inline-flex;align-items:center;gap:10px;font-size:12px;font-weight:800;letter-spacing:4px;color:var(--orange)}
@@ -323,6 +382,7 @@ a.scard{text-decoration:none;color:inherit}
     </div>
     <nav class="nav" aria-label="أقسام الموقع">
       <a href="#calendar">الأخبار المهمة</a>
+      <a href="#fed">الفيدرالي</a>
       <a href="#sessions">الجلسات</a>
       <a href="#prices">Prices &amp; Charts</a>
       <a href="#news">آخر الأخبار</a>
@@ -330,6 +390,15 @@ a.scard{text-decoration:none;color:inherit}
       <a href="#calculator">حاسبة اللوت</a>
       <a href="#course" class="cta">الدورة</a>
     </nav>
+  </div>
+  <div class="alert" id="newsAlert" role="status" hidden>
+    <div class="container">
+      <span class="siren" aria-hidden="true"></span>
+      <span class="txt" id="alertTxt"></span>
+      <span class="when" id="alertWhen"></span>
+      <a href="#calendar">التقويم</a>
+      <button type="button" id="alertClose" aria-label="إخفاء التنبيه"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
   </div>
 </header>
 
@@ -403,6 +472,39 @@ a.scard{text-decoration:none;color:inherit}
         <li id="calUpdated" style="margin-inline-start:auto"></li>
       </ul>
       <p class="note">نصيحة: تجنّب الدخول قبل الخبر عالي التأثير بـ 15 دقيقة وبعده بـ 15 دقيقة، لأن السبريد يتسع والحركة تكون عشوائية.</p>
+    </section>
+
+    <!-- FED -->
+    <section class="block" id="fed" aria-labelledby="fedTitle">
+      <div class="shead">
+        <div>
+          <span class="tag">FED DECISION</span>
+          <h2 id="fedTitle">قرار الفائدة الأمريكية القادم</h2>
+          <p class="sub">اجتماع الفيدرالي (FOMC) هو أقوى حدث يحرّك الذهب والبتكوين والدولار. القرار يصدر الساعة 2:00 ظهراً بتوقيت نيويورك، ويتبعه المؤتمر الصحفي بعد نص ساعة.</p>
+        </div>
+      </div>
+      <div class="fed">
+        <div class="fed-main">
+          <p class="fed-when" id="fedWhen">—</p>
+          <div class="cd" aria-live="off">
+            <div><b id="cdD">--</b><span>يوم</span></div>
+            <div><b id="cdH">--</b><span>ساعة</span></div>
+            <div><b id="cdM">--</b><span>دقيقة</span></div>
+            <div><b id="cdS">--</b><span>ثانية</span></div>
+          </div>
+          <p class="fed-live" id="fedLive">القرار صدر الحين. تقلّبات عالية متوقعة، انتبه لإدارة المخاطر.</p>
+          <ul class="fed-tips">
+            <li>تجنّب فتح صفقات جديدة قبل القرار بساعة.</li>
+            <li>المؤتمر الصحفي يحرّك السوق أحياناً أكثر من القرار نفسه.</li>
+            <li>وسّع وقف الخسارة أو قلّل اللوت إذا عندك صفقة مفتوحة.</li>
+          </ul>
+        </div>
+        <div class="fed-list">
+          <h3>الاجتماعات الجاية (بتوقيت الكويت)</h3>
+          <ol id="fedList"></ol>
+          <p class="note">المصدر: الجدول الرسمي للاحتياطي الفيدرالي الأمريكي.</p>
+        </div>
+      </div>
     </section>
 
     <!-- SESSIONS -->
@@ -585,6 +687,25 @@ a.scard{text-decoration:none;color:inherit}
             <a class="btn ghost" href="#contact">تواصل معنا</a>
           </div>
         </article>
+      </div>
+    </section>
+
+    <!-- INSTALL APP -->
+    <section class="block" id="app" aria-labelledby="appTitle">
+      <div class="app">
+        <img src="icons/icon-192.png" alt="أيقونة تطبيق Trader Holic" width="96" height="96">
+        <div style="min-width:0;width:100%">
+          <h2 id="appTitle">ثبّت Trader Holic على جوالك</h2>
+          <p>افتح المنصة بضغطة من الشاشة الرئيسية، مثل أي تطبيق.</p>
+          <div class="steps">
+            <div class="step" id="stepIos"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3DCB4F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>آيفون (Safari)</h3>
+              <ol><li>اضغط زر المشاركة تحت الشاشة</li><li>اختر «إضافة إلى الشاشة الرئيسية»</li><li>اضغط «إضافة»</li></ol></div>
+            <div class="step" id="stepAndroid"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3DCB4F" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>أندرويد (Chrome)</h3>
+              <ol><li>اضغط النقاط الثلاث فوق</li><li>اختر «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية»</li></ol>
+              <button type="button" class="btn" id="installBtn" style="margin-top:10px" hidden>ثبّت الحين</button></div>
+          </div>
+          <p class="installed" id="installed">✓ التطبيق مثبّت على جهازك</p>
+        </div>
       </div>
     </section>
 
@@ -993,7 +1114,7 @@ async function loadCalendarData(){
     const j=await r.json();CAL=(j.events||[]).map(e=>Object.assign(e,{ts:Date.parse(e.d)})).filter(e=>!isNaN(e.ts)).sort((a,b)=>a.ts-b.ts);
     const u=document.getElementById('calUpdated');if(u&&j.updated)u.textContent='آخر تحديث: '+ago(Date.parse(j.updated));
   }catch(_){CAL=[];}
-  renderCalendar();
+  renderCalendar();renderAlert();
 }
 segGroup('imp',v=>{calImp=v;renderCalendar();});
 loadCalendarData();setInterval(loadCalendarData,10*60000);setInterval(renderCalendar,60000);
@@ -1015,6 +1136,61 @@ async function loadNewsData(){
 }
 segGroup('news',v=>{newsKey=v;renderNews();});
 loadNewsData();setInterval(loadNewsData,5*60000);
+
+
+/* ============ High-impact news alert (1 hour before, 15 min after) ============ */
+function readDismissed(){try{return localStorage.getItem('th_alert_dismissed')||'';}catch(_){return'';}}
+function writeDismissed(v){try{localStorage.setItem('th_alert_dismissed',v);}catch(_){}}
+function renderAlert(){
+  const el=document.getElementById('newsAlert');if(!el)return;
+  const now=Date.now();
+  const ev=CAL.filter(e=>e.i==='High'&&e.ts>now-15*60000&&e.ts<now+60*60000);
+  if(!ev.length){el.hidden=true;return;}
+  const first=ev[0],key=first.d+first.t;
+  if(readDismissed()===key){el.hidden=true;return;}
+  const same=ev.filter(e=>e.ts===first.ts),names=same.map(e=>e.c+' '+e.t).join(' · ');
+  const p=kwParts(first.ts);
+  document.getElementById('alertTxt').innerHTML=(first.ts>now?'خبر عالي التأثير قريب: ':'صدر الحين: ')+'<b dir="ltr">'+esc(names)+'</b> · '+p.hh+':'+p.mm+' بتوقيت الكويت';
+  document.getElementById('alertWhen').textContent=first.ts>now?('بعد '+dur(first.ts-now)):'تقلّبات عالية';
+  el.dataset.key=key;el.hidden=false;
+}
+document.getElementById('alertClose').addEventListener('click',()=>{const el=document.getElementById('newsAlert');writeDismissed(el.dataset.key||'');el.hidden=true;});
+setInterval(renderAlert,30000);
+
+/* ============ FOMC countdown (official schedule; decision 2:00 pm New York) ============ */
+const FOMC=['2026-12-09','2027-01-27','2027-03-17','2027-04-28','2027-06-09','2027-07-28','2027-09-15','2027-10-27','2027-12-08']
+  .map(d=>{const [y,m,dd]=d.split('-').map(Number);return zonedToUtc(y,m,dd,14,'America/New_York');});
+function fedRender(){
+  const now=Date.now();
+  const live=FOMC.find(t=>now>=t&&now<t+3*3600000);
+  const next=FOMC.find(t=>t>now);
+  document.getElementById('fedLive').classList.toggle('on',!!live);
+  if(!next){document.getElementById('fedWhen').textContent='الجدول القادم بيتحدّث قريباً.';return;}
+  const p=kwParts(next);
+  document.getElementById('fedWhen').innerHTML='القرار القادم: <b>'+AR_DAYS[p.wd]+' '+p.d+' '+AR_MONTHS[p.m]+' '+p.y+'</b> · الساعة <b dir="ltr">'+p.hh+':'+p.mm+'</b> بتوقيت الكويت';
+  let ms=next-now;const d=Math.floor(ms/864e5);ms-=d*864e5;const h=Math.floor(ms/36e5);ms-=h*36e5;const m=Math.floor(ms/6e4);ms-=m*6e4;const s=Math.floor(ms/1e3);
+  document.getElementById('cdD').textContent=d;document.getElementById('cdH').textContent=String(h).padStart(2,'0');
+  document.getElementById('cdM').textContent=String(m).padStart(2,'0');document.getElementById('cdS').textContent=String(s).padStart(2,'0');
+}
+(function fedList(){
+  const now=Date.now();const up=FOMC.filter(t=>t>now-3*3600000).slice(0,6);
+  document.getElementById('fedList').innerHTML=up.map((t,i)=>{const p=kwParts(t);return `<li class="${i===0?'next':''}"><span>${AR_DAYS[p.wd]} ${p.d} ${AR_MONTHS[p.m]} ${p.y}</span><span class="t">${p.hh}:${p.mm}</span></li>`;}).join('');
+})();
+fedRender();setInterval(fedRender,1000);
+
+/* ============ Install as app ============ */
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));}
+(function installUi(){
+  const ua=navigator.userAgent||'',ios=/iphone|ipad|ipod/i.test(ua),android=/android/i.test(ua);
+  const standalone=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+  if(standalone){document.getElementById('installed').style.display='block';document.querySelector('#app .steps').hidden=true;}
+  if(ios)document.getElementById('stepIos').classList.add('me');
+  if(android)document.getElementById('stepAndroid').classList.add('me');
+  let deferred=null;const btn=document.getElementById('installBtn');
+  window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;btn.hidden=false;});
+  btn.addEventListener('click',async()=>{if(!deferred)return;deferred.prompt();try{await deferred.userChoice;}catch(_){}deferred=null;btn.hidden=true;});
+  window.addEventListener('appinstalled',()=>{document.getElementById('installed').style.display='block';btn.hidden=true;});
+})();
 
 /* ============ Misc ============ */
 document.getElementById('courseDate').textContent=SETTINGS.courseDate;
