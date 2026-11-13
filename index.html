@@ -343,7 +343,7 @@ a.scard{text-decoration:none;color:inherit}
 .cal-row .fp b{color:var(--muted);font-weight:700}
 .cal-row.hi .ttl{color:#FFFFFF}
 .cal-row.hi{background:linear-gradient(270deg,rgba(240,82,82,.08),transparent 60%)}
-.cal-row.past{opacity:.45}
+.cal-row.past>.tm,.cal-row.past>.cur,.cal-row.past>.ttl{opacity:.5}
 .cal-row.next{box-shadow:inset -3px 0 0 var(--green);background:linear-gradient(270deg,rgba(61,203,79,.10),transparent 70%)}
 .cal-row .soon{font-family:var(--ar);font-size:11px;font-weight:800;color:var(--green);margin-inline-start:6px}
 @media (max-width:640px){
@@ -384,7 +384,21 @@ a.scard{text-decoration:none;color:inherit}
 .fx .pos{color:var(--green);border-color:var(--green-line);background:var(--green-soft)}
 .fx .neg{color:#F48C78;border-color:#5A3029;background:var(--orange-soft)}
 .fx .neu{color:var(--muted)}
-.cal-more .caveat{margin:0;font-size:12px;color:var(--dim)}
+.cal-more .caveat{margin:0;font-size:12px;color:var(--dim);line-height:1.7}
+.fpv .ac b{color:var(--fg)}
+.fpv .ac.pos{border-color:var(--green-line);background:var(--green-soft)}.fpv .ac.pos b{color:var(--green)}
+.fpv .ac.neg{border-color:#5A3029;background:var(--orange-soft)}.fpv .ac.neg b{color:#F48C78}
+.fpv .ac.wait b{color:var(--dim);animation:blink 1.4s infinite}
+@keyframes blink{50%{opacity:.3}}
+.res{border-radius:12px;padding:12px 14px;border:1px solid var(--line-2);background:var(--surface);display:flex;flex-direction:column;gap:8px}
+.res p{margin:0;font-size:14px;color:var(--muted)}
+.res p b{color:var(--fg)}
+.res .sub{font-size:13px}
+.res.up,.res.down{border-color:#6B5A1E;background:#1E1A0E}
+.res.up p b,.res.down p b{color:#FFD24A}
+.res.wait p b{color:var(--fg)}
+.scen.decided>div{opacity:.45}
+.scen.decided>div.hit{opacity:1;border-color:#6B5A1E;box-shadow:0 0 0 1px #6B5A1E inset}
 @media (max-width:640px){
   .cal-row{grid-template-columns:54px minmax(0,1fr) 28px;row-gap:6px}
   .cal-row .cur{grid-column:1;grid-row:2}
@@ -498,7 +512,7 @@ a.scard{text-decoration:none;color:inherit}
         <div>
           <span class="tag">ECONOMIC CALENDAR</span>
           <h2 id="calTitle">الأخبار الاقتصادية المهمة</h2>
-          <p class="sub">كل الأوقات <b>بتوقيت الكويت</b>. الأخبار <b style="color:var(--red)">عالية التأثير</b> هي اللي تحرّك الذهب والفضة والبتكوين بقوة، مثل الفائدة الأمريكية والوظائف والتضخم.<br><b style="color:var(--green)">اضغط على أي خبر</b> عشان تشوف تأثيره على الذهب والدولار والبتكوين.</p>
+          <p class="sub">كل الأوقات <b>بتوقيت الكويت</b>. الأخبار <b style="color:var(--red)">عالية التأثير</b> هي اللي تحرّك الذهب والفضة والبتكوين بقوة، مثل الفائدة الأمريكية والوظائف والتضخم.<br>الأخبار القوية تنفتح لك <b style="color:var(--green)">نبذتها وتأثيرها</b> على الذهب والدولار والبتكوين مباشرة، وباقي الأخبار اضغط عليها. وبعد صدور الخبر تنزل <b style="color:#FFD24A">النتيجة الفعلية</b> بنفس المكان.</p>
         </div>
         <div class="seg" role="group" aria-label="مستوى أهمية الأخبار">
           <button type="button" data-imp="high" aria-pressed="true">عالية التأثير فقط</button>
@@ -1149,8 +1163,37 @@ const GUIDE=[
    what:'تصريحات أو محضر لمسؤول في البنك المركزي. ما فيه رقم متوقع، والسوق يتحرك حسب النبرة.'}
 ];
 const CUR_AR={USD:'الدولار',EUR:'اليورو',GBP:'الجنيه',JPY:'الين',CNY:'اليوان'};
+// Plain explanation of the most-watched indicators (first match wins); the GUIDE category above sets the direction.
+const DESC=[
+  [/Core PPI/i,'مؤشر أسعار المنتجين الأساسي: يقيس تغيّر الأسعار اللي تبيع فيها المصانع والشركات منتجاتها، بدون الغذاء والطاقة لأنها متقلبة. يعتبر إنذار مبكر للتضخم قبل لا يوصل للمستهلك.'],
+  [/PPI/i,'مؤشر أسعار المنتجين: يقيس تغيّر أسعار البيع عند المصانع والشركات (شامل الغذاء والطاقة). ارتفاعه يعني إن التكاليف بتنتقل للمستهلك لاحقاً، يعني تضخم أعلى.'],
+  [/Core PCE/i,'مؤشر نفقات الاستهلاك الأساسي: المقياس المفضّل عند الفيدرالي لقياس التضخم، بدون الغذاء والطاقة.'],
+  [/PCE/i,'مؤشر نفقات الاستهلاك الشخصي: مقياس تضخم يتابعه الفيدرالي عن قرب.'],
+  [/Core CPI/i,'التضخم الأساسي للمستهلك: تغيّر أسعار السلع والخدمات اللي يشتريها الناس، بدون الغذاء والطاقة. هذا الرقم اللي يركز عليه الفيدرالي أكثر شي.'],
+  [/CPI/i,'مؤشر أسعار المستهلك: المقياس الرئيسي للتضخم، يقيس تغيّر أسعار السلع والخدمات اللي يشتريها الناس.'],
+  [/ADP/i,'تقرير ADP: عدد الوظائف الجديدة في القطاع الخاص. يطلع قبل تقرير الوظائف الرسمي ويعطي لمحة عنه.'],
+  [/Non-Farm|NFP|Payrolls/i,'الوظائف غير الزراعية (NFP): عدد الوظائف الجديدة في أمريكا خلال الشهر. من أقوى الأخبار تأثيراً على الذهب والدولار.'],
+  [/Unemployment Rate/i,'نسبة البطالة: نسبة الناس اللي يدورون شغل وما لقوا. ارتفاعها يعني سوق عمل ضعيف ويرفع احتمال خفض الفائدة.'],
+  [/Unemployment Claims|Jobless Claims/i,'طلبات إعانة البطالة الأسبوعية: عدد الناس اللي قدّموا على إعانة بطالة لأول مرة. ارتفاعها إشارة ضعف في سوق العمل.'],
+  [/JOLTS|Job Openings/i,'فرص العمل الشاغرة: عدد الوظائف المتاحة عند الشركات. كثرتها تعني طلب قوي على العمالة.'],
+  [/Average Hourly Earnings|Wage|Earnings/i,'متوسط الأجور: ارتفاع الرواتب أسرع من المتوقع يغذّي التضخم.'],
+  [/Core Retail Sales/i,'مبيعات التجزئة الأساسية: إنفاق المستهلكين بدون السيارات. يقيس قوة الاستهلاك اللي هو محرك الاقتصاد الأمريكي.'],
+  [/Retail Sales/i,'مبيعات التجزئة: كم صرف الناس في المحلات. يقيس قوة الاستهلاك اللي هو محرك الاقتصاد الأمريكي.'],
+  [/GDP/i,'الناتج المحلي الإجمالي: أشمل مقياس لنمو الاقتصاد خلال الفترة.'],
+  [/ISM|PMI/i,'مؤشر مديري المشتريات: فوق 50 يعني القطاع يتوسّع، وتحت 50 يعني ينكمش.'],
+  [/Funds Rate/i,'قرار الفائدة الأمريكية: أقوى حدث في السوق. رفع الفائدة أو نبرة متشددة يقوّي الدولار ويضغط على الذهب والبتكوين.'],
+  [/Inflation Expectations/i,'توقعات التضخم عند المستهلكين: ارتفاعها يقلق الفيدرالي ويدعم بقاء الفائدة مرتفعة.'],
+  [/Sentiment|Confidence/i,'ثقة المستهلك أو الشركات: كل ما زادت الثقة زاد الإنفاق والاستثمار.'],
+  [/Durable Goods/i,'طلبيات السلع المعمّرة: طلبات المصانع على السلع اللي تعيش طويل مثل المعدات والسيارات. مؤشر على الاستثمار.'],
+  [/Home Sales|Housing|Building Permits|Pending/i,'بيانات قطاع العقار: تعكس قوة الطلب وتأثير الفائدة على السوق.'],
+  [/Trade Balance/i,'الميزان التجاري: الفرق بين الصادرات والواردات.'],
+  [/Industrial Production|Manufacturing Production/i,'الإنتاج الصناعي: حجم إنتاج المصانع والمناجم والمرافق.'],
+  [/Empire State|Philly Fed/i,'مسح التصنيع الإقليمي: فوق صفر يعني تحسّن، تحت صفر يعني تراجع.']
+];
 function guideFor(e){
   const g=GUIDE.find(x=>x.re.test(e.t))||{k:'other',up:'hawk',what:'خبر اقتصادي مؤثر على العملة.'};
+  const d=DESC.find(([re])=>re.test(e.t));
+  const what=d&&g.up!==null?d[1]+' '+({hawk:'رقم أعلى من المتوقع يعتبر قوي للعملة.',weak:'رقم أعلى من المتوقع يعتبر سلبي للعملة.'}[g.up]||''):g.what;
   const strong=g.up==='hawk';
   // effects when the figure comes in ABOVE forecast
   let up;
@@ -1162,19 +1205,36 @@ function guideFor(e){
               :[[cur,'neg'],['الدولار (غير مباشر)','pos'],['الذهب (طفيف)','neg'],['البتكوين (محدود)','neu']];
   }
   const flip=x=>x.map(([n,c])=>[n,c==='pos'?'neg':c==='neg'?'pos':'neu']);
-  return {g,up,down:flip(up)};
+  return {g,what,up,down:flip(up)};
+}
+const numOf=s=>{const m=String(s||'').replace(/,/g,'').match(/-?\d+(\.\d+)?/);return m?parseFloat(m[0]):null;};
+// Compare the released figure with the forecast (or with the previous figure when there is no forecast).
+function resultOf(e){
+  const a=numOf(e.a);if(a==null)return null;
+  const f=numOf(e.f),p=numOf(e.p),base=f!=null?f:p;if(base==null)return {dir:'na',a};
+  return {dir:a>base?'up':a<base?'down':'eq',a,base,baseStr:f!=null?e.f:e.p,label:f!=null?'المتوقع':'السابق'};
 }
 function chips(list){return '<div class="fx">'+list.map(([n,c])=>`<span class="${c}">${n} <i>${c==='pos'?'▲':c==='neg'?'▼':'–'}</i></span>`).join('')+'</div>';}
 function guideHtml(e){
-  const {g,up,down}=guideFor(e);
-  let body=`<p class="what">${g.what}</p>`;
+  const {g,what,up,down}=guideFor(e);
+  let body=`<p class="what">${what}</p>`;
   if(g.up===null){
     const hawk=e.c==='USD'?[['الدولار','pos'],['الذهب','neg'],['البتكوين','neg']]:[[CUR_AR[e.c]||e.c,'pos'],['الدولار (غير مباشر)','neg'],['الذهب (طفيف)','pos']];
     body+=`<div class="scen"><div class="up"><h4><span class="ar">▲</span>نبرة متشددة (Hawkish)</h4>${chips(hawk)}</div><div class="dn"><h4><span class="ar">▼</span>نبرة متساهلة (Dovish)</h4>${chips(hawk.map(([n,c])=>[n,c==='pos'?'neg':c==='neg'?'pos':'neu']))}</div></div>`;
   }else{
-    body+=`<div class="scen"><div class="up"><h4><span class="ar">▲</span>إذا جاء أعلى من المتوقع${e.f?' ('+esc(e.f)+')':''}</h4>${chips(up)}</div><div class="dn"><h4><span class="ar">▼</span>إذا جاء أقل من المتوقع</h4>${chips(down)}</div></div>`;
+    const r=resultOf(e);
+    if(r&&r.dir!=='na'){
+      const word={up:'أعلى من',down:'أقل من',eq:'مطابق لـ'}[r.dir];
+      body+=`<div class="res ${r.dir}"><p><b>صدر الخبر: <bdi>${esc(e.a)}</bdi></b> · ${word} ${r.label} <bdi dir="ltr">(${esc(r.baseStr)})</bdi></p>`+
+        (r.dir==='eq'?'<p class="sub">جاء مثل المتوقع، فالتأثير عادة محدود والسوق يتحرك حسب تفاصيل التقرير ومراجعة الرقم السابق.</p>'
+                     :`<p class="sub">الأثر المعتاد لهالنتيجة:</p>${chips(r.dir==='up'?up:down)}`)+`</div>`;
+    }else if(e.ts<Date.now()-60000){
+      body+='<div class="res wait"><p><b>صدر الخبر</b> · النتيجة تنزل هني خلال دقائق من صدوره.</p></div>';
+    }
+    const hit=r&&r.dir!=='na'&&r.dir!=='eq'?r.dir:'';
+    body+=`<div class="scen${hit?' decided':''}"><div class="up${hit==='up'?' hit':''}"><h4><span class="ar">▲</span>إذا جاء أعلى من المتوقع${e.f?' <bdi dir="ltr">('+esc(e.f)+')</bdi>':''}</h4>${chips(up)}</div><div class="dn${hit==='down'?' hit':''}"><h4><span class="ar">▼</span>إذا جاء أقل من المتوقع</h4>${chips(down)}</div></div>`;
   }
-  body+='<p class="caveat">هذا هو التأثير المعتاد للخبر. السوق أحياناً يتحرك عكس المتوقع إذا كان الخبر مسعّر مسبقاً، فانتظر التأكيد.</p>';
+  body+=`<p class="caveat">${e.i==='High'?'نصيحة: لا تفتح صفقة جديدة قبل الخبر بـ 15 دقيقة، وبعد صدوره انتظر إغلاق أول شمعة 5 دقائق وادخل فقط إذا الحركة تتوافق مع تحليلك. ':''}هذا هو التأثير المعتاد، والسوق أحياناً يتحرك عكسه إذا كان الخبر مسعّر مسبقاً.</p>`;
   return body;
 }
 
@@ -1183,7 +1243,8 @@ let CAL=[],calImp='high';
 const IMP={High:'hi',Medium:'md',Low:'lo',Holiday:'ho'};
 function renderCalendar(){
   const box=document.getElementById('calList');
-  const openKeys=new Set([...box.querySelectorAll('details[open]')].map(d=>d.dataset.k));
+  // remember what the visitor opened/closed; high-impact news start open so the brief is visible straight away
+  const openState=new Map([...box.querySelectorAll('details.cal-item')].map(d=>[d.dataset.k,d.open]));
   if(!CAL.length){box.innerHTML='<p class="wfallback">التقويم يتحدّث الحين، ارجع بعد دقائق.</p>';return;}
   const now=Date.now(),todayKey=(p=>p.y+'-'+p.m+'-'+p.d)(kwParts(now));
   const startToday=Date.parse(new Date(now+KW_OFFSET*60000).toISOString().slice(0,10)+'T00:00:00Z')-KW_OFFSET*60000;
@@ -1196,10 +1257,16 @@ function renderCalendar(){
   box.innerHTML=groups.map(g=>`<div class="cal-day"><div class="cal-dh"><span class="cal-date"><b>${g.p.d}</b><span>${AR_MONTHS[g.p.m]}</span></span><span class="dname">${AR_DAYS[g.p.wd]}</span>${g.k===todayKey?'<span class="today">اليوم</span>':''}<span class="cnt">${g.items.length===1?'خبر واحد':g.items.length===2?'خبرين':g.items.length+(g.items.length<11?' أخبار':' خبر')}</span></div>`+
     g.items.map(e=>{const p=kwParts(e.ts),cls=['cal-row',IMP[e.i]||'lo'];if(e.ts<now-5*60000)cls.push('past');if(nextHi&&e===nextHi)cls.push('next');
       const soon=(e.ts>now&&e.ts-now<3*3600000)?`<span class="soon">بعد ${dur(e.ts-now)}</span>`:'';
-      const fpv=e.i==='Holiday'?'':`<span class="fpv"><span class="fc"><small>المتوقع</small><b>${e.f?esc(e.f):'—'}</b></span><span><small>السابق</small><b>${e.p?esc(e.p):'—'}</b></span></span>`;
+      let act='';
+      if(e.i!=='Holiday'&&guideFor(e).g.up!==null){
+        const r=resultOf(e),gd=guideFor(e);let c='';
+        if(r&&(r.dir==='up'||r.dir==='down'))c=(r.dir==='up'?gd.up:gd.down)[0][1];
+        act=e.a?`<span class="ac ${c}"><small>الفعلي</small><b>${esc(e.a)}</b></span>`:(e.ts<now-60000?`<span class="ac wait"><small>الفعلي</small><b>…</b></span>`:`<span class="ac"><small>الفعلي</small><b>—</b></span>`);
+      }
+      const fpv=e.i==='Holiday'?'':`<span class="fpv">${act}<span class="fc"><small>المتوقع</small><b>${e.f?esc(e.f):'—'}</b></span><span><small>السابق</small><b>${e.p?esc(e.p):'—'}</b></span></span>`;
       const row=`<span class="tm">${e.i==='Holiday'?'—':p.hh+':'+p.mm}</span><span class="cur"><i class="imp ${IMP[e.i]||'lo'}" aria-label="${e.i}"></i>${esc(e.c)}</span><span class="ttl">${esc(e.t)}${soon}</span>${fpv}`;
       if(e.i==='Holiday')return `<div class="${cls.join(' ')}">${row}<span></span></div>`;
-      return `<details class="cal-item" data-k="${esc(e.d+e.t)}"${openKeys.has(e.d+e.t)?' open':''}><summary class="${cls.join(' ')}">${row}<span class="chev" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></summary><div class="cal-more">${guideHtml(e)}</div></details>`;}).join('')+`</div>`).join('');
+      return `<details class="cal-item" data-k="${esc(e.d+e.t)}"${(openState.has(e.d+e.t)?openState.get(e.d+e.t):e.i==='High')?' open':''}><summary class="${cls.join(' ')}">${row}<span class="chev" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></summary><div class="cal-more">${guideHtml(e)}</div></details>`;}).join('')+`</div>`).join('');
   // hero card
   if(nextHi){const p=kwParts(nextHi.ts);document.getElementById('stNews').textContent=nextHi.c+' · '+nextHi.t;
     document.getElementById('stNewsSub').textContent=AR_DAYS[p.wd]+' '+p.hh+':'+p.mm+' بتوقيت الكويت · '+(nextHi.ts>now?'بعد '+dur(nextHi.ts-now):'الحين');}
@@ -1207,14 +1274,14 @@ function renderCalendar(){
 }
 async function loadCalendarData(){
   try{
-    const r=await fetch('data/calendar.json?v='+Math.floor(Date.now()/300000),{cache:'no-store'});if(!r.ok)throw 0;
+    const r=await fetch('data/calendar.json?v='+Math.floor(Date.now()/60000),{cache:'no-store'});if(!r.ok)throw 0;
     const j=await r.json();CAL=(j.events||[]).map(e=>Object.assign(e,{ts:Date.parse(e.d)})).filter(e=>!isNaN(e.ts)).sort((a,b)=>a.ts-b.ts);
     const u=document.getElementById('calUpdated');if(u&&j.updated)u.textContent='آخر تحديث: '+ago(Date.parse(j.updated));
   }catch(_){CAL=[];}
   renderCalendar();renderAlert();
 }
 segGroup('imp',v=>{calImp=v;renderCalendar();});
-loadCalendarData();setInterval(loadCalendarData,10*60000);setInterval(renderCalendar,60000);
+loadCalendarData();setInterval(loadCalendarData,2*60000);setInterval(renderCalendar,60000);
 
 /* ============ News ============ */
 let NEWSDATA=null,newsKey='gold';

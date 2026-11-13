@@ -19,13 +19,12 @@ async function writeIfChanged(path, obj, ignoreKey = 'updated') {
   return true;
 }
 
-/* ---------------- Economic calendar (ForexFactory weekly export) ---------------- */
+/* ---------------- Economic calendar ----------------
+   Schedule, forecast and previous: ForexFactory weekly export (refreshed about hourly, it is rate-limited).
+   Actual results: TradingView's public economic calendar, checked on every run while a released event still lacks one. */
 const CURRENCIES = new Set(['USD', 'EUR', 'GBP', 'CNY', 'JPY', 'All']);
-async function calendar() {
-  const path = 'data/calendar.json';
-  const old = await readJson(path);
-  // The export is rate-limited: refresh at most about once an hour.
-  if (old?.updated && Date.now() - Date.parse(old.updated) < 50 * 60 * 1000) { console.log('calendar fresh, skip'); return; }
+const keyOf = e => e.d + '|' + e.c + '|' + e.t;
+async function fetchFF() {
   const events = [];
   for (const wk of ['thisweek', 'nextweek']) {
     try {
@@ -37,12 +36,112 @@ async function calendar() {
       }
     } catch (err) { console.log('calendar', wk, String(err.message || err)); }
   }
-  if (!events.length) { console.log('calendar: no events fetched, keeping old file'); return; }
   const seen = new Set();
-  const uniq = events.filter(e => { const k = e.d + e.c + e.t; if (seen.has(k)) return false; seen.add(k); return true; }).sort((a, b) => a.d.localeCompare(b.d));
-  // Keep earlier events of the current view if the new fetch lost them (e.g. week rollover).
-  await writeFile(path, JSON.stringify({ updated: new Date().toISOString(), source: 'ForexFactory', events: uniq }));
-  console.log('calendar events', uniq.length);
+  return events.filter(e => { const k = keyOf(e); if (seen.has(k)) return false; seen.add(k); return true; }).sort((a, b) => a.d.localeCompare(b.d));
+}
+
+// --- matching a ForexFactory title to a TradingView event ---
+const REGION = { German: 'DE', French: 'FR', Italian: 'IT', Spanish: 'ES' };
+const DEF_REGION = { USD: 'US', EUR: 'EU', GBP: 'GB', JPY: 'JP', CNY: 'CN' };
+const SYN = [
+  [/adp non-farm employment change|adp employment change/g, ' adp '],
+  [/non-farm employment change|non ?farm payrolls|nonfarm payrolls/g, ' nfp '],
+  [/unemployment claims|initial jobless claims/g, ' claims '],
+  [/continuing jobless claims|continuing claims/g, ' contclaims '],
+  [/inflation rate|consumer price index|\bcpi\b/g, ' cpi '],
+  [/producer price index|\bppi\b/g, ' ppi '],
+  [/federal funds rate|fed interest rate decision|interest rate decision|official bank rate|main refinancing rate|policy rate|bank rate/g, ' ratedecision '],
+  [/gdp growth rate|\bgdp\b/g, ' gdp '],
+  [/\bprel\b|\bprelim\b|\bflash\b|preliminary/g, ' prelim '],
+  [/\badv\b|advance/g, ' advance '],
+  [/retail sales ex autos/g, ' core retail sales '],
+  [/\bm\/m\b|\bmom\b/g, ' mom '], [/\by\/y\b|\byoy\b/g, ' yoy '], [/\bq\/q\b|\bqoq\b/g, ' qoq '],
+  [/jolts job openings|jolts/g, ' jolts '],
+  [/s&p global|\bhcob\b|\bau jibun bank\b|\bthe\b|\bs\.a\b|\bindex\b|\bchange\b/g, ' ']
+];
+function toks(title) {
+  let s = ' ' + title.toLowerCase().replace(/^(german|french|italian|spanish)\s+/, '') + ' ';
+  for (const [re, r] of SYN) s = s.replace(re, r);
+  return new Set(s.replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(Boolean));
+}
+const isCore = s => /\bcore\b|ex food|ex autos|excl/i.test(s);
+const period = t => (t.has('mom') ? 'mom' : t.has('yoy') ? 'yoy' : t.has('qoq') ? 'qoq' : '');
+const num = s => { const m = String(s ?? '').replace(/,/g, '').match(/-?\d+(\.\d+)?/); return m ? parseFloat(m[0]) : null; };
+const near = (a, b) => a != null && b != null && Math.abs(a - b) <= Math.max(0.051, Math.abs(a) * 0.006);
+function fmtActual(v, ff, tv) {
+  const ref = ff.p || ff.f || '';
+  let x = v;
+  const fp = num(ff.p), tp = tv.previous;
+  if (fp != null && tp != null && tp !== 0 && !near(fp, tp)) {
+    for (const k of [1000, 0.001, 1000000, 0.000001]) if (near(fp, tp * k)) { x = v * k; break; }
+  }
+  const dm = ref.match(/\.(\d+)/); const dec = dm ? dm[1].length : (Number.isInteger(x) ? 0 : Math.min(3, String(x).split('.')[1]?.length || 0));
+  const suffix = ref ? (ref.match(/[%KMBT]$/i)?.[0] || '') : (tv.unit === '%' ? '%' : (tv.scale || ''));
+  return x.toFixed(dec) + suffix;
+}
+function matchTV(ff, tvList, used) {
+  const region = REGION[ff.t.split(' ')[0]] || DEF_REGION[ff.c];
+  const ft = toks(ff.t), fc = isCore(ff.t), fper = period(ft), ts = Date.parse(ff.d);
+  let best = null;
+  for (const tv of tvList) {
+    if (used.has(tv.id) || tv.actual == null || tv.currency !== ff.c) continue;
+    if (region && tv.country !== region) continue;
+    if (Math.abs(Date.parse(tv.date) - ts) > 10 * 60000) continue;
+    const tt = toks(tv.title);
+    if (isCore(tv.title) !== fc) continue;
+    const tper = period(tt); if (fper && tper && fper !== tper) continue;
+    const P = new Set(['mom', 'yoy', 'qoq']);
+    const fa = [...ft].filter(w => !P.has(w)), ta = [...tt].filter(w => !P.has(w));
+    const inter = fa.filter(w => ta.includes(w)).length;
+    const tok = inter / (new Set([...fa, ...ta]).size || 1);
+    const prevOk = near(num(ff.p), tv.previous), fcOk = near(num(ff.f), tv.forecast);
+    if (!(tok >= 0.5 || (prevOk && tok >= 0.2) || (prevOk && fcOk && tok > 0))) continue;
+    const score = tok + (prevOk ? 1 : 0) + (fcOk ? 0.5 : 0);
+    if (!best || score > best.score) best = { tv, score };
+  }
+  return best?.tv || null;
+}
+async function fetchTV(fromMs, toMs) {
+  const url = `https://economic-calendar.tradingview.com/events?from=${new Date(fromMs).toISOString()}&to=${new Date(toMs).toISOString()}&countries=US,EU,DE,FR,IT,ES,GB,JP,CN`;
+  const r = await fetch(url, { headers: { 'user-agent': UA, origin: 'https://www.tradingview.com', referer: 'https://www.tradingview.com/' }, signal: AbortSignal.timeout(25000) });
+  if (!r.ok) throw new Error('tv ' + r.status);
+  const j = await r.json();
+  return Array.isArray(j?.result) ? j.result : [];
+}
+
+async function calendar() {
+  const path = 'data/calendar.json';
+  const old = (await readJson(path)) || {};
+  const ffAt = old.ffAt || old.updated;
+  let events = old.events || [];
+  let ffFresh = ffAt;
+  if (!ffAt || Date.now() - Date.parse(ffAt) >= 50 * 60 * 1000 || !events.length) {
+    const fresh = await fetchFF();
+    if (fresh.length) {
+      const prevA = new Map(events.filter(e => e.a).map(e => [keyOf(e), e.a]));
+      fresh.forEach(e => { const a = prevA.get(keyOf(e)); if (a) e.a = a; });
+      events = fresh; ffFresh = new Date().toISOString();
+    } else console.log('calendar: FF fetch empty, keeping old schedule');
+  } else console.log('calendar: FF fresh, only checking actuals');
+  if (!events.length) return;
+
+  // Actual results for released events (last 3 days) that still lack one.
+  const now = Date.now();
+  const need = events.filter(e => !e.a && e.i !== 'Holiday' && !/Speaks|Testif|Press Conference|Statement|Minutes|Meeting|Speech|Hearing|Auction|Bank Holiday/i.test(e.t)
+    && Date.parse(e.d) <= now - 60000 && Date.parse(e.d) >= now - 3 * 86400000);
+  if (need.length) {
+    try {
+      const tv = await fetchTV(now - 3 * 86400000 - 3600000, now + 3600000);
+      const used = new Set(); let n = 0;
+      for (const e of need) { const m = matchTV(e, tv, used); if (m) { used.add(m.id); e.a = fmtActual(m.actual, e, m); n++; console.log('actual', e.c, e.t, '=>', m.title, e.a); } }
+      console.log('actuals matched', n, 'of', need.length);
+    } catch (err) { console.log('actuals', String(err.message || err)); }
+  }
+  const out = { updated: new Date().toISOString(), ffAt: ffFresh, source: 'ForexFactory + TradingView', events };
+  const strip = o => JSON.stringify({ ...o, updated: 0 });
+  if (strip(out) === strip(old)) { console.log('calendar unchanged'); return; }
+  await writeFile(path, JSON.stringify(out));
+  console.log('calendar events', events.length);
 }
 
 /* ---------------- News (RSS) ---------------- */

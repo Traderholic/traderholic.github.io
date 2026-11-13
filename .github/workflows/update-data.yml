@@ -3,6 +3,9 @@ name: Update market data
 on:
   schedule:
     - cron: '*/15 * * * *'
+    # extra runs right after the usual US release times (8:30 and 10:00 New York) so results show up fast
+    - cron: '33,37,44 12,13 * * 1-5'
+    - cron: '3,7,14 14,15 * * 1-5'
   workflow_dispatch:
   push:
     branches: [main]
