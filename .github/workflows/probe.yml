@@ -1,0 +1,15 @@
+name: probe
+on:
+  push:
+    paths: ['.github/workflows/probe.yml']
+jobs:
+  p:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "== SCANNER"; curl -s -m 20 -X POST -A 'Mozilla/5.0' -H 'Content-Type: application/json' https://scanner.tradingview.com/global/scan -d '{"symbols":{"tickers":["OANDA:XAUUSD","OANDA:XAGUSD","BITSTAMP:BTCUSD","BITSTAMP:ETHUSD","SP:SPX","NASDAQ:NDX","DJ:DJI","TVC:DXY","CRYPTOCAP:TOTAL"]},"columns":["close","change","Perf.W","Perf.1M","high","low","High.1W","Low.1W","open","description"]}' | head -c 2500; echo
+          echo "== SCANNER america earnings"; curl -s -m 20 -X POST -A 'Mozilla/5.0' -H 'Content-Type: application/json' https://scanner.tradingview.com/america/scan -d '{"symbols":{"tickers":["NASDAQ:NVDA","NASDAQ:AAPL","NYSE:WMT","NASDAQ:TSLA"]},"columns":["close","Perf.W","earnings_release_next_date","earnings_release_date","description"]}' | head -c 1200; echo
+          echo "== FNG"; curl -s -D - -m 20 'https://api.alternative.me/fng/?limit=3' | grep -iE 'access-control|^\{|value' | head -c 800; echo
+          echo "== CNN"; curl -s -m 20 -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36' -H 'Referer: https://edition.cnn.com/' https://production.dataviz.cnn.io/index/fearandgreed/graphdata | head -c 600; echo
+          echo "== TV cal next week"; F=$(date -u -d 'next monday' +%Y-%m-%dT00:00:00.000Z); T=$(date -u -d 'next monday +5 day' +%Y-%m-%dT00:00:00.000Z); curl -s -m 20 -H 'Origin: https://www.tradingview.com' -A 'Mozilla/5.0' "https://economic-calendar.tradingview.com/events?from=$F&to=$T&countries=US,EU,GB,JP,CN" | jq -c '.result[]|select(.importance==1)|[.date,.currency,.title,.forecast,.previous]' | head -40
+          echo "== FF next"; curl -s -o /dev/null -w '%{http_code}\n' https://nfs.faireconomy.media/ff_calendar_nextweek.json
