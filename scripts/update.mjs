@@ -182,7 +182,8 @@ function parseRss(xml, fallbackSource) {
   return out;
 }
 // Headline quality: drop local-market price pages, too-short or mostly-Latin titles (tickers, ads).
-const LOCAL_MKT = /في (مصر|السعودية|الإمارات|الكويت|الأردن|المغرب|العراق|الجزائر|سوريا|لبنان|اليمن|قطر|عمان|عُمان|البحرين|تونس|ليبيا|السودان|فلسطين)|بالمصنعية|محلياً|المحلية/;
+const LOCAL_MKT = /شارك برأيك|(?:في|فى) (?:مصر|السعودية|الإمارات|الكويت|الأردن|المغرب|العراق|الجزائر|سوريا|لبنان|اليمن|قطر|عمان|عُمان|البحرين|تونس|ليبيا|السودان|فلسطين)|بالمصنعية|محلياً|المحلية/;
+const cleanSrc = x => (x || '').replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/$/, '').split(/ : | - | \| /)[0].trim();
 const goodTitle = t => { const ws = t.split(/\s+/).filter(Boolean); if (ws.length < 5) return false; const lat = (t.match(/[A-Za-z]/g) || []).length, ar = (t.match(/[\u0600-\u06FF]/g) || []).length; return ar > lat * 1.5; };
 const gnews = q => `https://news.google.com/rss/search?q=${encodeURIComponent(q)}&hl=ar&gl=SA&ceid=SA%3Aar`;
 const FEEDS = {
@@ -216,7 +217,7 @@ async function news() {
     }
     if (cfg.exclude) items = items.filter(x => !cfg.exclude.test(x.t) && !LOCAL_MKT.test(x.t));
     items = items.filter(x => goodTitle(x.t) || !/[\u0600-\u06FF]/.test(x.t));
-    items.forEach(x => { x.s = (x.s || '').replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/$/, ''); });
+    items.forEach(x => { x.s = cleanSrc(x.s); });
     const seen = new Set();
     items = items.filter(x => Date.parse(x.d) >= cutoff && Date.parse(x.d) <= Date.now() + 600000)
       .sort((a, b) => b.d.localeCompare(a.d))
@@ -323,7 +324,7 @@ async function recap() {
       if ([...w].some(z => picked.filter(p => p.w.has(z)).length >= 2)) continue; // one story can't take over the list
       picked.push({ x, w }); if (picked.length === 6) break;
     }
-    items = picked.map(({ x }) => ({ ...x, s: (x.s || '').replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/$/, '') }));
+    items = picked.map(({ x }) => ({ ...x, s: cleanSrc(x.s) }));
     out.headlines[k] = items.length ? items : (old.headlines?.[k] || []);
   }
   return writeIfChanged(path, out);
