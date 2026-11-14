@@ -224,6 +224,180 @@ async function news() {
   await writeIfChanged(path, out);
 }
 
+/* ---------------- Weekly recap ----------------
+   Week performance (TradingView scanner), the week's key results (kept even after the calendar rolls over),
+   key events and big-tech earnings for the coming days, and the week's top headlines per market. */
+const KW = 3 * 3600000;
+const kwDate = t => new Date(t + KW);
+function recapWeek(now = Date.now()) {
+  const k = kwDate(now); const wd = k.getUTCDay(); // 0 Sun .. 6 Sat (Kuwait calendar day)
+  const back = wd === 0 ? 6 : wd === 6 ? 5 : wd - 1; // days back to Monday
+  const mon = Date.UTC(k.getUTCFullYear(), k.getUTCMonth(), k.getUTCDate() - back) - KW; // Monday 00:00 Kuwait
+  return { from: mon, to: mon + 5 * 86400000 - 1, final: wd === 0 || wd === 6 };
+}
+const ASSETS = [
+  ['XAU', 'OANDA:XAUUSD', 'الذهب', 'metals'], ['XAG', 'OANDA:XAGUSD', 'الفضة', 'metals'],
+  ['SPX', 'SP:SPX', 'S&P 500', 'stocks'], ['NDX', 'NASDAQ:NDX', 'ناسداك 100', 'stocks'], ['DJI', 'DJ:DJI', 'داو جونز', 'stocks'],
+  ['BTC', 'BITSTAMP:BTCUSD', 'البتكوين', 'crypto'], ['ETH', 'BITSTAMP:ETHUSD', 'الإيثيريوم', 'crypto'], ['TOTAL', 'CRYPTOCAP:TOTAL', 'سوق الكريبتو', 'crypto'],
+  ['DXY', 'TVC:DXY', 'مؤشر الدولار', 'usd']
+];
+const MEGA = ['NASDAQ:AAPL', 'NASDAQ:MSFT', 'NASDAQ:NVDA', 'NASDAQ:AMZN', 'NASDAQ:GOOGL', 'NASDAQ:META', 'NASDAQ:TSLA', 'NASDAQ:AVGO', 'NASDAQ:NFLX', 'NASDAQ:AMD',
+  'NASDAQ:COST', 'NASDAQ:PLTR', 'NASDAQ:ADBE', 'NASDAQ:INTC', 'NASDAQ:MU', 'NASDAQ:PANW', 'NASDAQ:COIN', 'NASDAQ:MSTR', 'NYSE:BRK.B', 'NYSE:JPM', 'NYSE:V', 'NYSE:MA',
+  'NYSE:WMT', 'NYSE:ORCL', 'NYSE:LLY', 'NYSE:UNH', 'NYSE:XOM', 'NYSE:HD', 'NYSE:LOW', 'NYSE:TGT', 'NYSE:CRM', 'NYSE:BAC', 'NYSE:DIS', 'NYSE:NKE', 'NYSE:BABA', 'NYSE:TSM', 'NYSE:SNOW'];
+async function scan(market, tickers, columns) {
+  const r = await fetch(`https://scanner.tradingview.com/${market}/scan`, { method: 'POST', headers: { 'content-type': 'application/json', 'user-agent': UA },
+    body: JSON.stringify({ symbols: { tickers }, columns }), signal: AbortSignal.timeout(25000) });
+  if (!r.ok) throw new Error('scan ' + r.status);
+  const j = await r.json(); return new Map((j.data || []).map(x => [x.s, x.d]));
+}
+const WEEK_FEEDS = {
+  stocks: gnews('("وول ستريت" OR "الأسهم الأمريكية" OR ناسداك OR "ستاندرد آند بورز" OR "داو جونز" OR إنفيديا OR "أرباح الشركات") when:7d'),
+  metals: gnews('(الذهب OR الفضة) (أوقية OR الأوقية OR الأونصة OR "المعدن الأصفر" OR "المعدن النفيس" OR "الملاذ الآمن") when:7d'),
+  crypto: gnews('(بتكوين OR البيتكوين OR "العملات الرقمية" OR "العملات المشفرة" OR إيثريوم) when:7d')
+};
+const LOCAL_PRICE = /عيار|جنيه|جنيها|ريال|درهم|دينار|ليرة|الليرة|بالأسواق المحلية|محلات|الصاغة|المصوغات|سبيكة|سبائك|الجرام|للجرام|بالجرام/;
+async function recap() {
+  const path = 'data/recap.json';
+  const old = (await readJson(path)) || {};
+  const now = Date.now(), wk = recapWeek(now);
+  const out = { updated: new Date().toISOString(), week: { from: new Date(wk.from).toISOString(), to: new Date(wk.to).toISOString(), final: wk.final } };
+  // 1) performance
+  try {
+    const m = await scan('global', ASSETS.map(a => a[1]), ['close', 'Perf.W', 'Perf.1M', 'change']);
+    out.perf = ASSETS.map(([k, s, n, g]) => { const d = m.get(s); return d ? { k, n, g, c: d[0], w: d[1], m: d[2], d: d[3] } : null; }).filter(Boolean);
+  } catch (e) { console.log('recap perf', String(e.message || e)); }
+  if (!out.perf?.length) out.perf = old.perf || [];
+  // 2) results of the week (High + USD Medium), merged with what we kept earlier for the same week
+  const cal = (await readJson('data/calendar.json'))?.events || [];
+  const keep = new Map();
+  if (old.week?.from === out.week.from) (old.results || []).forEach(e => keep.set(e.d + '|' + e.c + '|' + e.t, e));
+  cal.forEach(e => { const t = Date.parse(e.d); if (t >= wk.from && t <= Math.min(now, wk.to + 2 * 86400000) && e.a && (e.i === 'High' || (e.i === 'Medium' && e.c === 'USD'))) keep.set(e.d + '|' + e.c + '|' + e.t, { t: e.t, c: e.c, d: e.d, i: e.i, f: e.f, p: e.p, a: e.a }); });
+  out.results = [...keep.values()].sort((a, b) => a.d.localeCompare(b.d));
+  // 3) coming events: next 8 days. High events from our calendar, filled in with TradingView's high-importance events.
+  const until = now + 8 * 86400000;
+  const next = cal.filter(e => e.i === 'High' && Date.parse(e.d) > now && Date.parse(e.d) < until).map(e => ({ t: e.t, c: e.c, d: e.d, f: e.f, p: e.p, src: 'ff' }));
+  try {
+    const tv = await fetchTV(now, until);
+    const fmt = (v, u, s) => v == null ? '' : (Math.round(v * 1000) / 1000) + (u === '%' ? '%' : '') + (s || '');
+    for (const x of tv) {
+      if (x.importance !== 1 || !['USD', 'EUR', 'GBP', 'JPY', 'CNY'].includes(x.currency)) continue;
+      const t = Date.parse(x.date); if (!(t > now && t < until)) continue;
+      if (next.some(e => e.c === x.currency && Math.abs(Date.parse(e.d) - t) < 15 * 60000)) continue;
+      next.push({ t: x.title.trim(), c: x.currency, d: new Date(t).toISOString(), f: fmt(x.forecast, x.unit, x.scale), p: fmt(x.previous, x.unit, x.scale), src: 'tv' });
+    }
+  } catch (e) { console.log('recap tv', String(e.message || e)); }
+  out.next = next.sort((a, b) => a.d.localeCompare(b.d)).slice(0, 30);
+  // 4) big-tech earnings in the next 8 days
+  try {
+    const m = await scan('america', MEGA, ['description', 'earnings_release_next_date', 'earnings_per_share_forecast_next_fq', 'market_cap_basic']);
+    out.earnings = MEGA.map(s => { const d = m.get(s); if (!d || !d[1]) return null; const t = d[1] * 1000; if (t < now - 12 * 3600000 || t > until) return null;
+      return { s: s.split(':')[1], n: d[0], d: new Date(t).toISOString(), eps: d[2], cap: d[3] }; }).filter(Boolean).sort((a, b) => a.d.localeCompare(b.d) || b.cap - a.cap);
+  } catch (e) { console.log('recap earnings', String(e.message || e)); out.earnings = old.earnings || []; }
+  // 5) top headlines of the week per market
+  out.headlines = {};
+  for (const [k, url] of Object.entries(WEEK_FEEDS)) {
+    let items = [];
+    try { items = parseRss(await get(url)); } catch (e) { console.log('recap news', k, String(e.message || e)); }
+    if (k === 'metals') items = items.filter(x => !LOCAL_PRICE.test(x.t));
+    const seen = new Set();
+    items = items.filter(x => Date.parse(x.d) >= now - 8 * 86400000)
+      .filter(x => { const kk = x.t.replace(/[^\p{L}\p{N}]/gu, '').slice(0, 40); if (seen.has(kk)) return false; seen.add(kk); return true; })
+      .slice(0, 6).map(x => ({ ...x, s: (x.s || '').replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/$/, '') }));
+    out.headlines[k] = items.length ? items : (old.headlines?.[k] || []);
+  }
+  return writeIfChanged(path, out);
+}
+
+/* ---------------- Fear & Greed ---------------- */
+async function sentiment() {
+  const path = 'data/sentiment.json';
+  const old = (await readJson(path)) || {};
+  const out = { updated: new Date().toISOString() };
+  try {
+    const j = JSON.parse(await get('https://api.alternative.me/fng/?limit=31'));
+    const h = (j.data || []).map(x => ({ v: +x.value, t: +x.timestamp * 1000 }));
+    if (h.length) out.crypto = { v: h[0].v, t: h[0].t, prev: h[1]?.v, week: h[7]?.v, month: h[30]?.v, hist: h.slice(0, 31).reverse().map(x => x.v) };
+  } catch (e) { console.log('fng crypto', String(e.message || e)); }
+  try {
+    const r = await fetch('https://production.dataviz.cnn.io/index/fearandgreed/graphdata', { headers: { 'user-agent': UA, referer: 'https://edition.cnn.com/', accept: 'application/json' }, signal: AbortSignal.timeout(25000) });
+    if (!r.ok) throw new Error('cnn ' + r.status);
+    const j = await r.json(); const f = j.fear_and_greed;
+    const hist = (j.fear_and_greed_historical?.data || []).slice(-31).map(x => Math.round(x.y));
+    if (f) out.stocks = { v: Math.round(f.score), t: Date.parse(f.timestamp), prev: Math.round(f.previous_close), week: Math.round(f.previous_1_week), month: Math.round(f.previous_1_month), hist };
+  } catch (e) { console.log('fng stocks', String(e.message || e)); }
+  out.crypto ??= old.crypto; out.stocks ??= old.stocks;
+  return writeIfChanged(path, out);
+}
+
+/* ---------------- Push notifications (OneSignal) ----------------
+   15 minutes before every high-impact release, and again when its actual figure lands.
+   push-config.json holds the public App ID; the API key comes from the ONESIGNAL_API_KEY secret. */
+import { createHash } from 'node:crypto';
+const IMPACT = [
+  { re: /Speaks|Testif|Press Conference|Statement|Minutes|Meeting|Speech|Hearing/i, up: null },
+  { re: /Funds Rate|Rate Decision|Interest Rate|Cash Rate|Bank Rate|Refinancing Rate|Policy Rate|Deposit Facility/i, up: 'hawk' },
+  { re: /CPI|PCE|PPI|Inflation|Price Index|Employment Cost|Average Hourly Earnings/i, up: 'hawk' },
+  { re: /Unemployment Rate/i, up: 'weak' }, { re: /Claims/i, up: 'weak' }
+];
+const CUR = { USD: 'الدولار', EUR: 'اليورو', GBP: 'الجنيه', JPY: 'الين', CNY: 'اليوان' };
+function effectLine(e, dir) { // dir: 'up' | 'down' relative to forecast
+  const g = IMPACT.find(x => x.re.test(e.t)); const up = g ? g.up : 'hawk'; if (!up) return '';
+  const curUp = (up === 'hawk') === (dir === 'up'); // currency strengthens?
+  const a = s => s ? '▲' : '▼';
+  if (e.c === 'USD') return `الدولار ${a(curUp)} · الذهب ${a(!curUp)} · الفضة ${a(!curUp)} · البتكوين ${a(!curUp)}`;
+  return `${CUR[e.c] || e.c} ${a(curUp)} · الدولار ${a(!curUp)} (غير مباشر)`;
+}
+const uuidOf = s => { const h = createHash('sha1').update(s).digest('hex'); return `${h.slice(0, 8)}-${h.slice(8, 12)}-4${h.slice(13, 16)}-a${h.slice(17, 20)}-${h.slice(20, 32)}`; };
+const hhmm = t => new Date(t + KW).toISOString().slice(11, 16);
+async function sendPush(cfg, key, heading, body) {
+  const r = await fetch('https://api.onesignal.com/notifications?c=push', {
+    method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Key ' + process.env.ONESIGNAL_API_KEY },
+    body: JSON.stringify({ app_id: cfg.appId, included_segments: ['Total Subscriptions'], target_channel: 'push', idempotency_key: uuidOf(key),
+      headings: { en: heading, ar: heading }, contents: { en: body, ar: body }, url: 'https://traderholic.github.io/#calendar',
+      chrome_web_icon: 'https://traderholic.github.io/icons/icon-192.png', ttl: 3600 }),
+    signal: AbortSignal.timeout(20000)
+  });
+  const txt = await r.text(); console.log('push', r.status, key, txt.slice(0, 200));
+  return r.ok;
+}
+async function pushAlerts() {
+  const cfg = await readJson('push-config.json');
+  if (!cfg?.appId || !process.env.ONESIGNAL_API_KEY) return false;
+  const logPath = 'data/push-log.json';
+  const log = (await readJson(logPath)) || { sent: {} };
+  const now = Date.now(); let changed = false;
+  for (const [k, t] of Object.entries(log.sent)) if (now - Date.parse(t) > 4 * 86400000) { delete log.sent[k]; changed = true; }
+  const cal = (await readJson('data/calendar.json'))?.events || [];
+  const hi = cal.filter(e => e.i === 'High');
+  const byTime = new Map(); hi.forEach(e => { const k = e.d; if (!byTime.has(k)) byTime.set(k, []); byTime.get(k).push(e); });
+  for (const [d, list] of byTime) {
+    const t = Date.parse(d);
+    // before
+    const preKey = 'pre|' + d + '|' + list.map(e => e.c + e.t).join(',');
+    if (t - now > 0 && t - now <= 15.5 * 60000 && !log.sent[preKey]) {
+      const mins = Math.max(1, Math.round((t - now) / 60000));
+      const body = list.map(e => `${e.c} · ${e.t}${e.f ? ' (المتوقع ' + e.f + ')' : ''}`).join('\n') + '\nانتبه: السبريد يتسع والحركة تكون قوية.';
+      if (await sendPush(cfg, preKey, `⏰ خبر قوي بعد ${mins} دقيقة · ${hhmm(t)} بتوقيت الكويت`, body)) { log.sent[preKey] = new Date().toISOString(); changed = true; }
+    }
+    // after: once every item at this time that can have a figure has one (or 10 minutes passed)
+    const withFig = list.filter(e => !IMPACT[0].re.test(e.t));
+    const got = withFig.filter(e => e.a);
+    const resKey = 'res|' + d + '|' + got.map(e => e.c + e.t).join(',');
+    if (got.length && now - t < 60 * 60000 && (got.length === withFig.length || now - t > 10 * 60000) && !Object.keys(log.sent).some(k => k.startsWith('res|' + d + '|'))) {
+      const lines = got.map(e => {
+        const a = num(e.a), f = num(e.f);
+        if (f == null) return `${e.t}: ${e.a}`;
+        const dir = a > f ? 'up' : a < f ? 'down' : 'eq';
+        const word = dir === 'up' ? 'أعلى من المتوقع ⬆️' : dir === 'down' ? 'أقل من المتوقع ⬇️' : 'مطابق للمتوقع';
+        return `${e.t}: ${e.a} (المتوقع ${e.f}) ${word}` + (dir === 'eq' ? '' : '\n' + effectLine(e, dir));
+      });
+      if (await sendPush(cfg, resKey, `📊 صدر الخبر · ${got[0].c}`, lines.join('\n'))) { log.sent[resKey] = new Date().toISOString(); changed = true; }
+    }
+  }
+  if (changed) await writeFile(logPath, JSON.stringify(log));
+  return changed;
+}
+
 /* ---------------- Runner ----------------
    GitHub's scheduled runs are often late or skipped, so one job stays alive for hours and checks in a loop:
    every ~12 s around a release, every minute otherwise; news every 10 minutes. Changes are committed and pushed at once. */
@@ -244,13 +418,22 @@ await mkdir('data', { recursive: true });
 if (!process.argv.includes('--watch')) {
   await calendar().catch(e => console.log('calendar failed', e));
   await news().catch(e => console.log('news failed', e));
+  await recap().catch(e => console.log('recap failed', e));
+  await sentiment().catch(e => console.log('sentiment failed', e));
 } else {
   const end = Date.now() + (Number(process.env.WATCH_MINUTES) || 330) * 60000;
-  let lastNews = 0;
+  let lastNews = 0, lastSlow = 0;
   while (Date.now() < end) {
     try { sh('git pull -q --rebase origin main'); } catch (e) { console.log('pull failed', String(e.message || e).slice(0, 200)); }
     const changed = await calendar().catch(e => { console.log('calendar failed', e); return false; });
-    if (changed) await publish('data: calendar update');
+    const pushed = await pushAlerts().catch(e => { console.log('push failed', e); return false; });
+    if (changed || pushed) await publish('data: calendar update');
+    if (Date.now() - lastSlow > 30 * 60000) {
+      lastSlow = Date.now();
+      await recap().catch(e => console.log('recap failed', e));
+      await sentiment().catch(e => console.log('sentiment failed', e));
+      await publish('data: recap and sentiment');
+    }
     if (Date.now() - lastNews > 10 * 60000) {
       lastNews = Date.now();
       await news().catch(e => console.log('news failed', e));

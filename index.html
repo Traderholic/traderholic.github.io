@@ -263,6 +263,89 @@ section.block{padding-block:40px}
   .cb-cta{width:100%;justify-content:center}
 }
 
+/* ---------- push bar ---------- */
+.pushbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:0 0 14px;padding:12px 14px;border-radius:var(--r-md);background:linear-gradient(90deg,var(--green-soft),var(--surface));border:1px solid var(--green-line)}
+.bell{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;border:0;cursor:pointer;font:inherit;font-weight:700;font-size:14px;background:var(--green);color:#0D1014}
+.bell.on{background:var(--surface-2);color:var(--green);box-shadow:inset 0 0 0 1px var(--green-line)}
+.bell:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+.pushnote{margin:0;flex:1;min-width:220px;font-size:13.5px;color:var(--muted);line-height:1.6}
+.pushnote b{color:var(--fg)}
+
+/* ---------- fear & greed ---------- */
+.fg-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:760px){.fg-grid{grid-template-columns:minmax(0,1fr)}}
+.fg{padding:20px;display:flex;flex-direction:column;gap:14px}
+.fg-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.fg-top h3{margin:0;font-size:18px}
+.fg-top .en{font-size:11px;font-weight:800;letter-spacing:2px;color:var(--dim)}
+.fg-gauge{position:relative;max-width:300px;width:100%;margin:0 auto}
+.fg-gauge svg{display:block;width:100%;height:auto}
+.fg-val{position:absolute;inset:auto 0 0 0;text-align:center;line-height:1}
+.fg-val b{display:block;font-family:var(--en);font-size:46px;font-weight:900}
+.fg-val span{display:inline-block;margin-top:8px;font-size:15px;font-weight:700;padding:4px 12px;border-radius:999px}
+.fg-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.fg-row div{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:8px;text-align:center}
+.fg-row small{display:block;font-size:11.5px;color:var(--dim);font-weight:700}
+.fg-row b{font-family:var(--en);font-size:17px}
+.fg-tip{margin:0;font-size:14px;line-height:1.7;color:var(--muted);padding:10px 12px;border-radius:12px;background:var(--bg);border-right:3px solid currentColor}
+.fg-spark{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--dim)}
+.fg-spark svg{flex:1;height:34px;min-width:0}
+
+/* ---------- weekly recap ---------- */
+.rc-story{padding:18px 20px;display:flex;flex-direction:column;gap:10px;margin-bottom:14px;background:linear-gradient(120deg,var(--surface) 55%,#14231A)}
+.rc-story .bw{display:flex;flex-wrap:wrap;gap:8px}
+.rc-story .bw span{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;font-size:13.5px;font-weight:700;border:1px solid var(--line-2);background:var(--bg)}
+.rc-story .bw .up{color:var(--green);border-color:var(--green-line)}.rc-story .bw .dn{color:#F48C78;border-color:#5A3029}
+.rc-story ul{margin:0;padding:0 18px 0 0;display:flex;flex-direction:column;gap:6px;color:var(--muted);line-height:1.7}
+.rc-story li b{color:var(--fg)}
+.pct{font-family:var(--en);font-weight:800;direction:ltr;unicode-bidi:isolate}
+.pct.up{color:var(--green)}.pct.dn{color:#F48C78}
+.rc-perf{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:14px}
+@media (max-width:900px){.rc-perf{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:520px){.rc-perf{grid-template-columns:minmax(0,1fr)}}
+.rc-card{position:relative;overflow:hidden;padding:14px 16px;border-radius:var(--r-md);background:var(--surface);border:1px solid var(--line);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;align-items:center}
+.rc-card::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:var(--gc,var(--line-2))}
+.rc-card .g{grid-column:1/-1;font-size:11px;font-weight:800;letter-spacing:1px;color:var(--gc,var(--dim))}
+.rc-card .n{font-size:16px;font-weight:700}
+.rc-card .c{font-family:var(--en);font-size:14px;color:var(--muted);direction:ltr;unicode-bidi:isolate;text-align:right}
+.rc-card .w{grid-row:2/4;grid-column:2;font-size:22px;text-align:left}
+.rc-card .m{grid-column:1/-1;font-size:12px;color:var(--dim)}
+.rc-card .bar{grid-column:1/-1;height:6px;border-radius:6px;background:var(--bg);position:relative;overflow:hidden;margin-top:4px}
+.rc-card .bar i{position:absolute;top:0;bottom:0;border-radius:6px}
+.rc-two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:14px}
+@media (max-width:860px){.rc-two{grid-template-columns:minmax(0,1fr)}}
+.rc-box{padding:18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.rc-box h3{margin:0;font-size:18px;display:flex;align-items:center;gap:10px}
+.rc-box h4{margin:8px 0 0;font-size:15px;color:var(--muted)}
+.rc-box .dot{width:10px;height:10px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green)}
+.rc-box .dot.o{background:var(--orange);box-shadow:0 0 10px var(--orange)}.rc-box .dot.g{background:#FFD24A;box-shadow:0 0 10px #FFD24A}
+.rc-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.rc-res{border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;background:var(--bg)}
+.rc-res .top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--dim)}
+.rc-res .top b{font-size:15px;color:var(--fg);font-family:var(--en)}
+.rc-res .nums{font-size:14px;color:var(--muted)}
+.rc-res .nums b{font-family:var(--en);color:#FFD24A}
+.rc-res .fx span{font-size:12.5px;padding:4px 9px}
+.rc-day{font-size:13px;font-weight:800;color:var(--green);margin-top:4px}
+.rc-ev{display:grid;grid-template-columns:48px 44px minmax(0,1fr);gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+.rc-ev:last-child{border-bottom:0}
+.rc-ev .tm{font-family:var(--en);font-weight:800}
+.rc-ev .cu{font-family:var(--en);font-size:12px;font-weight:800;color:var(--muted)}
+.rc-ev .ti{font-family:var(--en);font-weight:600;min-width:0}
+.rc-ev .ti small{display:block;font-family:var(--ar);font-weight:500;color:var(--dim);font-size:12px}
+.rc-earn{display:flex;flex-wrap:wrap;gap:8px}
+.rc-earn span{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:10px;background:var(--bg);border:1px solid var(--line);font-size:13px}
+.rc-earn b{font-family:var(--en);color:var(--fg)}
+.rc-earn small{color:var(--dim)}
+.rc-news{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 18px}
+@media (max-width:760px){.rc-news{grid-template-columns:minmax(0,1fr)}}
+.rc-news a{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);text-decoration:none;color:var(--fg);min-width:0}
+.rc-news a:hover .t{color:var(--green)}
+.rc-news .i{font-family:var(--en);font-weight:900;font-size:20px;color:transparent;-webkit-text-stroke:1px var(--green);min-width:28px}
+.rc-news .t{font-weight:700;line-height:1.6}
+.rc-news .s{display:block;font-size:12.5px;color:var(--dim);margin-top:2px}
+.rc-empty{color:var(--dim);font-size:14px;margin:0}
+
 /* contact */
 .contact{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px;align-items:center;background:var(--green-soft);border:1.5px solid var(--green);border-radius:var(--r-lg);padding:26px}
 @media (max-width:760px){.contact{grid-template-columns:minmax(0,1fr);text-align:center;justify-items:center}}
@@ -489,7 +572,9 @@ a.scard{text-decoration:none;color:inherit}
       <a href="#fed">الفيدرالي</a>
       <a href="#sessions">الجلسات</a>
       <a href="#prices">Prices &amp; Charts</a>
+      <a href="#sentiment">الخوف والطمع</a>
       <a href="#news">آخر الأخبار</a>
+      <a href="#recap">ملخص الأسبوع</a>
       <a href="#holidays">العطل</a>
       <a href="#calculator">حاسبة اللوت</a>
       <a href="#course" class="cta">الدورة</a>
@@ -566,6 +651,10 @@ a.scard{text-decoration:none;color:inherit}
           <button type="button" data-imp="med" aria-pressed="false">متوسطة وعالية</button>
           <button type="button" data-imp="all" aria-pressed="false">الكل</button>
         </div>
+      </div>
+      <div class="pushbar" id="pushBar" hidden>
+        <button type="button" class="bell" id="pushBtn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span id="pushLbl">نبّهني قبل الأخبار القوية</span></button>
+        <p class="pushnote" id="pushNote">يوصلك إشعار قبل الخبر القوي بـ 15 دقيقة، وإشعار ثاني بالنتيجة وتأثيرها على الذهب والفضة والدولار والبتكوين.</p>
       </div>
       <div class="panel cal" id="calList" aria-live="polite"><p class="wfallback">جاري تحميل التقويم…</p></div>
       <ul class="legend" aria-label="مفتاح الألوان">
@@ -654,6 +743,22 @@ a.scard{text-decoration:none;color:inherit}
       <div class="panel chartbox"><div class="widget" id="chartWidget" style="height:100%"></div></div>
     </section>
 
+    <!-- FEAR & GREED -->
+    <section class="block" id="sentiment" aria-labelledby="fgTitle">
+      <div class="shead" data-wm="SENTIMENT">
+        <div>
+          <span class="tag">FEAR &amp; GREED</span>
+          <h2 id="fgTitle">مؤشر الخوف والطمع</h2>
+          <p class="sub">يقيس مزاج المستثمرين من <b>0</b> (خوف شديد) إلى <b>100</b> (طمع شديد). الخوف الشديد يصير عادة وقت البيع بذعر، والطمع الشديد وقت الحماس الزايد.</p>
+        </div>
+      </div>
+      <div class="fg-grid">
+        <article class="panel fg" id="fgCrypto"><p class="wfallback">جاري التحميل…</p></article>
+        <article class="panel fg" id="fgStocks"><p class="wfallback">جاري التحميل…</p></article>
+      </div>
+      <p class="note">المصادر: <span dir="ltr">Alternative.me</span> لمؤشر الكريبتو، و<span dir="ltr">CNN Business</span> لمؤشر الأسهم الأمريكية. <span id="fgUpd"></span></p>
+    </section>
+
     <!-- NEWS -->
     <section class="block" id="news" aria-labelledby="nwTitle">
       <div class="shead" data-wm="NEWS">
@@ -670,6 +775,34 @@ a.scard{text-decoration:none;color:inherit}
       </div>
       <div class="panel newslist" id="newsList" aria-live="polite"><p class="wfallback">جاري تحميل الأخبار…</p></div>
       <p class="note" id="newsUpdated"></p>
+    </section>
+
+    <!-- WEEKLY RECAP -->
+    <section class="block" id="recap" aria-labelledby="rcTitle">
+      <div class="shead" data-wm="WEEKLY">
+        <div>
+          <span class="tag">WEEKLY RECAP</span>
+          <h2 id="rcTitle">ملخص الأسبوع</h2>
+          <p class="sub" id="rcSub">أداء الأسهم الأمريكية والذهب والفضة والكريبتو، وأبرز النتائج والعناوين، وأهم اللي جاي.</p>
+        </div>
+      </div>
+      <div class="rc-story panel" id="rcStory"><p class="wfallback">جاري تحميل الملخص…</p></div>
+      <div class="rc-perf" id="rcPerf"></div>
+      <div class="rc-two">
+        <div class="panel rc-box"><h3><span class="dot"></span>أبرز نتائج الأسبوع</h3><div id="rcRes"></div></div>
+        <div class="panel rc-box"><h3><span class="dot o"></span><span id="rcNextT">أهم أحداث الأسبوع الجاي</span></h3><div id="rcNext"></div>
+          <h4>نتائج الشركات الأمريكية الكبرى</h4><div id="rcEarn"></div></div>
+      </div>
+      <div class="panel rc-box">
+        <div class="rc-head"><h3><span class="dot g"></span>أبرز عناوين الأسبوع</h3>
+          <div class="seg" role="group" aria-label="سوق العناوين">
+            <button type="button" data-rch="stocks" aria-pressed="true">الأسهم الأمريكية</button>
+            <button type="button" data-rch="metals" aria-pressed="false">الذهب والفضة</button>
+            <button type="button" data-rch="crypto" aria-pressed="false">الكريبتو</button>
+          </div></div>
+        <div id="rcNews"></div>
+      </div>
+      <p class="note" id="rcUpd"></p>
     </section>
 
     <!-- HOLIDAYS -->
@@ -1424,6 +1557,150 @@ document.getElementById('copyPhone').addEventListener('click',async e=>{
   const b=e.currentTarget;try{await navigator.clipboard.writeText('+'+SETTINGS.whatsapp);b.textContent='تم النسخ ✓';}catch(_){b.textContent='+965 9998 0548';}
   setTimeout(()=>b.textContent='نسخ الرقم',2200);
 });
+
+/* ============ Fear & Greed ============ */
+const FG_ZONES=[[25,'خوف شديد','#F05252'],[45,'خوف','#E0715B'],[55,'محايد','#E8C547'],[75,'طمع','#8BD45E'],[101,'طمع شديد','#3DCB4F']];
+const fgZone=v=>FG_ZONES.find(z=>v<z[0])||FG_ZONES[4];
+const FG_TIPS={
+  'خوف شديد':'المستثمرين يبيعون بذعر. تاريخياً هذي مناطق يجمّع فيها المستثمر طويل المدى، بس انتظر تأكيد الانعكاس قبل الدخول.',
+  'خوف':'المزاج سلبي والسوق حذر. ركّز على إدارة المخاطرة وصفقات بحجم أصغر.',
+  'محايد':'ما فيه اتجاه عاطفي واضح، والسوق ينتظر محفّز جديد.',
+  'طمع':'الثقة عالية والأسعار مرتفعة. لا تلحق السعر بدون خطة واضحة.',
+  'طمع شديد':'السوق متحمس زيادة وغالباً تتبعه تصحيحات. انتبه وأمّن جزء من أرباحك.'};
+function fgGauge(v){
+  const cx=150,cy=150,r=118,seg=[[0,25],[25,45],[45,55],[55,75],[75,100]];
+  const pt=(val,rr)=>{const a=Math.PI*(1-val/100);return [cx+rr*Math.cos(a),cy-rr*Math.sin(a)];};
+  const arcs=seg.map(([a,b],i)=>{const [x1,y1]=pt(a+0.6,r),[x2,y2]=pt(b-0.6,r);return `<path d="M${x1.toFixed(1)} ${y1.toFixed(1)} A${r} ${r} 0 0 1 ${x2.toFixed(1)} ${y2.toFixed(1)}" stroke="${FG_ZONES[i][2]}" stroke-width="22" fill="none" stroke-linecap="butt" opacity="${v>=a&&v<(b===100?101:b)?1:.32}"/>`;}).join('');
+  const [nx,ny]=pt(v,r-34);
+  return `<svg viewBox="0 0 300 170" role="img" aria-label="المؤشر عند ${v}">${arcs}
+    <line x1="${cx}" y1="${cy}" x2="${nx.toFixed(1)}" y2="${ny.toFixed(1)}" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="${cx}" cy="${cy}" r="10" fill="#FFFFFF"/><circle cx="${cx}" cy="${cy}" r="4" fill="#0D1014"/>
+    <text x="22" y="166" fill="#7E8893" font-size="13" font-family="Montserrat,sans-serif" font-weight="700">0</text>
+    <text x="268" y="166" fill="#7E8893" font-size="13" font-family="Montserrat,sans-serif" font-weight="700">100</text></svg>`;
+}
+function fgSpark(h){
+  if(!h||h.length<3)return'';const w=200,ht=34,n=h.length;
+  const pts=h.map((v,i)=>`${(i*(w/(n-1))).toFixed(1)},${(ht-2-(v/100)*(ht-4)).toFixed(1)}`).join(' ');
+  return `<div class="fg-spark"><span>آخر 30 يوم</span><svg viewBox="0 0 ${w} ${ht}" preserveAspectRatio="none" aria-hidden="true"><line x1="0" y1="${ht/2}" x2="${w}" y2="${ht/2}" stroke="#262D36" stroke-dasharray="3 4"/><polyline points="${pts}" fill="none" stroke="${fgZone(h[n-1])[2]}" stroke-width="2" vector-effect="non-scaling-stroke"/></svg></div>`;
+}
+function fgCard(title,en,d){
+  if(!d||d.v==null)return `<div class="fg-top"><h3>${title}</h3><span class="en">${en}</span></div><p class="wfallback">البيانات تتحدّث، ارجع بعد شوي.</p>`;
+  const z=fgZone(d.v),cell=(lab,v)=>`<div><small>${lab}</small><b style="color:${v==null?'var(--dim)':fgZone(v)[2]}">${v==null?'—':v}</b></div>`;
+  return `<div class="fg-top"><h3>${title}</h3><span class="en">${en}</span></div>
+    <div class="fg-gauge">${fgGauge(d.v)}<div class="fg-val"><b style="color:${z[2]}">${d.v}</b><span style="background:${z[2]}22;color:${z[2]}">${z[1]}</span></div></div>
+    <div class="fg-row">${cell('أمس',d.prev)}${cell('قبل أسبوع',d.week)}${cell('قبل شهر',d.month)}</div>
+    ${fgSpark(d.hist)}
+    <p class="fg-tip" style="color:${z[2]}"><span style="color:var(--muted)">${FG_TIPS[z[1]]}</span></p>`;
+}
+async function loadSentiment(){
+  try{const r=await fetch('data/sentiment.json?v='+Math.floor(Date.now()/300000),{cache:'no-store'});if(!r.ok)throw 0;const j=await r.json();
+    document.getElementById('fgCrypto').innerHTML=fgCard('البتكوين والكريبتو','CRYPTO',j.crypto);
+    document.getElementById('fgStocks').innerHTML=fgCard('الأسهم الأمريكية','US STOCKS',j.stocks);
+    if(j.updated)document.getElementById('fgUpd').textContent='آخر تحديث: '+ago(Date.parse(j.updated))+'.';
+  }catch(_){['fgCrypto','fgStocks'].forEach(id=>document.getElementById(id).innerHTML='<p class="wfallback">البيانات تتحدّث، ارجع بعد شوي.</p>');}
+}
+loadSentiment();setInterval(loadSentiment,15*60000);
+
+/* ============ Weekly recap ============ */
+const RC_GROUPS={stocks:['الأسهم الأمريكية','#7AA2F7'],metals:['المعادن','#E8C547'],crypto:['الكريبتو','#F2A23C'],usd:['الدولار','#A9B1BB']};
+let RECAP=null,rcNewsKey='stocks';
+const sgn=v=>(v>0?'+':v<0?'−':'')+Math.abs(v).toFixed(2)+'%';
+const pctHtml=v=>v==null?'<span class="pct">—</span>':`<span class="pct ${v>0?'up':v<0?'dn':''}">${sgn(v)}</span>`;
+function fmtPx(k,v){if(v==null)return'—';if(k==='TOTAL')return '$'+(v/1e12).toFixed(2)+'T';
+  const dp=(k==='BTC'||k==='ETH'||k==='DJI'||k==='NDX'||k==='SPX')?(v>=10000?0:2):(k==='XAG'||k==='DXY')?2:2;
+  const s=v.toLocaleString('en-US',{minimumFractionDigits:dp,maximumFractionDigits:dp});return (['SPX','NDX','DJI','DXY'].includes(k)?'':'$')+s;}
+function kwDayLabel(t){const p=kwParts(t);return AR_DAYS[p.wd]+' '+p.d+' '+AR_MONTHS[p.m];}
+function renderRecap(){
+  const j=RECAP;if(!j)return;
+  const now=Date.now(),from=Date.parse(j.week.from),to=Date.parse(j.week.to);
+  const live=!(j.week.final)&&now<=to+86400000;
+  document.getElementById('rcTitle').textContent=live?'ملخص الأسبوع لحد الحين':'ملخص الأسبوع';
+  document.getElementById('rcSub').innerHTML=`من <b>${kwDayLabel(from)}</b> إلى <b>${kwDayLabel(to)}</b>${live?' · الأرقام تتحدّث مع السوق':''}. الأداء محسوب على آخر 7 أيام.`;
+  document.getElementById('rcNextT').textContent=live?'أهم الأحداث الجاية (7 أيام)':'أهم أحداث الأسبوع الجاي';
+  const P=Object.fromEntries((j.perf||[]).map(x=>[x.k,x]));
+  // story
+  const perf=(j.perf||[]).filter(x=>x.w!=null&&x.k!=='TOTAL');
+  let story='';
+  if(perf.length){
+    const best=perf.reduce((a,b)=>b.w>a.w?b:a),worst=perf.reduce((a,b)=>b.w<a.w?b:a);
+    const line=(lab,keys)=>{const xs=keys.map(k=>P[k]).filter(Boolean);return xs.length?`<li><b>${lab}:</b> ${xs.map(x=>`${x.n} ${pctHtml(x.w)}`).join('، ')}.</li>`:'';};
+    let extra='';const g=P.XAU,d=P.DXY;
+    if(g&&d&&g.w!=null&&d.w!=null){if(d.w>0.3&&g.w<-0.3)extra='<li>ارتفاع الدولار تزامن مع تراجع الذهب هالأسبوع، وهذي العلاقة العكسية المعتادة بينهم.</li>';
+      else if(d.w<-0.3&&g.w>0.3)extra='<li>تراجع الدولار تزامن مع صعود الذهب هالأسبوع، وهذي العلاقة العكسية المعتادة بينهم.</li>';}
+    story=`<div class="bw"><span class="up">▲ الأفضل أداءً: ${best.n} ${pctHtml(best.w)}</span><span class="dn">▼ الأسوأ أداءً: ${worst.n} ${pctHtml(worst.w)}</span></div>
+      <ul>${line('الأسهم الأمريكية',['SPX','NDX','DJI'])}${line('الذهب والفضة',['XAU','XAG'])}${line('الكريبتو',['BTC','ETH'])}${line('الدولار',['DXY'])}${extra}</ul>`;
+  }
+  document.getElementById('rcStory').innerHTML=story||'<p class="rc-empty">الأرقام تتحدّث، ارجع بعد شوي.</p>';
+  // cards
+  const max=Math.max(1,...(j.perf||[]).map(x=>Math.abs(x.w||0)));
+  document.getElementById('rcPerf').innerHTML=(j.perf||[]).map(x=>{const g=RC_GROUPS[x.g]||['',''];const w=x.w||0,wd=Math.abs(w)/max*50;
+    return `<div class="rc-card" style="--gc:${g[1]}"><span class="g">${g[0]}</span><span class="n">${esc(x.n)}</span>${pctHtml(x.w).replace('class="pct','class="w pct')}<span class="c">${fmtPx(x.k,x.c)}</span>
+      <span class="m">آخر شهر: ${pctHtml(x.m)}</span><span class="bar"><i style="${w>=0?'left:50%':'right:50%'};width:${wd.toFixed(1)}%;background:${w>=0?'var(--green)':'#F48C78'}"></i></span></div>`;}).join('');
+  // results
+  const res=(j.results||[]).filter(e=>e.a);
+  document.getElementById('rcRes').innerHTML=res.length?res.map(e=>{const t=Date.parse(e.d),p=kwParts(t);const r=resultOf(e),gd=guideFor(Object.assign({},e,{ts:t}));
+    const word=r&&r.dir!=='na'?({up:'أعلى من المتوقع',down:'أقل من المتوقع',eq:'مطابق للمتوقع'}[r.dir]):'';
+    const fx=r&&(r.dir==='up'||r.dir==='down')&&gd.g.up!==null?chips(r.dir==='up'?gd.up:gd.down):'';
+    return `<div class="rc-res"><div class="top"><span>${AR_DAYS[p.wd]} ${p.hh}:${p.mm}</span><span class="cu">${esc(e.c)}</span><b>${esc(e.t)}</b></div>
+      <div class="nums">الفعلي <b>${esc(e.a)}</b>${e.f?` · المتوقع ${esc(e.f)}`:''}${word?` · <span style="color:${r.dir==='eq'?'var(--muted)':'#FFD24A'};font-weight:700">${word}</span>`:''}</div>${fx}</div>`;}).join('')
+    :'<p class="rc-empty">لسّا ما صدرت أخبار قوية هالأسبوع.</p>';
+  // next events grouped by day
+  const nx=(j.next||[]).filter(e=>Date.parse(e.d)>now);let lastDay='',html='';
+  nx.forEach(e=>{const t=Date.parse(e.d),p=kwParts(t),day=kwDayLabel(t);if(day!==lastDay){html+=`<div class="rc-day">${day}</div>`;lastDay=day;}
+    const d=DESC.find(([re])=>re.test(e.t));
+    html+=`<div class="rc-ev"><span class="tm">${p.hh}:${p.mm}</span><span class="cu">${esc(e.c)}</span><span class="ti">${esc(e.t)}${e.f||e.p?`<small>${e.f?'المتوقع '+esc(e.f):''}${e.f&&e.p?' · ':''}${e.p?'السابق '+esc(e.p):''}</small>`:''}</span></div>`;});
+  document.getElementById('rcNext').innerHTML=html||'<p class="rc-empty">جدول الأسبوع الجاي ينزل خلال الويكند.</p>';
+  const er=(j.earnings||[]).filter(e=>Date.parse(e.d)>now-12*3600000);
+  document.getElementById('rcEarn').innerHTML=er.length?'<div class="rc-earn">'+er.map(e=>{const p=kwParts(Date.parse(e.d));return `<span><b>${esc(e.s)}</b><small>${AR_DAYS[p.wd]} ${p.d} ${AR_MONTHS[p.m]}</small></span>`;}).join('')+'</div>'
+    :'<p class="rc-empty">ما فيه نتائج لشركات كبرى بالأيام الجاية.</p>';
+  renderRcNews();
+  if(j.updated)document.getElementById('rcUpd').textContent='المصادر: TradingView للأسعار والأحداث، والعناوين من المواقع الإخبارية. آخر تحديث: '+ago(Date.parse(j.updated))+'.';
+}
+function renderRcNews(){
+  const list=(RECAP?.headlines?.[rcNewsKey])||[];
+  document.getElementById('rcNews').innerHTML=list.length?'<div class="rc-news">'+list.map((x,i)=>`<a href="${esc(x.u)}" target="_blank" rel="noopener"><span class="i">${String(i+1).padStart(2,'0')}</span><span><span class="t">${esc(x.t)}</span><span class="s">${esc(x.s||'')} · ${ago(Date.parse(x.d))}</span></span></a>`).join('')+'</div>'
+    :'<p class="rc-empty">العناوين تتحدّث، ارجع بعد شوي.</p>';
+}
+async function loadRecap(){
+  try{const r=await fetch('data/recap.json?v='+Math.floor(Date.now()/300000),{cache:'no-store'});if(!r.ok)throw 0;RECAP=await r.json();renderRecap();}
+  catch(_){document.getElementById('rcStory').innerHTML='<p class="rc-empty">الملخص يتجهّز، ارجع بعد شوي.</p>';}
+}
+segGroup('rch',v=>{rcNewsKey=v;renderRcNews();});
+loadRecap();setInterval(loadRecap,15*60000);
+
+/* ============ Push notifications (OneSignal) ============ */
+(async function(){
+  let cfg=null;try{const r=await fetch('push-config.json',{cache:'no-store'});cfg=await r.json();}catch(_){}
+  if(!cfg||!cfg.appId)return;
+  const bar=document.getElementById('pushBar'),btn=document.getElementById('pushBtn'),lbl=document.getElementById('pushLbl'),note=document.getElementById('pushNote');
+  bar.hidden=false;
+  const isIOS=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  const standalone=window.matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+  const setOn=()=>{btn.classList.add('on');lbl.textContent='التنبيهات مفعّلة ✓';note.innerHTML='بيوصلك إشعار قبل كل خبر قوي بـ 15 دقيقة، وإشعار ثاني بالنتيجة وتأثيرها.';};
+  if(isIOS&&!standalone){
+    btn.addEventListener('click',()=>{note.innerHTML='<b>على الآيفون لازم تثبّت التطبيق أول:</b> اضغط زر المشاركة ← «إضافة إلى الشاشة الرئيسية»، وبعدها افتح التطبيق من الشاشة الرئيسية واضغط هذا الزر من داخله.';
+      document.getElementById('app')?.scrollIntoView({behavior:'smooth'});});
+    return;
+  }
+  window.OneSignalDeferred=window.OneSignalDeferred||[];
+  const sc=document.createElement('script');sc.src='https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js';sc.defer=true;document.head.appendChild(sc);
+  OneSignalDeferred.push(async function(OneSignal){
+    try{
+      await OneSignal.init({appId:cfg.appId,serviceWorkerPath:'sw.js',serviceWorkerParam:{scope:'/'},notifyButton:{enable:false}});
+      if(OneSignal.Notifications.permission&&OneSignal.User.PushSubscription.optedIn)setOn();
+      OneSignal.Notifications.addEventListener('permissionChange',ok=>{if(ok)setOn();});
+      btn.addEventListener('click',async()=>{
+        if(btn.classList.contains('on'))return;
+        try{
+          if(Notification.permission==='denied'){note.innerHTML='<b>الإشعارات مقفلة لهالموقع.</b> فعّلها من إعدادات المتصفح أو الجوال، وبعدها ارجع اضغط الزر.';return;}
+          await OneSignal.Notifications.requestPermission();
+          if(!OneSignal.User.PushSubscription.optedIn)await OneSignal.User.PushSubscription.optIn();
+          if(OneSignal.Notifications.permission)setOn();
+        }catch(_){note.innerHTML='ما قدرنا نفعّل التنبيهات الحين، جرّب مرة ثانية.';}
+      });
+    }catch(_){bar.hidden=true;}
+  });
+})();
 
 /* ============ Lot calculator: open/close bar ============ */
 (function(){

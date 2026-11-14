@@ -32,6 +32,8 @@ jobs:
         with:
           node-version: 20
       - name: Watch calendar and news
+        env:
+          ONESIGNAL_API_KEY: ${{ secrets.ONESIGNAL_API_KEY }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
