@@ -2,7 +2,7 @@ name: Push test
 on:
   push:
     branches: [main]
-    paths: ['push-test.txt']
+    paths: ['push-message.json']
   workflow_dispatch:
     inputs:
       message:
