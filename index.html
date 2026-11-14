@@ -1690,7 +1690,7 @@ loadRecap();setInterval(loadRecap,15*60000);
   const sc=document.createElement('script');sc.src='https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js';sc.defer=true;document.head.appendChild(sc);
   OneSignalDeferred.push(async function(OneSignal){
     try{
-      await OneSignal.init({appId:cfg.appId,serviceWorkerPath:'sw.js',serviceWorkerParam:{scope:'/'},notifyButton:{enable:false}});
+      await OneSignal.init({appId:cfg.appId,serviceWorkerPath:'push/onesignal/OneSignalSDKWorker.js',serviceWorkerParam:{scope:'/push/onesignal/'},notifyButton:{enable:false}});
       if(OneSignal.Notifications.permission&&OneSignal.User.PushSubscription.optedIn)setOn();
       OneSignal.Notifications.addEventListener('permissionChange',ok=>{if(ok)setOn();});
       btn.addEventListener('click',async()=>{
