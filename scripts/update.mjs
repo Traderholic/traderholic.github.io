@@ -120,7 +120,8 @@ async function calendar() {
   const path = 'data/calendar.json';
   const old = (await readJson(path)) || {};
   const ffAt = old.ffAt || old.updated;
-  let events = old.events || [];
+  // work on a copy so the 'unchanged' check below compares against the file as it was
+  let events = (old.events || []).map(e => ({ ...e }));
   let ffFresh = ffAt;
   if (!ffAt || Date.now() - Date.parse(ffAt) >= 50 * 60 * 1000 || !events.length) {
     const fresh = await fetchFF();
@@ -135,7 +136,7 @@ async function calendar() {
   // Actual results for released events (last 3 days) that still lack one.
   const now = Date.now();
   const need = events.filter(e => !e.a && e.i !== 'Holiday' && !/Speaks|Testif|Press Conference|Statement|Minutes|Meeting|Speech|Hearing|Auction|Bank Holiday/i.test(e.t)
-    && Date.parse(e.d) <= now - 60000 && Date.parse(e.d) >= now - 3 * 86400000);
+    && Date.parse(e.d) <= now && Date.parse(e.d) >= now - 3 * 86400000);
   if (need.length) {
     try {
       const tv = await fetchTV(now - 3 * 86400000 - 3600000, now + 3600000);
@@ -146,9 +147,21 @@ async function calendar() {
   }
   const out = { updated: new Date().toISOString(), ffAt: ffFresh, source: 'ForexFactory + TradingView', events };
   const strip = o => JSON.stringify({ ...o, updated: 0 });
-  if (strip(out) === strip(old)) { console.log('calendar unchanged'); return; }
+  if (strip(out) === strip(old)) { console.log('calendar unchanged'); return false; }
   await writeFile(path, JSON.stringify(out));
   console.log('calendar events', events.length);
+  return true;
+}
+// Seconds until the next check: fast right around a release, slower otherwise.
+async function nextDelay() {
+  const d = await readJson('data/calendar.json'); const now = Date.now();
+  const SPEECH = /Speaks|Testif|Press Conference|Statement|Minutes|Meeting|Speech|Hearing|Auction|Holiday/i;
+  const hot = (d?.events || []).some(e => {
+    if (e.i === 'Holiday' || e.i === 'Low' || SPEECH.test(e.t)) return false;
+    const t = Date.parse(e.d);
+    return (t > now && t - now < 3 * 60000) || (!e.a && t <= now && now - t < 40 * 60000);
+  });
+  return hot ? 12 : 60;
 }
 
 /* ---------------- News (RSS) ---------------- */
@@ -211,6 +224,38 @@ async function news() {
   await writeIfChanged(path, out);
 }
 
+/* ---------------- Runner ----------------
+   GitHub's scheduled runs are often late or skipped, so one job stays alive for hours and checks in a loop:
+   every ~12 s around a release, every minute otherwise; news every 10 minutes. Changes are committed and pushed at once. */
+import { execSync } from 'node:child_process';
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const sh = c => execSync(c, { stdio: 'pipe' }).toString().trim();
+async function publish(msg) {
+  sh('git add data');
+  try { sh('git diff --cached --quiet'); return false; } catch { /* there are changes */ }
+  sh(`git commit -q -m "${msg}"`);
+  for (let i = 0; i < 5; i++) {
+    try { sh('git pull -q --rebase origin main'); sh('git push -q origin main'); console.log(new Date().toISOString(), 'pushed:', msg); return true; }
+    catch (e) { console.log('push retry', String(e.message || e).slice(0, 200)); await sleep(4000); }
+  }
+  return false;
+}
 await mkdir('data', { recursive: true });
-await calendar().catch(e => console.log('calendar failed', e));
-await news().catch(e => console.log('news failed', e));
+if (!process.argv.includes('--watch')) {
+  await calendar().catch(e => console.log('calendar failed', e));
+  await news().catch(e => console.log('news failed', e));
+} else {
+  const end = Date.now() + (Number(process.env.WATCH_MINUTES) || 330) * 60000;
+  let lastNews = 0;
+  while (Date.now() < end) {
+    try { sh('git pull -q --rebase origin main'); } catch (e) { console.log('pull failed', String(e.message || e).slice(0, 200)); }
+    const changed = await calendar().catch(e => { console.log('calendar failed', e); return false; });
+    if (changed) await publish('data: calendar update');
+    if (Date.now() - lastNews > 10 * 60000) {
+      lastNews = Date.now();
+      await news().catch(e => console.log('news failed', e));
+      await publish('data: news update');
+    }
+    await sleep((await nextDelay().catch(() => 60)) * 1000);
+  }
+}

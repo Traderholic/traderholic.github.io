@@ -98,16 +98,22 @@ a{color:var(--green)}
 section.block{padding-block:40px}
 .shead{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px}
 .shead h2{margin:0;font-size:clamp(26px,4vw,34px);line-height:1.25;font-weight:700;text-wrap:balance}
-/* 3D section titles: white face, green extruded depth, soft glow + accent bar */
-.shead h2,.contact h2,.app h2{color:#FFFFFF;letter-spacing:.2px;
-  text-shadow:0 1px 0 #DDE3EA,0 2px 0 #B9C2CC,0 3px 0 #3DCB4F,0 4px 0 #2FA640,0 5px 0 #258535,0 6px 0 #1C672A,0 7px 0 #154F20,
-    0 10px 16px rgba(0,0,0,.6),0 0 34px rgba(61,203,79,.22)}
-.shead h2{font-size:clamp(30px,5.2vw,44px);line-height:1.3;padding-bottom:4px}
-.shead h2::after{content:"";display:block;width:72px;height:4px;margin-top:12px;border-radius:4px;
-  background:linear-gradient(90deg,var(--green),#FFD24A 55%,var(--orange));box-shadow:0 0 14px rgba(61,203,79,.45)}
-#prTitle::after{margin-left:auto}
-.contact h2,.app h2{text-shadow:0 1px 0 #DDE3EA,0 2px 0 #3DCB4F,0 3px 0 #2FA640,0 4px 0 #1C672A,0 5px 0 #154F20,0 8px 12px rgba(0,0,0,.55),0 0 26px rgba(61,203,79,.2)}
-@media (max-width:640px){.shead h2{text-shadow:0 1px 0 #DDE3EA,0 2px 0 #3DCB4F,0 3px 0 #2FA640,0 4px 0 #1C672A,0 5px 0 #154F20,0 8px 12px rgba(0,0,0,.6),0 0 26px rgba(61,203,79,.2)}}
+/* Section titles: silver-white face, brand accent bar, outlined English watermark behind */
+.shead{position:relative;isolation:isolate}
+.shead[data-wm]::before{content:attr(data-wm);position:absolute;z-index:-1;top:-.22em;right:-2px;max-width:100%;overflow:hidden;white-space:nowrap;pointer-events:none;
+  font-family:var(--en);font-weight:900;font-size:clamp(58px,11vw,128px);line-height:1;letter-spacing:2px;direction:ltr;
+  color:transparent;-webkit-text-stroke:1px rgba(61,203,79,.26);
+  -webkit-mask-image:linear-gradient(180deg,#000 30%,transparent 92%);mask-image:linear-gradient(180deg,#000 30%,transparent 92%)}
+.shead .tag{display:inline-flex;align-items:center;gap:10px}
+.shead .tag::after{content:"";width:34px;height:2px;border-radius:2px;background:linear-gradient(90deg,var(--orange),var(--green))}
+.shead h2,.contact h2,.app h2{background:linear-gradient(180deg,#FFFFFF 0%,#FFFFFF 50%,#B7C2CC 100%);-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 6px 18px rgba(0,0,0,.55))}
+.shead h2{margin-top:4px;font-size:clamp(30px,5vw,44px);line-height:1.3;font-weight:700;letter-spacing:.2px}
+.shead h2::before{content:"";display:inline-block;width:6px;height:.82em;margin-left:14px;vertical-align:-.06em;border-radius:6px;
+  background:linear-gradient(180deg,var(--green) 0%,var(--green) 55%,var(--orange) 100%);box-shadow:0 0 16px rgba(61,203,79,.55)}
+#prTitle::before{content:none}
+#prTitle::after{content:"";display:inline-block;width:6px;height:.82em;margin-left:14px;vertical-align:-.06em;border-radius:6px;
+  background:linear-gradient(180deg,var(--green) 0%,var(--green) 55%,var(--orange) 100%);box-shadow:0 0 16px rgba(61,203,79,.55)}
 .shead .sub{margin:6px 0 0;color:var(--muted);max-width:62ch}
 .shead .tag{font-family:var(--en);font-size:12px;font-weight:800;letter-spacing:3px;color:var(--green);direction:ltr}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden}
@@ -518,7 +524,7 @@ a.scard{text-decoration:none;color:inherit}
 
     <!-- ECONOMIC CALENDAR -->
     <section class="block" id="calendar" aria-labelledby="calTitle">
-      <div class="shead">
+      <div class="shead" data-wm="CALENDAR">
         <div>
           <span class="tag">ECONOMIC CALENDAR</span>
           <h2 id="calTitle">الأخبار الاقتصادية المهمة</h2>
@@ -543,7 +549,7 @@ a.scard{text-decoration:none;color:inherit}
 
     <!-- FED -->
     <section class="block" id="fed" aria-labelledby="fedTitle">
-      <div class="shead">
+      <div class="shead" data-wm="FOMC">
         <div>
           <span class="tag">FED DECISION</span>
           <h2 id="fedTitle">قرار الفائدة الأمريكية القادم</h2>
@@ -576,7 +582,7 @@ a.scard{text-decoration:none;color:inherit}
 
     <!-- SESSIONS -->
     <section class="block" id="sessions" aria-labelledby="sesTitle">
-      <div class="shead">
+      <div class="shead" data-wm="SESSIONS">
         <div>
           <span class="tag">MARKET SESSIONS</span>
           <h2 id="sesTitle">أوقات الجلسات بتوقيت الكويت</h2>
@@ -597,7 +603,7 @@ a.scard{text-decoration:none;color:inherit}
 
     <!-- PRICES -->
     <section class="block" id="prices" aria-labelledby="prTitle">
-      <div class="shead">
+      <div class="shead" data-wm="CHARTS">
         <div>
           <span class="tag">MARKETS</span>
           <h2 id="prTitle" dir="ltr" style="font-family:var(--en);font-weight:800;text-align:right">Live Prices &amp; Charts</h2>
@@ -619,7 +625,7 @@ a.scard{text-decoration:none;color:inherit}
 
     <!-- NEWS -->
     <section class="block" id="news" aria-labelledby="nwTitle">
-      <div class="shead">
+      <div class="shead" data-wm="NEWS">
         <div>
           <span class="tag">LATEST NEWS</span>
           <h2 id="nwTitle">آخر الأخبار</h2>
@@ -637,7 +643,7 @@ a.scard{text-decoration:none;color:inherit}
 
     <!-- HOLIDAYS -->
     <section class="block" id="holidays" aria-labelledby="hoTitle">
-      <div class="shead">
+      <div class="shead" data-wm="HOLIDAYS">
         <div>
           <span class="tag">MARKET HOLIDAYS</span>
           <h2 id="hoTitle">العطل اللي تأثر على السيولة</h2>
@@ -657,7 +663,7 @@ a.scard{text-decoration:none;color:inherit}
 
     <!-- CALCULATOR -->
     <section class="block" id="calculator" aria-labelledby="clTitle">
-      <div class="shead">
+      <div class="shead" data-wm="RISK">
         <div>
           <span class="tag">LOT CALCULATOR</span>
           <h2 id="clTitle">حاسبة حجم اللوت</h2>
@@ -722,7 +728,7 @@ a.scard{text-decoration:none;color:inherit}
 
     <!-- COURSE -->
     <section class="block" id="course" aria-labelledby="coTitle">
-      <div class="shead">
+      <div class="shead" data-wm="COURSE">
         <div>
           <span class="tag">THE COURSE</span>
           <h2 id="coTitle">دورة Trader Holic</h2>
@@ -1284,14 +1290,21 @@ function renderCalendar(){
 }
 async function loadCalendarData(){
   try{
-    const r=await fetch('data/calendar.json?v='+Math.floor(Date.now()/60000),{cache:'no-store'});if(!r.ok)throw 0;
+    const r=await fetch('data/calendar.json?v='+Math.floor(Date.now()/10000),{cache:'no-store'});if(!r.ok)throw 0;
     const j=await r.json();CAL=(j.events||[]).map(e=>Object.assign(e,{ts:Date.parse(e.d)})).filter(e=>!isNaN(e.ts)).sort((a,b)=>a.ts-b.ts);
     const u=document.getElementById('calUpdated');if(u&&j.updated)u.textContent='آخر تحديث: '+ago(Date.parse(j.updated));
   }catch(_){CAL=[];}
   renderCalendar();renderAlert();
 }
 segGroup('imp',v=>{calImp=v;renderCalendar();});
-loadCalendarData();setInterval(loadCalendarData,2*60000);setInterval(renderCalendar,60000);
+// Poll fast (every 15 s) around a release so the actual figure shows up as soon as it lands, otherwise every 2 minutes.
+const SPEECH_RE=/Speaks|Testif|Press Conference|Statement|Minutes|Meeting|Speech|Hearing|Auction/i;
+function calHot(){const now=Date.now();return CAL.some(e=>(e.i==='High'||e.i==='Medium')&&!SPEECH_RE.test(e.t)&&((e.ts>now&&e.ts-now<3*60000)||(!e.a&&e.ts<=now&&now-e.ts<40*60000)));}
+let calTimer=0;
+async function calLoop(){clearTimeout(calTimer);await loadCalendarData();calTimer=setTimeout(calLoop,calHot()?15000:120000);}
+calLoop();
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')calLoop();});
+window.addEventListener('focus',()=>calLoop());setInterval(renderCalendar,60000);
 
 /* ============ News ============ */
 let NEWSDATA=null,newsKey='gold';

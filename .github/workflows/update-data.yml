@@ -1,11 +1,11 @@
 name: Update market data
 
+# One long-lived job watches the calendar and news and pushes changes immediately.
+# The hourly schedule starts a fresh job (cancelling the old one), so a skipped or late
+# schedule never leaves the site without a watcher: each job can run for 5.5 hours.
 on:
   schedule:
-    - cron: '*/15 * * * *'
-    # extra runs right after the usual US release times (8:30 and 10:00 New York) so results show up fast
-    - cron: '33,37,44 12,13 * * 1-5'
-    - cron: '3,7,14 14,15 * * 1-5'
+    - cron: '7 * * * *'
   workflow_dispatch:
   push:
     branches: [main]
@@ -18,28 +18,21 @@ permissions:
 
 concurrency:
   group: update-data
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 345
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 20
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Fetch calendar and news
-        run: node scripts/update.mjs
-      - name: Commit data if it changed
+      - name: Watch calendar and news
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data
-          if git diff --cached --quiet; then
-            echo "No changes"
-          else
-            git commit -m "data: refresh calendar and news"
-            git pull --rebase -q origin main
-            git push
-          fi
+          node scripts/update.mjs --watch
