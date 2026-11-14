@@ -1,0 +1,19 @@
+name: Push test
+on:
+  workflow_dispatch:
+    inputs:
+      message:
+        description: 'Notification text (optional)'
+        required: false
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node scripts/push-test.mjs
+        env:
+          ONESIGNAL_API_KEY: ${{ secrets.ONESIGNAL_API_KEY }}
+          MSG: ${{ inputs.message }}
