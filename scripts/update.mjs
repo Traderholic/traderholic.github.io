@@ -181,6 +181,9 @@ function parseRss(xml, fallbackSource) {
   }
   return out;
 }
+// Headline quality: drop local-market price pages, too-short or mostly-Latin titles (tickers, ads).
+const LOCAL_MKT = /في (مصر|السعودية|الإمارات|الكويت|الأردن|المغرب|العراق|الجزائر|سوريا|لبنان|اليمن|قطر|عمان|عُمان|البحرين|تونس|ليبيا|السودان|فلسطين)|بالمصنعية|محلياً|المحلية/;
+const goodTitle = t => { const ws = t.split(/\s+/).filter(Boolean); if (ws.length < 5) return false; const lat = (t.match(/[A-Za-z]/g) || []).length, ar = (t.match(/[\u0600-\u06FF]/g) || []).length; return ar > lat * 1.5; };
 const gnews = q => `https://news.google.com/rss/search?q=${encodeURIComponent(q)}&hl=ar&gl=SA&ceid=SA%3Aar`;
 const FEEDS = {
   gold: {
@@ -211,7 +214,8 @@ async function news() {
         catch (e) { console.log('news fallback', key, String(e.message || e)); }
       }
     }
-    if (cfg.exclude) items = items.filter(x => !cfg.exclude.test(x.t));
+    if (cfg.exclude) items = items.filter(x => !cfg.exclude.test(x.t) && !LOCAL_MKT.test(x.t));
+    items = items.filter(x => goodTitle(x.t) || !/[\u0600-\u06FF]/.test(x.t));
     items.forEach(x => { x.s = (x.s || '').replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/$/, ''); });
     const seen = new Set();
     items = items.filter(x => Date.parse(x.d) >= cutoff && Date.parse(x.d) <= Date.now() + 600000)
@@ -236,7 +240,7 @@ function recapWeek(now = Date.now()) {
   return { from: mon, to: mon + 5 * 86400000 - 1, final: wd === 0 || wd === 6 };
 }
 const ASSETS = [
-  ['XAU', 'OANDA:XAUUSD', 'الذهب', 'metals'], ['XAG', 'OANDA:XAGUSD', 'الفضة', 'metals'],
+  ['XAU', 'OANDA:XAUUSD', 'الذهب', 'metals'], ['XAG', 'TVC:SILVER', 'الفضة', 'metals'],
   ['SPX', 'SP:SPX', 'S&P 500', 'stocks'], ['NDX', 'NASDAQ:NDX', 'ناسداك 100', 'stocks'], ['DJI', 'DJ:DJI', 'داو جونز', 'stocks'],
   ['BTC', 'BITSTAMP:BTCUSD', 'البتكوين', 'crypto'], ['ETH', 'BITSTAMP:ETHUSD', 'الإيثيريوم', 'crypto'], ['TOTAL', 'CRYPTOCAP:TOTAL', 'سوق الكريبتو', 'crypto'],
   ['DXY', 'TVC:DXY', 'مؤشر الدولار', 'usd']
@@ -281,6 +285,8 @@ async function recap() {
     const fmt = (v, u, s) => v == null ? '' : (Math.round(v * 1000) / 1000) + (u === '%' ? '%' : '') + (s || '');
     for (const x of tv) {
       if (x.importance !== 1 || !['USD', 'EUR', 'GBP', 'JPY', 'CNY'].includes(x.currency)) continue;
+      // outside the US keep only the releases that move markets
+      if (x.currency !== 'USD' && !/Inflation|CPI|GDP|Interest Rate|Rate Decision|Unemployment|Retail Sales|PMI|ZEW|Ifo|Employment Change/i.test(x.title)) continue;
       const t = Date.parse(x.date); if (!(t > now && t < until)) continue;
       if (next.some(e => e.c === x.currency && Math.abs(Date.parse(e.d) - t) < 15 * 60000)) continue;
       next.push({ t: x.title.trim(), c: x.currency, d: new Date(t).toISOString(), f: fmt(x.forecast, x.unit, x.scale), p: fmt(x.previous, x.unit, x.scale), src: 'tv' });
@@ -298,11 +304,26 @@ async function recap() {
   for (const [k, url] of Object.entries(WEEK_FEEDS)) {
     let items = [];
     try { items = parseRss(await get(url)); } catch (e) { console.log('recap news', k, String(e.message || e)); }
+    items = items.filter(x => goodTitle(x.t) && !LOCAL_MKT.test(x.t));
     if (k === 'metals') items = items.filter(x => !LOCAL_PRICE.test(x.t));
-    const seen = new Set();
-    items = items.filter(x => Date.parse(x.d) >= now - 8 * 86400000)
-      .filter(x => { const kk = x.t.replace(/[^\p{L}\p{N}]/gu, '').slice(0, 40); if (seen.has(kk)) return false; seen.add(kk); return true; })
-      .slice(0, 6).map(x => ({ ...x, s: (x.s || '').replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/$/, '') }));
+    // drop stale headlines whose quoted price is far from today's (republished old articles)
+    const px = Object.fromEntries((out.perf || []).map(p => [p.k, p.c]));
+    items = items.filter(x => {
+      if (k === 'crypto' && px.BTC) { const m = x.t.match(/(\d{2,3}(?:[.,]\d+)?)\s*ألف/); if (m && /بتكوين|البيتكوين|بيتكوين/.test(x.t)) { const v = parseFloat(m[1].replace(',', '.')) * 1000; if (Math.abs(v - px.BTC) / px.BTC > 0.2) return false; } }
+      if (k === 'metals' && px.XAU) { const m = x.t.match(/(\d[\d,]{3,5})\s*دولار/); if (m && /الذهب|الأونصة|الأوقية/.test(x.t)) { const v = parseFloat(m[1].replace(/,/g, '')); if (v > 1000 && Math.abs(v - px.XAU) / px.XAU > 0.15) return false; } }
+      return true;
+    });
+    // keep the list varied: skip a headline that mostly repeats one already picked
+    const COMMON = new Set(['الذهب', 'الفضة', 'أسعار', 'سعر', 'دولار', 'الدولار', 'دولارا', 'دولاراً', 'بيتكوين', 'البيتكوين', 'بتكوين', 'العملات', 'المشفرة', 'الرقمية', 'الأسهم', 'الأمريكية', 'الأونصة', 'الأوقية', 'ارتفاع', 'تراجع', 'يرتفع', 'يتراجع', 'ترتفع', 'تتراجع', 'الأسواق', 'الأسبوع', 'اليوم', 'مستوى', 'وسط', 'بعد', 'خلال']);
+    const words = t => new Set(t.replace(/[^\p{L}\p{N} ]/gu, ' ').split(/\s+/).filter(w => w.length >= 4 && !COMMON.has(w)));
+    const picked = [];
+    for (const x of items.filter(x => Date.parse(x.d) >= now - 8 * 86400000)) {
+      const w = words(x.t);
+      if (picked.some(p => { let n = 0; w.forEach(z => { if (p.w.has(z)) n++; }); return n >= 2 || n / Math.max(1, Math.min(w.size, p.w.size)) > 0.34; })) continue;
+      if ([...w].some(z => picked.filter(p => p.w.has(z)).length >= 2)) continue; // one story can't take over the list
+      picked.push({ x, w }); if (picked.length === 6) break;
+    }
+    items = picked.map(({ x }) => ({ ...x, s: (x.s || '').replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/$/, '') }));
     out.headlines[k] = items.length ? items : (old.headlines?.[k] || []);
   }
   return writeIfChanged(path, out);
