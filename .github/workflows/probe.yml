@@ -1,0 +1,13 @@
+name: probe
+on:
+  push:
+    paths: ['.github/workflows/probe.yml']
+jobs:
+  p:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          F=$(date -u -d '-1 day' +%Y-%m-%dT00:00:00.000Z); T=$(date -u +%Y-%m-%dT23:00:00.000Z)
+          for O in https://traderholic.github.io https://www.tradingview.com; do echo "== origin $O"; curl -s -D - -o /dev/null -m 20 -H "Origin: $O" -A 'Mozilla/5.0' "https://economic-calendar.tradingview.com/events?from=$F&to=$T&countries=US" | grep -i -E '^HTTP|access-control|cache|age:'; done
+          echo "== no origin"; curl -s -o /dev/null -w '%{http_code}\n' -m 20 -A 'Mozilla/5.0' "https://economic-calendar.tradingview.com/events?from=$F&to=$T&countries=US"
+          echo "== preflight"; curl -s -D - -o /dev/null -X OPTIONS -H 'Origin: https://traderholic.github.io' -H 'Access-Control-Request-Method: GET' "https://economic-calendar.tradingview.com/events" | grep -i -E '^HTTP|access-control'
