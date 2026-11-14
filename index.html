@@ -528,7 +528,7 @@ a.scard{text-decoration:none;color:inherit}
         <div>
           <span class="tag">ECONOMIC CALENDAR</span>
           <h2 id="calTitle">الأخبار الاقتصادية المهمة</h2>
-          <p class="sub">كل الأوقات <b>بتوقيت الكويت</b>. الأخبار <b style="color:var(--red)">عالية التأثير</b> هي اللي تحرّك الذهب والفضة والبتكوين بقوة، مثل الفائدة الأمريكية والوظائف والتضخم.<br>الأخبار القوية تنفتح لك <b style="color:var(--green)">نبذتها وتأثيرها</b> على الذهب والدولار والبتكوين مباشرة، وباقي الأخبار اضغط عليها. وبعد صدور الخبر تنزل <b style="color:#FFD24A">النتيجة الفعلية</b> بنفس المكان.</p>
+          <p class="sub">كل الأوقات <b>بتوقيت الكويت</b>. الأخبار <b style="color:var(--red)">عالية التأثير</b> هي اللي تحرّك الذهب والفضة والبتكوين بقوة، مثل الفائدة الأمريكية والوظائف والتضخم.<br>الأخبار القوية تنفتح لك <b style="color:var(--green)">نبذتها وتأثيرها</b> على الذهب والفضة والدولار والبتكوين مباشرة، وباقي الأخبار اضغط عليها. وبعد صدور الخبر تنزل <b style="color:#FFD24A">النتيجة الفعلية</b> بنفس المكان.</p>
         </div>
         <div class="seg" role="group" aria-label="مستوى أهمية الأخبار">
           <button type="button" data-imp="high" aria-pressed="true">عالية التأثير فقط</button>
@@ -1214,11 +1214,11 @@ function guideFor(e){
   // effects when the figure comes in ABOVE forecast
   let up;
   if(e.c==='USD'){
-    up=strong?[['الدولار','pos'],['الذهب','neg'],['البتكوين','neg']]:[['الدولار','neg'],['الذهب','pos'],['البتكوين','pos']];
+    up=strong?[['الدولار','pos'],['الذهب','neg'],['الفضة','neg'],['البتكوين','neg']]:[['الدولار','neg'],['الذهب','pos'],['الفضة','pos'],['البتكوين','pos']];
   }else{
     const cur=CUR_AR[e.c]||e.c;
-    up=strong?[[cur,'pos'],['الدولار (غير مباشر)','neg'],['الذهب (طفيف)','pos'],['البتكوين (محدود)','neu']]
-              :[[cur,'neg'],['الدولار (غير مباشر)','pos'],['الذهب (طفيف)','neg'],['البتكوين (محدود)','neu']];
+    up=strong?[[cur,'pos'],['الدولار (غير مباشر)','neg'],['الذهب (طفيف)','pos'],['الفضة (طفيف)','pos'],['البتكوين (محدود)','neu']]
+              :[[cur,'neg'],['الدولار (غير مباشر)','pos'],['الذهب (طفيف)','neg'],['الفضة (طفيف)','neg'],['البتكوين (محدود)','neu']];
   }
   const flip=x=>x.map(([n,c])=>[n,c==='pos'?'neg':c==='neg'?'pos':'neu']);
   return {g,what,up,down:flip(up)};
@@ -1235,7 +1235,7 @@ function guideHtml(e){
   const {g,what,up,down}=guideFor(e);
   let body=`<p class="what">${what}</p>`;
   if(g.up===null){
-    const hawk=e.c==='USD'?[['الدولار','pos'],['الذهب','neg'],['البتكوين','neg']]:[[CUR_AR[e.c]||e.c,'pos'],['الدولار (غير مباشر)','neg'],['الذهب (طفيف)','pos']];
+    const hawk=e.c==='USD'?[['الدولار','pos'],['الذهب','neg'],['الفضة','neg'],['البتكوين','neg']]:[[CUR_AR[e.c]||e.c,'pos'],['الدولار (غير مباشر)','neg'],['الذهب (طفيف)','pos'],['الفضة (طفيف)','pos']];
     body+=`<div class="scen"><div class="up"><h4><span class="ar">▲</span>نبرة متشددة (Hawkish)</h4>${chips(hawk)}</div><div class="dn"><h4><span class="ar">▼</span>نبرة متساهلة (Dovish)</h4>${chips(hawk.map(([n,c])=>[n,c==='pos'?'neg':c==='neg'?'pos':'neu']))}</div></div>`;
   }else{
     const r=resultOf(e);
