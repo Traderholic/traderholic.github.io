@@ -399,7 +399,8 @@ async function pushAlerts() {
     if (t - now > 0 && t - now <= 15.5 * 60000 && !log.sent[preKey]) {
       const mins = Math.max(1, Math.round((t - now) / 60000));
       const body = list.map(e => `${e.c} · ${e.t}${e.f ? ' (المتوقع ' + e.f + ')' : ''}`).join('\n') + '\nانتبه: السبريد يتسع والحركة تكون قوية.';
-      if (await sendPush(cfg, preKey, `⏰ خبر قوي بعد ${mins} دقيقة · ${hhmm(t)} بتوقيت الكويت`, body)) { log.sent[preKey] = new Date().toISOString(); changed = true; }
+      const mw = mins === 1 ? 'دقيقة' : mins === 2 ? 'دقيقتين' : mins <= 10 ? mins + ' دقائق' : mins + ' دقيقة';
+      if (await sendPush(cfg, preKey, `⏰ خبر قوي بعد ${mw} · ${hhmm(t)} بتوقيت الكويت`, body)) { log.sent[preKey] = new Date().toISOString(); changed = true; }
     }
     // after: once every item at this time that can have a figure has one (or 10 minutes passed)
     const withFig = list.filter(e => !IMPACT[0].re.test(e.t));

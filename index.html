@@ -280,7 +280,7 @@ section.block{padding-block:40px}
 .fg-top .en{font-size:11px;font-weight:800;letter-spacing:2px;color:var(--dim)}
 .fg-gauge{position:relative;max-width:300px;width:100%;margin:0 auto}
 .fg-gauge svg{display:block;width:100%;height:auto}
-.fg-val{position:absolute;inset:auto 0 0 0;text-align:center;line-height:1}
+.fg-val{text-align:center;line-height:1;margin-top:-6px}
 .fg-val b{display:block;font-family:var(--en);font-size:46px;font-weight:900}
 .fg-val span{display:inline-block;margin-top:8px;font-size:15px;font-weight:700;padding:4px 12px;border-radius:999px}
 .fg-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
@@ -302,7 +302,7 @@ section.block{padding-block:40px}
 .pct.up{color:var(--green)}.pct.dn{color:#F48C78}
 .rc-perf{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:14px}
 @media (max-width:900px){.rc-perf{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media (max-width:520px){.rc-perf{grid-template-columns:minmax(0,1fr)}}
+
 .rc-card{position:relative;overflow:hidden;padding:14px 16px;border-radius:var(--r-md);background:var(--surface);border:1px solid var(--line);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;align-items:center}
 .rc-card::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:var(--gc,var(--line-2))}
 .rc-card .g{grid-column:1/-1;font-size:11px;font-weight:800;letter-spacing:1px;color:var(--gc,var(--dim))}
@@ -312,6 +312,10 @@ section.block{padding-block:40px}
 .rc-card .m{grid-column:1/-1;font-size:12px;color:var(--dim)}
 .rc-card .bar{grid-column:1/-1;height:6px;border-radius:6px;background:var(--bg);position:relative;overflow:hidden;margin-top:4px}
 .rc-card .bar i{position:absolute;top:0;bottom:0;border-radius:6px}
+@media (max-width:520px){.rc-perf{gap:10px}
+  .rc-card{grid-template-columns:minmax(0,1fr);padding:12px;gap:3px}
+  .rc-card .w{grid-row:auto;grid-column:auto;text-align:right;font-size:20px}
+  .rc-card .n{font-size:15px}.rc-card .c{font-size:13px}.rc-card .m{font-size:11.5px}}
 .rc-two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:14px}
 @media (max-width:860px){.rc-two{grid-template-columns:minmax(0,1fr)}}
 .rc-box{padding:18px;display:flex;flex-direction:column;gap:12px;min-width:0}
@@ -1571,7 +1575,7 @@ function fgGauge(v){
   const cx=150,cy=150,r=118,seg=[[0,25],[25,45],[45,55],[55,75],[75,100]];
   const pt=(val,rr)=>{const a=Math.PI*(1-val/100);return [cx+rr*Math.cos(a),cy-rr*Math.sin(a)];};
   const arcs=seg.map(([a,b],i)=>{const [x1,y1]=pt(a+0.6,r),[x2,y2]=pt(b-0.6,r);return `<path d="M${x1.toFixed(1)} ${y1.toFixed(1)} A${r} ${r} 0 0 1 ${x2.toFixed(1)} ${y2.toFixed(1)}" stroke="${FG_ZONES[i][2]}" stroke-width="22" fill="none" stroke-linecap="butt" opacity="${v>=a&&v<(b===100?101:b)?1:.32}"/>`;}).join('');
-  const [nx,ny]=pt(v,r-34);
+  const [nx,ny]=pt(v,r-30);
   return `<svg viewBox="0 0 300 170" role="img" aria-label="المؤشر عند ${v}">${arcs}
     <line x1="${cx}" y1="${cy}" x2="${nx.toFixed(1)}" y2="${ny.toFixed(1)}" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round"/>
     <circle cx="${cx}" cy="${cy}" r="10" fill="#FFFFFF"/><circle cx="${cx}" cy="${cy}" r="4" fill="#0D1014"/>
@@ -1642,13 +1646,13 @@ function renderRecap(){
     const word=r&&r.dir!=='na'?({up:'أعلى من المتوقع',down:'أقل من المتوقع',eq:'مطابق للمتوقع'}[r.dir]):'';
     const fx=r&&(r.dir==='up'||r.dir==='down')&&gd.g.up!==null?chips(r.dir==='up'?gd.up:gd.down):'';
     return `<div class="rc-res"><div class="top"><span>${AR_DAYS[p.wd]} ${p.hh}:${p.mm}</span><span class="cu">${esc(e.c)}</span><b>${esc(e.t)}</b></div>
-      <div class="nums">الفعلي <b>${esc(e.a)}</b>${e.f?` · المتوقع ${esc(e.f)}`:''}${word?` · <span style="color:${r.dir==='eq'?'var(--muted)':'#FFD24A'};font-weight:700">${word}</span>`:''}</div>${fx}</div>`;}).join('')
+      <div class="nums">الفعلي <b><bdi dir="ltr">${esc(e.a)}</bdi></b>${e.f?` · المتوقع <bdi dir="ltr">${esc(e.f)}</bdi>`:''}${word?` · <span style="color:${r.dir==='eq'?'var(--muted)':'#FFD24A'};font-weight:700">${word}</span>`:''}</div>${fx}</div>`;}).join('')
     :'<p class="rc-empty">لسّا ما صدرت أخبار قوية هالأسبوع.</p>';
   // next events grouped by day
   const nx=(j.next||[]).filter(e=>Date.parse(e.d)>now);let lastDay='',html='';
   nx.forEach(e=>{const t=Date.parse(e.d),p=kwParts(t),day=kwDayLabel(t);if(day!==lastDay){html+=`<div class="rc-day">${day}</div>`;lastDay=day;}
     const d=DESC.find(([re])=>re.test(e.t));
-    html+=`<div class="rc-ev"><span class="tm">${p.hh}:${p.mm}</span><span class="cu">${esc(e.c)}</span><span class="ti">${esc(e.t)}${e.f||e.p?`<small>${e.f?'المتوقع '+esc(e.f):''}${e.f&&e.p?' · ':''}${e.p?'السابق '+esc(e.p):''}</small>`:''}</span></div>`;});
+    html+=`<div class="rc-ev"><span class="tm">${p.hh}:${p.mm}</span><span class="cu">${esc(e.c)}</span><span class="ti">${esc(e.t)}${e.f||e.p?`<small>${e.f?'المتوقع <bdi dir="ltr">'+esc(e.f)+'</bdi>':''}${e.f&&e.p?' · ':''}${e.p?'السابق <bdi dir="ltr">'+esc(e.p)+'</bdi>':''}</small>`:''}</span></div>`;});
   document.getElementById('rcNext').innerHTML=html||'<p class="rc-empty">جدول الأسبوع الجاي ينزل خلال الويكند.</p>';
   const er=(j.earnings||[]).filter(e=>Date.parse(e.d)>now-12*3600000);
   document.getElementById('rcEarn').innerHTML=er.length?'<div class="rc-earn">'+er.map(e=>{const p=kwParts(Date.parse(e.d));return `<span><b>${esc(e.s)}</b><small>${AR_DAYS[p.wd]} ${p.d} ${AR_MONTHS[p.m]}</small></span>`;}).join('')+'</div>'
