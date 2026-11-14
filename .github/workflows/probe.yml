@@ -1,0 +1,12 @@
+name: probe
+on:
+  push:
+    paths: ['.github/workflows/probe.yml']
+jobs:
+  p:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          curl -s -m 20 -X POST -A 'Mozilla/5.0' -H 'Content-Type: application/json' https://scanner.tradingview.com/global/scan -d '{"symbols":{"tickers":["OANDA:XAGUSD","TVC:SILVER","FX_IDC:XAGUSD","FOREXCOM:XAGUSD","CAPITALCOM:SILVER","PEPPERSTONE:XAGUSD","OANDA:XAUUSD"]},"columns":["close","Perf.W","Perf.1M"]}'; echo
+          curl -s -m 20 -X POST -A 'Mozilla/5.0' -H 'Content-Type: application/json' https://scanner.tradingview.com/cfd/scan -d '{"symbols":{"tickers":["OANDA:XAGUSD","TVC:SILVER","OANDA:XAUUSD"]},"columns":["close","Perf.W","Perf.1M"]}'; echo
+          curl -s -m 20 -X POST -A 'Mozilla/5.0' -H 'Content-Type: application/json' https://scanner.tradingview.com/forex/scan -d '{"symbols":{"tickers":["OANDA:XAGUSD","FX_IDC:XAGUSD"]},"columns":["close","Perf.W","Perf.1M"]}'; echo
