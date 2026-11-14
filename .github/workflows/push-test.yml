@@ -1,5 +1,8 @@
 name: Push test
 on:
+  push:
+    branches: [main]
+    paths: ['push-test.txt']
   workflow_dispatch:
     inputs:
       message:
