@@ -350,6 +350,18 @@ section.block{padding-block:40px}
 .rc-news .s{display:block;font-size:12.5px;color:var(--dim);margin-top:2px}
 .rc-empty{color:var(--dim);font-size:14px;margin:0}
 
+/* ---------- hero backdrop: rising chart + glowing Λ (inspired by the 1% Club / Λ wallpapers) ---------- */
+main{overflow-x:clip}
+.hero{position:relative;isolation:isolate}
+.hero-bg{position:absolute;z-index:-1;top:-30px;bottom:-40px;left:calc(50% - 50vw);width:100vw;pointer-events:none;overflow:hidden;
+  -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 12%,#000 80%,transparent 100%);mask-image:linear-gradient(180deg,transparent 0,#000 12%,#000 80%,transparent 100%)}
+.hero-bg svg{position:absolute;inset:0;width:100%;height:100%}
+.club{position:relative}
+.club-art{position:absolute;z-index:-1;pointer-events:none;left:50%;top:50%;width:min(620px,130%);aspect-ratio:1;transform:translate(-50%,-50%)}
+.club-art svg{width:100%;height:100%;display:block}
+.quote{background:rgba(21,26,32,.72);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.club-pillars li{background:rgba(21,26,32,.75)}
+
 /* contact */
 .contact{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px;align-items:center;background:var(--green-soft);border:1.5px solid var(--green);border-radius:var(--r-lg);padding:26px}
 @media (max-width:760px){.contact{grid-template-columns:minmax(0,1fr);text-align:center;justify-items:center}}
@@ -602,7 +614,25 @@ a.scard{text-decoration:none;color:inherit}
 
     <!-- HERO -->
     <section class="hero" aria-labelledby="heroTitle">
+      <div class="hero-bg" aria-hidden="true"><svg id="heroChart" preserveAspectRatio="none" viewBox="0 0 1200 600"></svg></div>
       <div class="club" dir="ltr" lang="en">
+        <div class="club-art" aria-hidden="true">
+          <svg viewBox="0 0 600 600">
+            <defs>
+              <radialGradient id="caGlow" cx="50%" cy="52%" r="50%"><stop offset="0" stop-color="#3DCB4F" stop-opacity=".20"/><stop offset=".55" stop-color="#3DCB4F" stop-opacity=".05"/><stop offset="1" stop-color="#3DCB4F" stop-opacity="0"/></radialGradient>
+              <linearGradient id="caLam" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C8FFD0"/><stop offset=".4" stop-color="#3DCB4F"/><stop offset="1" stop-color="#145A22"/></linearGradient>
+              <filter id="caBlur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="22"/></filter>
+            </defs>
+            <circle cx="300" cy="310" r="300" fill="url(#caGlow)"/>
+            <g fill="none" stroke="#3DCB4F"><circle cx="300" cy="310" r="140" stroke-opacity=".10"/><circle cx="300" cy="310" r="200" stroke-opacity=".07"/><circle cx="300" cy="310" r="262" stroke-opacity=".045"/></g>
+            <g opacity=".22">
+              <path d="M205 470 L300 190 L395 425" fill="none" stroke="#3DCB4F" stroke-width="46" filter="url(#caBlur)"/>
+              <path d="M205 470 L300 190 L395 425" fill="none" stroke="url(#caLam)" stroke-width="30" stroke-linejoin="miter"/>
+            </g>
+            <line x1="120" x2="480" y1="470" y2="470" stroke="#3DCB4F" stroke-opacity=".18"/>
+            <circle cx="300" cy="512" r="4" fill="#E0715B" opacity=".55"/>
+          </svg>
+        </div>
         <p class="club-tag">TRADER HOLIC PRESENTS</p>
         <h1 id="heroTitle">THE <span>1%</span> CLUB</h1>
         <p class="club-lead">Most traders chase the market.<br><b>The 1% let it come to them.</b></p>
@@ -1704,6 +1734,24 @@ loadRecap();setInterval(loadRecap,15*60000);
       });
     }catch(_){bar.hidden=true;}
   });
+})();
+
+/* ============ Hero backdrop: rising candle chart ============ */
+(function(){
+  const svg=document.getElementById('heroChart');if(!svg)return;
+  let sd=7;const r=()=>{sd=(sd*16807)%2147483647;return (sd-1)/2147483646;};
+  const way=[12,20,16,28,23,36,31,46,41,58,52,70,64,82];const n=96,cs=[];let prev=way[0];
+  for(let i=0;i<n;i++){const t=i/(n-1)*(way.length-1),k=Math.min(way.length-2,Math.floor(t)),f=t-k;
+    const c=way[k]+(way[k+1]-way[k])*f+(r()-.5)*4.5,o=prev,h=Math.max(o,c)+r()*2.6,l=Math.min(o,c)-r()*2.6;cs.push({o,c,h,l});prev=c;}
+  const W=1200/n,y=v=>590-v*6.6;let g='',d='';
+  cs.forEach((c,i)=>{const x=i*W+W/2,up=c.c>=c.o,col=up?'#3DCB4F':'#E0715B';
+    g+=`<line x1="${x}" x2="${x}" y1="${y(c.h)}" y2="${y(c.l)}" stroke="${col}" stroke-width="1" vector-effect="non-scaling-stroke"/>`;
+    const y1=y(Math.max(c.o,c.c)),y2=y(Math.min(c.o,c.c));g+=`<rect x="${x-W*.3}" y="${y1}" width="${W*.6}" height="${Math.max(1.5,y2-y1)}" fill="${col}"/>`;
+    d+=(i?'L':'M')+x.toFixed(1)+' '+y(c.c).toFixed(1);});
+  svg.innerHTML=`<defs><linearGradient id="hcFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3DCB4F" stop-opacity=".10"/><stop offset="1" stop-color="#3DCB4F" stop-opacity="0"/></linearGradient></defs>
+    <path d="${d} L1200 600 L0 600Z" fill="url(#hcFill)"/>
+    <g opacity=".10">${g}</g>
+    <path d="${d}" fill="none" stroke="#3DCB4F" stroke-width="1.6" opacity=".28" vector-effect="non-scaling-stroke"/>`;
 })();
 
 /* ============ Lot calculator: open/close bar ============ */
