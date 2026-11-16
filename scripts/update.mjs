@@ -467,16 +467,23 @@ function summaryQuery(e) {
   const tp = TOPIC.find(([re]) => re.test(e.t)); return tp ? `US ${tp[1]} when:2h` : null;
 }
 async function translateAr(text) {
+  try { // Google's dictionary endpoint (works from servers), then MyMemory as a fallback
+    const r = await fetch('https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl=en&tl=ar&q=' + encodeURIComponent(text), { headers: { 'user-agent': UA }, signal: AbortSignal.timeout(12000) });
+    if (r.ok) { const j = await r.json(); const out = Array.isArray(j) ? (Array.isArray(j[0]) ? j[0][0] : j[0]) : null; if (typeof out === 'string' && /[\u0600-\u06FF]/.test(out)) return out.trim(); }
+  } catch { /* try the next one */ }
   try {
-    const r = await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ar&dt=t&q=' + encodeURIComponent(text), { headers: { 'user-agent': UA }, signal: AbortSignal.timeout(12000) });
-    if (!r.ok) return null; const j = await r.json(); const out = (j[0] || []).map(x => x[0]).join('').trim(); return out || null;
-  } catch { return null; }
+    const r = await fetch('https://api.mymemory.translated.net/get?langpair=en|ar&q=' + encodeURIComponent(text), { signal: AbortSignal.timeout(12000) });
+    if (r.ok) { const j = await r.json(); const out = j?.responseData?.translatedText; if (out && /[\u0600-\u06FF]/.test(out)) return out.trim(); }
+  } catch { /* give up */ }
+  return null;
 }
-function pickHeadlines(items, since, max, skip = new Set()) {
+const SAYS = /\bsays?\b|\bsaid\b|\bsees\b|\bwarns?\b|\bsignals?\b|\bstresses\b|\bexpects?\b|\bholds?\b|\bcuts?\b|\braises?\b|\bkeeps?\b|\bleaves?\b|\brises?\b|\bfalls?\b|\bjumps?\b|\bslows?\b|\bcools?\b|\bbeats?\b|\bmiss(es)?\b|:/i;
+function pickHeadlines(items, since, max, skip = new Set(), mustWire = false, name = '') {
   const words = t => new Set(t.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(w => w.length > 3));
+  const score = x => (SAYS.test(x.t) ? 3 : 0) + (name && x.t.includes(name) ? 2 : 0) + (WIRES.test(x.s) ? 1.5 : 0);
   const picked = [];
-  const good = items.filter(x => Date.parse(x.d) >= since && !NOT_NEWS.test(x.t) && !skip.has(x.t))
-    .sort((a, b) => (WIRES.test(b.s) - WIRES.test(a.s)) || (Date.parse(a.d) - Date.parse(b.d)));
+  const good = items.filter(x => Date.parse(x.d) >= since && !NOT_NEWS.test(x.t) && !skip.has(x.t) && (!mustWire || WIRES.test(x.s)) && SAYS.test(x.t))
+    .sort((a, b) => score(b) - score(a) || Date.parse(b.d) - Date.parse(a.d));
   for (const x of good) {
     const w = words(x.t);
     if (picked.some(p => { let n = 0; w.forEach(z => { if (p.w.has(z)) n++; }); return n / Math.max(1, Math.min(w.size, p.w.size)) > 0.45; })) continue;
@@ -505,7 +512,8 @@ async function summaries() {
     let items = [];
     try { items = parseRss(await get(`https://news.google.com/rss/search?q=${encodeURIComponent(summaryQuery(e))}&hl=en-US&gl=US&ceid=US%3Aen`)); } catch (err) { console.log('summary news', String(err.message || err)); continue; }
     const skip = new Set((cur?.items || []).map(x => x.en));
-    const picked = pickHeadlines(items, t - 3 * 60000, 3, skip);
+    const nm = (e.t.match(/([A-Z][a-z]+) (?:Speaks|Testifies|Speech)/) || [])[1] || '';
+    const picked = pickHeadlines(items, t - 3 * 60000, 3, skip, !isTalk, nm);
     if (picked.length < 2) { if (stage === 2 && now - t > 80 * 60000) { cur.stage = 3; changed = true; } continue; }
     const out = [];
     for (const x of picked) out.push({ en: x.t, ar: (await translateAr(x.t)) || x.t, s: x.s, u: x.u, d: x.d });
@@ -545,7 +553,8 @@ if (process.argv.includes('--summary-test')) {
   const [d, c, t] = process.argv[process.argv.indexOf('--summary-test') + 1].split('|');
   const e = { d, c, t, i: 'High' }; console.log('query:', summaryQuery(e));
   const items = parseRss(await get(`https://news.google.com/rss/search?q=${encodeURIComponent(summaryQuery(e))}&hl=en-US&gl=US&ceid=US%3Aen`));
-  for (const x of pickHeadlines(items, Date.parse(d) - 3 * 60000, 3)) console.log('-', x.d, x.s, '|', x.t, '\n  →', await translateAr(x.t));
+  const nm = (t.match(/([A-Z][a-z]+) (?:Speaks|Testifies|Speech)/) || [])[1] || '';
+  for (const x of pickHeadlines(items, Date.parse(d) - 3 * 60000, 3, new Set(), !(IMPACT[0].re.test(t) || IMPACT[1].re.test(t)), nm)) console.log('-', x.d, x.s, '|', x.t, '\n  →', await translateAr(x.t));
 } else if (!process.argv.includes('--watch')) {
   await calendar().catch(e => console.log('calendar failed', e));
   await news().catch(e => console.log('news failed', e));
