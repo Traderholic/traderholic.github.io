@@ -1,0 +1,10 @@
+name: probe
+on:
+  push:
+    paths: ['.github/workflows/probe.yml']
+jobs:
+  p:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          curl -s -m 20 -H 'Origin: https://www.tradingview.com' -A 'Mozilla/5.0' "https://economic-calendar.tradingview.com/events?from=2026-11-16T00:00:00.000Z&to=2026-11-16T23:00:00.000Z&countries=US,EU,CN" | jq -c '.result[]|[.date,.country,.currency,.importance,.title,.actual,.forecast,.previous]' | grep -iE 'industrial|home prices|cleveland|empire|warsh|fed' 
