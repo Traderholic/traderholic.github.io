@@ -1,0 +1,19 @@
+name: probe
+on:
+  push:
+    paths: ['.github/workflows/probe.yml']
+jobs:
+  p:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          for q in 'وارش when:1h' 'وارش الفيدرالي when:2h' 'Warsh when:1h'; do
+            echo "== $q"; U=$(python3 -c "import urllib.parse,sys;print(urllib.parse.quote(sys.argv[1]))" "$q")
+            HL=ar; GL=SA; case "$q" in Warsh*) HL=en-US; GL=US;; esac
+            curl -s -m 20 -A 'Mozilla/5.0' "https://news.google.com/rss/search?q=$U&hl=$HL&gl=$GL&ceid=$GL:${HL%%-*}" | python3 -c "
+          import sys,re,html
+          x=sys.stdin.read()
+          for it in re.findall(r'<item>(.*?)</item>',x,re.S)[:10]:
+            t=html.unescape(re.search(r'<title>(.*?)</title>',it,re.S).group(1)); d=re.search(r'<pubDate>(.*?)</pubDate>',it).group(1); print(d,'|',t)"
+          done
+          date -u
