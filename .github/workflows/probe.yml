@@ -6,9 +6,9 @@ jobs:
   p:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 20 }
       - run: |
-          node scripts/update.mjs --summary-test "2026-11-16T17:00:00.000Z|USD|Fed Chairman Warsh Speaks"
-          node scripts/update.mjs --summary-test "2026-11-13T13:30:00.000Z|USD|PPI m/m"
+          Q='Warsh%20says%20emerging%20technologies%20will%20have%20significant%20impact'
+          echo "== gtx"; curl -s -w ' [%{http_code}]\n' -m 15 -A 'Mozilla/5.0' "https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ar&dt=t&q=$Q" | head -c 400; echo
+          echo "== gtx2"; curl -s -w ' [%{http_code}]\n' -m 15 -A 'Mozilla/5.0' "https://translate.google.com/translate_a/single?client=gtx&sl=en&tl=ar&dt=t&q=$Q" | head -c 400; echo
+          echo "== clients5"; curl -s -w ' [%{http_code}]\n' -m 15 -A 'Mozilla/5.0' "https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl=en&tl=ar&q=$Q" | head -c 400; echo
+          echo "== mymemory"; curl -s -w ' [%{http_code}]\n' -m 15 "https://api.mymemory.translated.net/get?q=$Q&langpair=en|ar" | head -c 500; echo
