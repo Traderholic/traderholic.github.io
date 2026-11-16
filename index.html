@@ -362,6 +362,15 @@ main{overflow-x:clip}
 .quote{background:rgba(21,26,32,.72);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
 .club-pillars li{background:rgba(21,26,32,.75)}
 
+.sum{border:1px solid #2C4A33;background:linear-gradient(180deg,#112018,#0E1512);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.sum h4{margin:0;font-size:14px;color:var(--green)}
+.sum ul{margin:0;padding:0 18px 0 0;display:flex;flex-direction:column;gap:8px}
+.sum li{line-height:1.6}
+.sum li a{color:var(--fg);text-decoration:none;font-weight:600}
+.sum li a:hover{color:var(--green)}
+.sum li small{display:block;font-size:12px;color:var(--dim)}
+.sum.wait p{margin:0;font-size:13px;color:var(--muted)}
+
 /* contact */
 .contact{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px;align-items:center;background:var(--green-soft);border:1.5px solid var(--green);border-radius:var(--r-lg);padding:26px}
 @media (max-width:760px){.contact{grid-template-columns:minmax(0,1fr);text-align:center;justify-items:center}}
@@ -1455,6 +1464,9 @@ function guideHtml(e){
     const hit=r&&r.dir!=='na'&&r.dir!=='eq'?r.dir:'';
     body+=`<div class="scen${hit?' decided':''}"><div class="up${hit==='up'?' hit':''}"><h4><span class="ar">▲</span>إذا جاء أعلى من المتوقع${e.f?' <bdi dir="ltr">('+esc(e.f)+')</bdi>':''}</h4>${chips(up)}</div><div class="dn${hit==='down'?' hit':''}"><h4><span class="ar">▼</span>إذا جاء أقل من المتوقع</h4>${chips(down)}</div></div>`;
   }
+  const sm=SUMS[e.d+'|'+e.c+'|'+e.t];
+  if(sm&&sm.items&&sm.items.length){body+=`<div class="sum"><h4>📰 ملخص اللي صار</h4><ul>${sm.items.map(x=>`<li><a href="${esc(x.u)}" target="_blank" rel="noopener">${esc(x.ar||x.en)}</a><small>${esc(x.s||'')} · ${ago(Date.parse(x.d))}</small></li>`).join('')}</ul></div>`;}
+  else if(e.i==='High'&&e.ts<=Date.now()&&Date.now()-e.ts<90*60000&&(IMPACT_TALK.test(e.t)||e.c==='USD')){body+='<div class="sum wait"><p>ملخص أهم اللي انقال ينزل هني خلال دقايق من بداية الحدث.</p></div>';}
   body+=`<p class="caveat">${e.i==='High'?'نصيحة: لا تفتح صفقة جديدة قبل الخبر بـ 15 دقيقة، وبعد صدوره انتظر إغلاق أول شمعة 5 دقائق وادخل فقط إذا الحركة تتوافق مع تحليلك. ':''}هذا هو التأثير المعتاد، والسوق أحياناً يتحرك عكسه إذا كان الخبر مسعّر مسبقاً.</p>`;
   return body;
 }
@@ -1493,18 +1505,21 @@ function renderCalendar(){
     document.getElementById('stNewsSub').textContent=AR_DAYS[p.wd]+' '+p.hh+':'+p.mm+' بتوقيت الكويت · '+(nextHi.ts>now?'بعد '+dur(nextHi.ts-now):'الحين');}
   else{document.getElementById('stNews').textContent='ما فيه أخبار قوية قريبة';document.getElementById('stNewsSub').textContent='';}
 }
+var SUMS={};
+var IMPACT_TALK=/Speaks|Testif|Press Conference|Statement|Minutes|Funds Rate|Rate Decision|Interest Rate|Bank Rate|Refinancing Rate|Policy Rate/i;
 async function loadCalendarData(){
   try{
     const r=await fetch('data/calendar.json?v='+Math.floor(Date.now()/10000),{cache:'no-store'});if(!r.ok)throw 0;
     const j=await r.json();CAL=(j.events||[]).map(e=>Object.assign(e,{ts:Date.parse(e.d)})).filter(e=>!isNaN(e.ts)).sort((a,b)=>a.ts-b.ts);
     const u=document.getElementById('calUpdated');if(u&&j.updated)u.textContent='آخر تحديث: '+ago(Date.parse(j.updated));
   }catch(_){CAL=[];}
+  try{const r2=await fetch('data/summaries.json?v='+Math.floor(Date.now()/10000),{cache:'no-store'});if(r2.ok)SUMS=await r2.json();}catch(_){}
   renderCalendar();renderAlert();
 }
 segGroup('imp',v=>{calImp=v;renderCalendar();});
 // Poll fast (every 15 s) around a release so the actual figure shows up as soon as it lands, otherwise every 2 minutes.
 const SPEECH_RE=/Speaks|Testif|Press Conference|Statement|Minutes|Meeting|Speech|Hearing|Auction/i;
-function calHot(){const now=Date.now();return CAL.some(e=>(e.i==='High'||e.i==='Medium')&&!SPEECH_RE.test(e.t)&&((e.ts>now&&e.ts-now<3*60000)||(!e.a&&e.ts<=now&&now-e.ts<40*60000)));}
+function calHot(){const now=Date.now();return CAL.some(e=>((e.i==='High'||e.i==='Medium')&&!SPEECH_RE.test(e.t)&&((e.ts>now&&e.ts-now<3*60000)||(!e.a&&e.ts<=now&&now-e.ts<40*60000)))||(e.i==='High'&&e.ts<=now&&now-e.ts<60*60000));}
 let calTimer=0;
 async function calLoop(){clearTimeout(calTimer);await loadCalendarData();calTimer=setTimeout(calLoop,calHot()?15000:120000);}
 calLoop();
