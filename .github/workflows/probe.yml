@@ -1,0 +1,12 @@
+name: probe
+on:
+  push:
+    branches: [dbg]
+jobs:
+  p:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: DRY=1 node scripts/update.mjs --summaries-once; cat data/summaries.json | head -c 2000

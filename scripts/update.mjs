@@ -503,6 +503,7 @@ async function summaries() {
   for (const e of cal) { if (e.i !== 'High' || !summaryQuery(e)) continue; const t = Date.parse(e.d); if (!(now - t > 3 * 60000 && now - t < 95 * 60000)) continue;
     const cur = slots.get(e.d); const rank = x => IMPACT[0].re.test(x.t) ? 0 : IMPACT[1].re.test(x.t) ? 1 : 2; if (!cur || rank(e) < rank(cur)) slots.set(e.d, e); }
   const cfg = await readJson('push-config.json');
+  console.log('slots', [...slots.keys()], new Date(now).toISOString());
   for (const [d, e] of slots) {
     const t = Date.parse(d), key = keyOf(e), cur = store[key];
     const isTalk = IMPACT[0].re.test(e.t) || IMPACT[1].re.test(e.t);
@@ -549,7 +550,9 @@ async function publish(msg) {
   return false;
 }
 await mkdir('data', { recursive: true });
-if (process.argv.includes('--summary-test')) {
+if (process.argv.includes('--summaries-once')) {
+  console.log('result', await summaries());
+} else if (process.argv.includes('--summary-test')) {
   // dry run against a past event: node scripts/update.mjs --summary-test "<ISO date>|<currency>|<title>"
   const [d, c, t] = process.argv[process.argv.indexOf('--summary-test') + 1].split('|');
   const e = { d, c, t, i: 'High' }; console.log('query:', summaryQuery(e));
