@@ -156,12 +156,17 @@ async function calendar() {
 async function nextDelay() {
   const d = await readJson('data/calendar.json'); const now = Date.now();
   const SPEECH = /Speaks|Testif|Press Conference|Statement|Minutes|Meeting|Speech|Hearing|Auction|Holiday/i;
-  const hot = (d?.events || []).some(e => {
-    if (e.i === 'Holiday' || e.i === 'Low' || SPEECH.test(e.t)) return false;
-    const t = Date.parse(e.d);
-    return (t > now && t - now < 3 * 60000) || (!e.a && t <= now && now - t < 40 * 60000);
-  });
-  return hot ? 12 : 60;
+  let delay = 60;
+  for (const e of d?.events || []) {
+    if (e.i === 'Holiday') continue;
+    const t = Date.parse(e.d), big = e.i === 'High' || e.i === 'Medium';
+    if (big && !SPEECH.test(e.t) && !e.a && t <= now && now - t < 4 * 60000) return 5;            // just released: every 5 s
+    if (big && t > now && t - now < 3 * 60000) delay = Math.min(delay, 10);                         // about to release
+    if (big && !SPEECH.test(e.t) && !e.a && t <= now && now - t < 40 * 60000) delay = Math.min(delay, 12);
+    if (e.i === 'High' && t <= now && now - t < 95 * 60000) delay = Math.min(delay, 30);           // summary window
+    if (e.i === 'Low' && !e.a && t <= now && now - t < 10 * 60000) delay = Math.min(delay, 20);
+  }
+  return delay;
 }
 
 /* ---------------- News (RSS) ---------------- */
@@ -382,6 +387,24 @@ async function sendPush(cfg, key, heading, body) {
   const txt = await r.text(); console.log('push', r.status, key, txt.slice(0, 200));
   return r.ok;
 }
+function resultLine(e) {
+  const a = num(e.a), f = num(e.f);
+  if (IMPACT[1].re.test(e.t)) {
+    const p = num(e.p); const w = p == null || a == null ? '' : a > p ? 'رفع' : a < p ? 'خفض' : 'تثبيت';
+    const vs = f == null ? '' : a > f ? ' (أعلى من المتوقع)' : a < f ? ' (أقل من المتوقع)' : ' (مثل المتوقع)';
+    const dir = f == null || a === f ? null : a > f ? 'up' : 'down';
+    return `${e.t}: ${e.a}${w ? ' · ' + w : ''}${vs}` + (dir ? '\n' + effectLine(e, dir) : '');
+  }
+  if (f == null) return `${e.t}: ${e.a}`;
+  const dir = a > f ? 'up' : a < f ? 'down' : 'eq';
+  const word = dir === 'up' ? 'أعلى من المتوقع ⬆️' : dir === 'down' ? 'أقل من المتوقع ⬇️' : 'مطابق للمتوقع';
+  return `${e.t}: ${e.a} (المتوقع ${e.f}) ${word}` + (dir === 'eq' ? '' : '\n' + effectLine(e, dir));
+}
+function rateHeadline(e) {
+  const a = num(e.a), p = num(e.p); const bank = { USD: 'الفيدرالي', EUR: 'المركزي الأوروبي', GBP: 'بنك إنجلترا', JPY: 'بنك اليابان' }[e.c] || 'البنك المركزي';
+  if (a == null || p == null) return `قرار ${bank}: ${e.a}`;
+  return a > p ? `${bank} يرفع الفائدة إلى ${e.a}` : a < p ? `${bank} يخفض الفائدة إلى ${e.a}` : `${bank} يثبت الفائدة عند ${e.a}`;
+}
 async function pushAlerts() {
   const cfg = await readJson('push-config.json');
   if (!cfg?.appId || !process.env.ONESIGNAL_API_KEY) return false;
@@ -402,22 +425,101 @@ async function pushAlerts() {
       const mw = mins === 1 ? 'دقيقة' : mins === 2 ? 'دقيقتين' : mins <= 10 ? mins + ' دقائق' : mins + ' دقيقة';
       if (await sendPush(cfg, preKey, `⏰ خبر قوي بعد ${mw} · ${hhmm(t)} بتوقيت الكويت`, body)) { log.sent[preKey] = new Date().toISOString(); changed = true; }
     }
-    // after: once every item at this time that can have a figure has one (or 10 minutes passed)
+    // after: send as soon as figures land. Items of the same time slot that arrive within ~30 s go in one alert;
+    // anything arriving later gets its own alert, so nobody waits on a slow item.
     const withFig = list.filter(e => !IMPACT[0].re.test(e.t));
-    const got = withFig.filter(e => e.a);
-    const resKey = 'res|' + d + '|' + got.map(e => e.c + e.t).join(',');
-    if (got.length && now - t < 60 * 60000 && (got.length === withFig.length || now - t > 10 * 60000) && !Object.keys(log.sent).some(k => k.startsWith('res|' + d + '|'))) {
-      const lines = got.map(e => {
-        const a = num(e.a), f = num(e.f);
-        if (f == null) return `${e.t}: ${e.a}`;
-        const dir = a > f ? 'up' : a < f ? 'down' : 'eq';
-        const word = dir === 'up' ? 'أعلى من المتوقع ⬆️' : dir === 'down' ? 'أقل من المتوقع ⬇️' : 'مطابق للمتوقع';
-        return `${e.t}: ${e.a} (المتوقع ${e.f}) ${word}` + (dir === 'eq' ? '' : '\n' + effectLine(e, dir));
-      });
-      if (await sendPush(cfg, resKey, `📊 صدر الخبر · ${got[0].c}`, lines.join('\n'))) { log.sent[resKey] = new Date().toISOString(); changed = true; }
+    const fresh = withFig.filter(e => e.a && !log.sent['res1|' + keyOf(e)]);
+    if (fresh.length && now - t < 60 * 60000) {
+      const seenK = 'seen|' + d;
+      if (!log.sent[seenK]) { log.sent[seenK] = new Date().toISOString(); changed = true; }
+      const waiting = withFig.some(e => !e.a) && now - Date.parse(log.sent[seenK]) < 30000 && now - t < 3 * 60000;
+      if (!waiting) {
+        const lines = fresh.map(resultLine);
+        const resKey = 'res|' + d + '|' + fresh.map(e => e.c + e.t).join(',');
+        const rate = fresh.find(e => IMPACT[1].re.test(e.t));
+        const head = rate ? `🏦 ${rateHeadline(rate)}` : `📊 صدر الخبر · ${fresh[0].c} · ${hhmm(t)}`;
+        if (await sendPush(cfg, resKey, head, lines.join('\n'))) { fresh.forEach(e => { log.sent['res1|' + keyOf(e)] = new Date().toISOString(); }); changed = true; }
+      }
     }
   }
   if (changed) await writeFile(logPath, JSON.stringify(log));
+  return changed;
+}
+
+/* ---------------- Summaries of high-impact events ----------------
+   After a central-bank decision, speech or press conference (and after big data releases), collect the first
+   wire headlines (English wires publish within minutes), translate them to Arabic, push a short summary and
+   keep it in data/summaries.json so the calendar can show it under the event. */
+const WIRES = /Reuters|Bloomberg|CNBC|Wall Street Journal|WSJ|Financial Times|MarketWatch|Barron|Axios|AP News|Associated Press|FXStreet|ForexLive|Investing\.com|Yahoo|Fox Business|Business Insider|Kitco|CNN|Morningstar|Nasdaq|The Hill|Politico|NBC|CBS|ABC|Forbes|Fortune|Coindesk|Cointelegraph|The Block|Federal Reserve/i;
+const NOT_NEWS = /watch live|live:|livestream|live updates|preview|what to expect|ahead of|to speak|will speak|set to|schedule|how to watch|calendar|week ahead|podcast|video/i;
+const BANK = { USD: 'Fed', EUR: 'ECB', GBP: '"Bank of England"', JPY: '"Bank of Japan"' };
+const BANK_AR = { USD: 'الفيدرالي', EUR: 'المركزي الأوروبي', GBP: 'بنك إنجلترا', JPY: 'بنك اليابان' };
+const TOPIC = [
+  [/CPI|Inflation/i, 'inflation CPI'], [/PCE/i, 'PCE inflation'], [/PPI/i, 'producer prices PPI'],
+  [/Non-Farm|NFP|Payrolls/i, 'payrolls jobs report'], [/Unemployment Rate/i, 'unemployment rate'], [/Claims/i, 'jobless claims'],
+  [/GDP/i, 'GDP economy'], [/Retail Sales/i, 'retail sales'], [/ISM|PMI/i, 'ISM PMI'], [/JOLTS/i, 'job openings JOLTS']
+];
+function summaryQuery(e) {
+  const bank = BANK[e.c]; if (!bank) return null;
+  const name = (e.t.match(/([A-Z][a-z]+) (?:Speaks|Testifies|Speech)/) || [])[1];
+  if (IMPACT[0].re.test(e.t) || IMPACT[1].re.test(e.t)) return name ? `(${name} OR ${bank}) when:2h` : `(${bank} OR "rate decision") when:2h`;
+  if (e.c !== 'USD') return null;
+  const tp = TOPIC.find(([re]) => re.test(e.t)); return tp ? `US ${tp[1]} when:2h` : null;
+}
+async function translateAr(text) {
+  try {
+    const r = await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ar&dt=t&q=' + encodeURIComponent(text), { headers: { 'user-agent': UA }, signal: AbortSignal.timeout(12000) });
+    if (!r.ok) return null; const j = await r.json(); const out = (j[0] || []).map(x => x[0]).join('').trim(); return out || null;
+  } catch { return null; }
+}
+function pickHeadlines(items, since, max, skip = new Set()) {
+  const words = t => new Set(t.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(w => w.length > 3));
+  const picked = [];
+  const good = items.filter(x => Date.parse(x.d) >= since && !NOT_NEWS.test(x.t) && !skip.has(x.t))
+    .sort((a, b) => (WIRES.test(b.s) - WIRES.test(a.s)) || (Date.parse(a.d) - Date.parse(b.d)));
+  for (const x of good) {
+    const w = words(x.t);
+    if (picked.some(p => { let n = 0; w.forEach(z => { if (p.w.has(z)) n++; }); return n / Math.max(1, Math.min(w.size, p.w.size)) > 0.45; })) continue;
+    picked.push({ x, w }); if (picked.length === max) break;
+  }
+  return picked.map(p => p.x);
+}
+async function summaries() {
+  const path = 'data/summaries.json';
+  const store = (await readJson(path)) || {};
+  const now = Date.now(); let changed = false;
+  for (const k of Object.keys(store)) if (now - Date.parse(store[k].at || 0) > 8 * 86400000) { delete store[k]; changed = true; }
+  const cal = (await readJson('data/calendar.json'))?.events || [];
+  // one summary per time slot: prefer the speech / press conference / rate decision, else the first data item
+  const slots = new Map();
+  for (const e of cal) { if (e.i !== 'High' || !summaryQuery(e)) continue; const t = Date.parse(e.d); if (!(now - t > 3 * 60000 && now - t < 95 * 60000)) continue;
+    const cur = slots.get(e.d); const rank = x => IMPACT[0].re.test(x.t) ? 0 : IMPACT[1].re.test(x.t) ? 1 : 2; if (!cur || rank(e) < rank(cur)) slots.set(e.d, e); }
+  const cfg = await readJson('push-config.json');
+  for (const [d, e] of slots) {
+    const t = Date.parse(d), key = keyOf(e), cur = store[key];
+    const isTalk = IMPACT[0].re.test(e.t) || IMPACT[1].re.test(e.t);
+    // stage 1 as soon as there are 2+ fresh headlines (talks) or after 6 min (data); stage 2 update after 40 min for talks
+    const stage = !cur ? 1 : (isTalk && cur.stage === 1 && now - t > 40 * 60000) ? 2 : 0;
+    if (!stage) continue;
+    if (!isTalk && now - t < 6 * 60000) continue;
+    let items = [];
+    try { items = parseRss(await get(`https://news.google.com/rss/search?q=${encodeURIComponent(summaryQuery(e))}&hl=en-US&gl=US&ceid=US%3Aen`)); } catch (err) { console.log('summary news', String(err.message || err)); continue; }
+    const skip = new Set((cur?.items || []).map(x => x.en));
+    const picked = pickHeadlines(items, t - 3 * 60000, 3, skip);
+    if (picked.length < 2) { if (stage === 2 && now - t > 80 * 60000) { cur.stage = 3; changed = true; } continue; }
+    const out = [];
+    for (const x of picked) out.push({ en: x.t, ar: (await translateAr(x.t)) || x.t, s: x.s, u: x.u, d: x.d });
+    const entry = cur || { t: e.t, c: e.c, d: e.d, items: [] };
+    entry.items = [...(entry.items || []), ...out]; entry.stage = stage; entry.at = new Date().toISOString();
+    store[key] = entry; changed = true;
+    console.log('summary', stage, e.c, e.t, out.map(x => x.ar).join(' | '));
+    if (cfg?.appId && process.env.ONESIGNAL_API_KEY && !process.env.DRY) {
+      const who = (e.t.match(/([A-Z][a-z]+) (?:Speaks|Testifies)/) || [])[1];
+      const title = isTalk ? `🎙️ ${stage === 2 ? 'تحديث: ' : ''}أبرز ما قيل · ${BANK_AR[e.c] || e.c}${who ? ' (' + who + ')' : ''}` : `📰 ملخص الخبر · ${e.t}`;
+      await sendPush(cfg, 'sum|' + stage + '|' + key, title, out.map(x => '• ' + x.ar).join('\n'));
+    }
+  }
+  if (changed) await writeFile(path, JSON.stringify(store));
   return changed;
 }
 
@@ -438,7 +540,13 @@ async function publish(msg) {
   return false;
 }
 await mkdir('data', { recursive: true });
-if (!process.argv.includes('--watch')) {
+if (process.argv.includes('--summary-test')) {
+  // dry run against a past event: node scripts/update.mjs --summary-test "<ISO date>|<currency>|<title>"
+  const [d, c, t] = process.argv[process.argv.indexOf('--summary-test') + 1].split('|');
+  const e = { d, c, t, i: 'High' }; console.log('query:', summaryQuery(e));
+  const items = parseRss(await get(`https://news.google.com/rss/search?q=${encodeURIComponent(summaryQuery(e))}&hl=en-US&gl=US&ceid=US%3Aen`));
+  for (const x of pickHeadlines(items, Date.parse(d) - 3 * 60000, 3)) console.log('-', x.d, x.s, '|', x.t, '\n  →', await translateAr(x.t));
+} else if (!process.argv.includes('--watch')) {
   await calendar().catch(e => console.log('calendar failed', e));
   await news().catch(e => console.log('news failed', e));
   await recap().catch(e => console.log('recap failed', e));
@@ -451,6 +559,7 @@ if (!process.argv.includes('--watch')) {
     const changed = await calendar().catch(e => { console.log('calendar failed', e); return false; });
     const pushed = await pushAlerts().catch(e => { console.log('push failed', e); return false; });
     if (changed || pushed) await publish('data: calendar update');
+    if (await summaries().catch(e => { console.log('summaries failed', e); return false; })) await publish('data: event summary');
     if (Date.now() - lastSlow > 30 * 60000) {
       lastSlow = Date.now();
       await recap().catch(e => console.log('recap failed', e));

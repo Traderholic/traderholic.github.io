@@ -1,19 +1,14 @@
 name: probe
 on:
   push:
-    paths: ['.github/workflows/probe.yml']
+    branches: [test-summary]
 jobs:
   p:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
       - run: |
-          for q in 'وارش when:1h' 'وارش الفيدرالي when:2h' 'Warsh when:1h'; do
-            echo "== $q"; U=$(python3 -c "import urllib.parse,sys;print(urllib.parse.quote(sys.argv[1]))" "$q")
-            HL=ar; GL=SA; case "$q" in Warsh*) HL=en-US; GL=US;; esac
-            curl -s -m 20 -A 'Mozilla/5.0' "https://news.google.com/rss/search?q=$U&hl=$HL&gl=$GL&ceid=$GL:${HL%%-*}" | python3 -c "
-          import sys,re,html
-          x=sys.stdin.read()
-          for it in re.findall(r'<item>(.*?)</item>',x,re.S)[:10]:
-            t=html.unescape(re.search(r'<title>(.*?)</title>',it,re.S).group(1)); d=re.search(r'<pubDate>(.*?)</pubDate>',it).group(1); print(d,'|',t)"
-          done
-          date -u
+          node scripts/update.mjs --summary-test "2026-11-16T17:00:00.000Z|USD|Fed Chairman Warsh Speaks"
+          node scripts/update.mjs --summary-test "2026-11-13T13:30:00.000Z|USD|PPI m/m"
