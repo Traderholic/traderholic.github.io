@@ -492,6 +492,7 @@ function pickHeadlines(items, since, max, skip = new Set(), mustWire = false, na
   }
   return picked.map(p => p.x);
 }
+const SUM_LAST = new Map();
 async function summaries() {
   const path = 'data/summaries.json';
   const store = (await readJson(path)) || {};
@@ -510,11 +511,14 @@ async function summaries() {
     const stage = !cur ? 1 : (isTalk && cur.stage === 1 && now - t > 40 * 60000) ? 2 : 0;
     if (!stage) continue;
     if (!isTalk && now - t < 6 * 60000) continue;
+    if (now - (SUM_LAST.get(key + stage) || 0) < 60000) continue; // at most one news query a minute per event
+    SUM_LAST.set(key + stage, now);
     let items = [];
     try { items = parseRss(await get(`https://news.google.com/rss/search?q=${encodeURIComponent(summaryQuery(e))}&hl=en-US&gl=US&ceid=US%3Aen`)); } catch (err) { console.log('summary news', String(err.message || err)); continue; }
     const skip = new Set((cur?.items || []).map(x => x.en));
     const nm = (e.t.match(/([A-Z][a-z]+) (?:Speaks|Testifies|Speech)/) || [])[1] || '';
     const picked = pickHeadlines(items, t - 3 * 60000, 3, skip, !isTalk, nm);
+    console.log('summary check', stage, e.t, 'headlines', items.length, 'picked', picked.length);
     if (picked.length < 2) { if (stage === 2 && now - t > 80 * 60000) { cur.stage = 3; changed = true; } continue; }
     const out = [];
     for (const x of picked) out.push({ en: x.t, ar: (await translateAr(x.t)) || x.t, s: x.s, u: x.u, d: x.d });
