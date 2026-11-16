@@ -1,0 +1,17 @@
+name: probe
+on:
+  push:
+    branches: [dbg2]
+jobs:
+  p:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: |
+          node -e "
+          const s=require('fs').readFileSync('scripts/update.mjs','utf8');
+          " 
+          for u in 'https://www.bing.com/news/search?q=Warsh&format=rss&qft=sortbydate%3d%221%22' 'https://www.forexlive.com/feed/news' 'https://www.fxstreet.com/rss/news'; do echo "== $u"; curl -s -m 20 -A 'Mozilla/5.0 (X11; Linux x86_64) Chrome/126.0' "$u" | grep -o '<title>[^<]*</title>' | head -6; done
+          node scripts/update.mjs --summary-test "2026-11-16T17:00:00.000Z|USD|Fed Chairman Warsh Speaks"
