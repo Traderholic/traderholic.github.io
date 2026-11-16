@@ -179,7 +179,7 @@ function parseRss(xml, fallbackSource) {
   for (const m of xml.matchAll(/<item[\s>]([\s\S]*?)<\/item>/gi)) {
     const it = m[1];
     let title = tag(it, 'title'); const link = tag(it, 'link'); const date = Date.parse(tag(it, 'pubDate') || tag(it, 'dc:date'));
-    let source = tag(it, 'source') || fallbackSource || '';
+    let source = tag(it, 'source') || tag(it, 'News:Source') || fallbackSource || '';
     if (!title || !/^https?:\/\//.test(link) || Number.isNaN(date)) continue;
     if (source && title.endsWith(' - ' + source)) title = title.slice(0, -(source.length + 3)).trim();
     out.push({ t: title, u: link, s: source, d: new Date(date).toISOString() });
@@ -492,6 +492,26 @@ function pickHeadlines(items, since, max, skip = new Set(), mustWire = false, na
   }
   return picked.map(p => p.x);
 }
+// Headlines for summaries: Google News first, then Bing News, then the fast FX wires (a runner IP can get blocked by one of them).
+async function fetchSummaryHeadlines(q, kw) {
+  const plain = q.replace(/\s*when:\S+/g, '');
+  const tries = [
+    [`https://news.google.com/rss/search?q=${encodeURIComponent(q)}&hl=en-US&gl=US&ceid=US%3Aen`, null],
+    [`https://www.bing.com/news/search?q=${encodeURIComponent(plain)}&format=rss&qft=sortbydate%3d%221%22`, null],
+    ['https://www.forexlive.com/feed/news', 'ForexLive'], ['https://www.fxstreet.com/rss/news', 'FXStreet']
+  ];
+  let all = [];
+  for (const [url, src] of tries) {
+    try {
+      let items = parseRss(await get(url), src || '');
+      items.forEach(x => { if (!x.s) { try { x.s = new URL(x.u).hostname.replace(/^www\./, ''); } catch { /* keep empty */ } } x.s = x.s.replace(/<[^>]*>/g, ''); });
+      if (src) items = items.filter(x => kw.test(x.t));
+      all = all.concat(items);
+      if (!src && items.length >= 5) break; // a search engine answered well; no need for the wires
+    } catch (err) { console.log('summary src', String(err.message || err).slice(0, 120)); }
+  }
+  return all;
+}
 const SUM_LAST = new Map();
 async function summaries() {
   const path = 'data/summaries.json';
@@ -514,7 +534,10 @@ async function summaries() {
     if (now - (SUM_LAST.get(key + stage) || 0) < 60000) continue; // at most one news query a minute per event
     SUM_LAST.set(key + stage, now);
     let items = [];
-    try { items = parseRss(await get(`https://news.google.com/rss/search?q=${encodeURIComponent(summaryQuery(e))}&hl=en-US&gl=US&ceid=US%3Aen`)); } catch (err) { console.log('summary news', String(err.message || err)); continue; }
+    const nm0 = (e.t.match(/([A-Z][a-z]+) (?:Speaks|Testifies|Speech)/) || [])[1];
+    const kw = new RegExp([nm0, { USD: 'Fed|FOMC|Federal Reserve', EUR: 'ECB|Lagarde', GBP: 'BoE|Bank of England|Bailey', JPY: 'BoJ|Bank of Japan|Ueda' }[e.c] || 'Fed'].filter(Boolean).join('|') + (isTalk ? '' : '|' + (TOPIC.find(([re]) => re.test(e.t)) || [, ''])[1].split(' ').join('|')), 'i');
+    items = await fetchSummaryHeadlines(summaryQuery(e), kw);
+    if (!items.length) continue;
     const skip = new Set((cur?.items || []).map(x => x.en));
     const nm = (e.t.match(/([A-Z][a-z]+) (?:Speaks|Testifies|Speech)/) || [])[1] || '';
     const picked = pickHeadlines(items, t - 3 * 60000, 3, skip, !isTalk, nm);
@@ -557,7 +580,7 @@ if (process.argv.includes('--summary-test')) {
   // dry run against a past event: node scripts/update.mjs --summary-test "<ISO date>|<currency>|<title>"
   const [d, c, t] = process.argv[process.argv.indexOf('--summary-test') + 1].split('|');
   const e = { d, c, t, i: 'High' }; console.log('query:', summaryQuery(e));
-  const items = parseRss(await get(`https://news.google.com/rss/search?q=${encodeURIComponent(summaryQuery(e))}&hl=en-US&gl=US&ceid=US%3Aen`));
+  const items = await fetchSummaryHeadlines(summaryQuery(e), /Warsh|Fed|FOMC/i);
   const nm = (t.match(/([A-Z][a-z]+) (?:Speaks|Testifies|Speech)/) || [])[1] || '';
   for (const x of pickHeadlines(items, Date.parse(d) - 3 * 60000, 3, new Set(), !(IMPACT[0].re.test(t) || IMPACT[1].re.test(t)), nm)) console.log('-', x.d, x.s, '|', x.t, '\n  →', await translateAr(x.t));
 } else if (!process.argv.includes('--watch')) {
