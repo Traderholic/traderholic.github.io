@@ -116,9 +116,9 @@ async function fetchFFActuals(days) {
     const d = new Date(t - 5 * 3600000); // FF day pages follow New York's calendar day
     const url = `https://www.forexfactory.com/calendar?day=${FF_MON[d.getUTCMonth()]}${d.getUTCDate()}.${d.getUTCFullYear()}`;
     try {
-      const r = await fetch(url, { headers: { 'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36', 'accept-language': 'en-US' }, signal: AbortSignal.timeout(15000) });
-      if (!r.ok) { console.log('ff page', r.status); continue; }
-      const html = await r.text();
+      // curl, not fetch: the site's firewall refuses Node's HTTP client but accepts curl
+      const html = execFileSync('curl', ['-s', '--compressed', '-m', '15', '-A', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36', '-H', 'Accept-Language: en-US', url], { maxBuffer: 1 << 24 }).toString();
+      if (!html.includes('"dateline"')) { console.log('ff page: no calendar data', html.length); continue; }
       const re = /\{"id":\d+,"ebaseId":\d+,"name":"((?:[^"\\]|\\.)*)"[^{}]*?"dateline":(\d+)[^{}]*?"currency":"(\w*)"[^{}]*?"actual":"((?:[^"\\]|\\.)*)"/g;
       let m; while ((m = re.exec(html))) {
         const name = m[1].replace(/\\\//g, '/').replace(/\\u0026/g, '&'), actual = m[4].replace(/\\\//g, '/');
@@ -160,7 +160,7 @@ async function calendar() {
   if (need.length) {
     // 1) ForexFactory page: fastest, exact titles
     try {
-      const recentNeed = need.filter(e => now - Date.parse(e.d) < 6 * 3600000);
+      const recentNeed = need.filter(e => now - Date.parse(e.d) < 24 * 3600000);
       const days = [...new Set(recentNeed.map(e => { const d = new Date(Date.parse(e.d) - 5 * 3600000); return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) + 5 * 3600000; }))].slice(-2);
       const ff = days.length ? await fetchFFActuals(days) : new Map(); let n = 0;
       for (const e of need) { const a = ff.get(e.c + '|' + e.t + '|' + Date.parse(e.d)); if (a) { e.a = a; n++; console.log('actual(ff)', e.c, e.t, a); } }
@@ -555,7 +555,7 @@ async function summaries() {
 /* ---------------- Runner ----------------
    GitHub's scheduled runs are often late or skipped, so one job stays alive for hours and checks in a loop:
    every ~12 s around a release, every minute otherwise; news every 10 minutes. Changes are committed and pushed at once. */
-import { execSync } from 'node:child_process';
+import { execSync, execFileSync } from 'node:child_process';
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const sh = c => execSync(c, { stdio: 'pipe' }).toString().trim();
 async function publish(msg) {
@@ -569,7 +569,10 @@ async function publish(msg) {
   return false;
 }
 await mkdir('data', { recursive: true });
-if (process.argv.includes('--summary-test')) {
+if (process.argv.includes('--ff-test')) {
+  // check the ForexFactory page source: node scripts/update.mjs --ff-test
+  const m = await fetchFFActuals([Date.now() - 6 * 3600000]); console.log('ff size', m.size); for (const [k, v] of [...m].slice(0, 40)) console.log(k, v);
+} else if (process.argv.includes('--summary-test')) {
   // dry run against a past event: node scripts/update.mjs --summary-test "<ISO date>|<currency>|<title>"
   const [d, c, t] = process.argv[process.argv.indexOf('--summary-test') + 1].split('|');
   const e = { d, c, t, i: 'High' }; console.log('query:', summaryQuery(e));
