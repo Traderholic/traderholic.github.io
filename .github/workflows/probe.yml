@@ -1,0 +1,11 @@
+name: probe
+on:
+  push:
+    branches: [dbg4]
+jobs:
+  p:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          date -u
+          curl -s -m 20 -H 'Origin: https://www.tradingview.com' -A 'Mozilla/5.0' "https://economic-calendar.tradingview.com/events?from=2026-11-17T13:00:00.000Z&to=2026-11-17T14:00:00.000Z&countries=US" | jq -c '.result[]|[.date,.title,.actual,.forecast,.previous,.unit]'
