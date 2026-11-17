@@ -108,6 +108,26 @@ function matchTV(ff, tvList, used) {
   }
   return best?.tv || null;
 }
+// ForexFactory's own calendar page carries the actual figure seconds after release (same titles as our list).
+const FF_MON = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+async function fetchFFActuals(days) {
+  const out = new Map();
+  for (const t of days) {
+    const d = new Date(t - 5 * 3600000); // FF day pages follow New York's calendar day
+    const url = `https://www.forexfactory.com/calendar?day=${FF_MON[d.getUTCMonth()]}${d.getUTCDate()}.${d.getUTCFullYear()}`;
+    try {
+      const r = await fetch(url, { headers: { 'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36', 'accept-language': 'en-US' }, signal: AbortSignal.timeout(15000) });
+      if (!r.ok) { console.log('ff page', r.status); continue; }
+      const html = await r.text();
+      const re = /\{"id":\d+,"ebaseId":\d+,"name":"((?:[^"\\]|\\.)*)"[^{}]*?"dateline":(\d+)[^{}]*?"currency":"(\w*)"[^{}]*?"actual":"((?:[^"\\]|\\.)*)"/g;
+      let m; while ((m = re.exec(html))) {
+        const name = m[1].replace(/\\\//g, '/').replace(/\\u0026/g, '&'), actual = m[4].replace(/\\\//g, '/');
+        if (actual) out.set(m[3] + '|' + name + '|' + (+m[2] * 1000), actual);
+      }
+    } catch (e) { console.log('ff page', String(e.message || e).slice(0, 100)); }
+  }
+  return out;
+}
 async function fetchTV(fromMs, toMs) {
   const url = `https://economic-calendar.tradingview.com/events?from=${new Date(fromMs).toISOString()}&to=${new Date(toMs).toISOString()}&countries=US,EU,DE,FR,IT,ES,GB,JP,CN`;
   const r = await fetch(url, { headers: { 'user-agent': UA, origin: 'https://www.tradingview.com', referer: 'https://www.tradingview.com/' }, signal: AbortSignal.timeout(25000) });
@@ -138,11 +158,22 @@ async function calendar() {
   const need = events.filter(e => !e.a && e.i !== 'Holiday' && !/Speaks|Testif|Press Conference|Statement|Minutes|Meeting|Speech|Hearing|Auction|Bank Holiday/i.test(e.t)
     && Date.parse(e.d) <= now && Date.parse(e.d) >= now - 3 * 86400000);
   if (need.length) {
+    // 1) ForexFactory page: fastest, exact titles
+    try {
+      const recentNeed = need.filter(e => now - Date.parse(e.d) < 6 * 3600000);
+      const days = [...new Set(recentNeed.map(e => { const d = new Date(Date.parse(e.d) - 5 * 3600000); return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) + 5 * 3600000; }))].slice(-2);
+      const ff = days.length ? await fetchFFActuals(days) : new Map(); let n = 0;
+      for (const e of need) { const a = ff.get(e.c + '|' + e.t + '|' + Date.parse(e.d)); if (a) { e.a = a; n++; console.log('actual(ff)', e.c, e.t, a); } }
+      if (n) console.log('ff actuals', n);
+    } catch (err) { console.log('ff actuals', String(err.message || err)); }
+  }
+  const need2 = need.filter(e => !e.a);
+  if (need2.length) {
     try {
       const tv = await fetchTV(now - 3 * 86400000 - 3600000, now + 3600000);
       const used = new Set(); let n = 0;
-      for (const e of need) { const m = matchTV(e, tv, used); const a = m && fmtActual(m.actual, e, m); if (a) { used.add(m.id); e.a = a; n++; console.log('actual', e.c, e.t, '=>', m.title, e.a); } }
-      console.log('actuals matched', n, 'of', need.length);
+      for (const e of need2) { const m = matchTV(e, tv, used); const a = m && fmtActual(m.actual, e, m); if (a) { used.add(m.id); e.a = a; n++; console.log('actual', e.c, e.t, '=>', m.title, e.a); } }
+      console.log('actuals matched', n, 'of', need2.length);
     } catch (err) { console.log('actuals', String(err.message || err)); }
   }
   const out = { updated: new Date().toISOString(), ffAt: ffFresh, source: 'ForexFactory + TradingView', events };
