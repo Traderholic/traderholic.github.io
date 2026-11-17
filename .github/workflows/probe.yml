@@ -1,0 +1,20 @@
+name: probe
+on:
+  push:
+    branches: [fonts-tmp]
+jobs:
+  p:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: |
+          mkdir out && cd out
+          for fam in 'IBM+Plex+Sans+Arabic:wght@400;500;600;700' 'Montserrat:wght@500;600;700;800;900'; do
+            curl -s -A 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/534.30 (KHTML, like Gecko) Safari/534.30' "https://fonts.googleapis.com/css2?family=$fam&display=swap" >> fonts.css
+          done
+          grep -o 'https://fonts.gstatic.com[^)]*' fonts.css | sort -u | while read u; do curl -s -O "$u"; done
+          ls -la; head -c 1500 fonts.css
+          npm i -s qrcode@1.5.4 >/dev/null 2>&1 && node -e "require('qrcode').toString('https://traderholic.github.io',{type:'svg',margin:0,errorCorrectionLevel:'M',color:{dark:'#0D1014',light:'#FFFFFF'}},(e,s)=>require('fs').writeFileSync('qr.svg',s))" && ls -la qr.svg
+      - uses: actions/upload-artifact@v4
+        with: { name: fonts, path: out, retention-days: 1 }
