@@ -569,7 +569,9 @@ async function publish(msg) {
   return false;
 }
 await mkdir('data', { recursive: true });
-if (process.argv.includes('--summary-test')) {
+if (process.argv.includes('--ff-test')) {
+  const m = await fetchFFActuals([Date.now() - 6 * 3600000]); console.log('ff size', m.size); for (const [k, v] of [...m].slice(0, 40)) console.log(k, v);
+} else if (process.argv.includes('--summary-test')) {
   // dry run against a past event: node scripts/update.mjs --summary-test "<ISO date>|<currency>|<title>"
   const [d, c, t] = process.argv[process.argv.indexOf('--summary-test') + 1].split('|');
   const e = { d, c, t, i: 'High' }; console.log('query:', summaryQuery(e));
