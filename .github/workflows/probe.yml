@@ -1,0 +1,16 @@
+name: probe
+on:
+  push:
+    branches: [dbg5]
+jobs:
+  p:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          date -u
+          UA='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36'
+          echo "== FF"; curl -s -m 25 -A "$UA" -H 'Accept-Language: en-US' "https://www.forexfactory.com/calendar?day=nov17.2026" -o ff.html -w '%{http_code}\n'; wc -c ff.html; grep -o '"name":"[^"]*Retail Sales[^"]*"[^}]\{0,400\}' ff.html | head -4; grep -o 'Just a moment' ff.html | head -1
+          echo "== MFB"; curl -s -m 25 -A "$UA" "https://www.myfxbook.com/forex-economic-calendar" -o mfb.html -w '%{http_code}\n'; wc -c mfb.html; grep -i -o 'Retail Sales[^<]\{0,40\}' mfb.html | head -5
+          echo "== INV"; curl -s -m 25 -A "$UA" "https://www.investing.com/economic-calendar/" -o inv.html -w '%{http_code}\n'; wc -c inv.html; grep -o 'Just a moment' inv.html | head -1
+          echo "== FXS"; curl -s -m 25 -A "$UA" "https://calendar-api.fxstreet.com/en/api/v1/eventDates/2026-11-17T13:00:00Z/2026-11-17T14:00:00Z" -w ' %{http_code}\n' | head -c 300; echo
+          echo "== TV again"; curl -s -m 20 -H 'Origin: https://www.tradingview.com' -A 'Mozilla/5.0' "https://economic-calendar.tradingview.com/events?from=2026-11-17T13:00:00.000Z&to=2026-11-17T14:00:00.000Z&countries=US" | jq -c '.result[]|select(.title|test("Retail Sales MoM|Ex Autos"))|[.title,.actual]'
