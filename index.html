@@ -371,6 +371,18 @@ main{overflow-x:clip}
 .sum li small{display:block;font-size:12px;color:var(--dim)}
 .sum.wait p{margin:0;font-size:13px;color:var(--muted)}
 
+/* next high-impact news: live countdown inside the card */
+.news-next{position:relative;padding-left:190px}
+.nn-cd{position:absolute;left:16px;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:4px;direction:ltr;padding:8px 10px;border-radius:12px;background:var(--bg);border:1px solid #5A3029}
+.nn-cd span{display:flex;flex-direction:column;align-items:center;min-width:38px}
+.nn-cd b{font-family:var(--en);font-size:22px;font-weight:900;line-height:1.1;color:#FFFFFF;font-variant-numeric:tabular-nums}
+.nn-cd small{font-size:10px;color:var(--dim);font-weight:700}
+.nn-cd i{font-style:normal;font-family:var(--en);font-weight:900;color:#F48C78;margin-top:-12px}
+.nn-cd.soon{border-color:#E0715B;box-shadow:0 0 0 3px rgba(224,113,91,.12)}
+.nn-cd.soon b{color:#FFD24A}
+.nn-cd.soon i{animation:blink 1s infinite}
+@media (max-width:560px){.news-next{padding-left:16px}.nn-cd{position:static;transform:none;align-self:flex-start;margin-top:8px}}
+
 /* contact */
 .contact{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px;align-items:center;background:var(--green-soft);border:1.5px solid var(--green);border-radius:var(--r-lg);padding:26px}
 @media (max-width:760px){.contact{grid-template-columns:minmax(0,1fr);text-align:center;justify-items:center}}
@@ -677,6 +689,9 @@ a.scard{text-decoration:none;color:inherit}
           <span class="k"><i class="imp hi" aria-hidden="true"></i>الخبر القادم عالي التأثير</span>
           <span class="v" id="stNews" dir="auto">—</span>
           <span class="s" id="stNewsSub"></span>
+          <span class="nn-cd" id="stNewsCd" aria-label="العد التنازلي للخبر" hidden>
+            <span><b id="cdH">00</b><small>ساعة</small></span><i>:</i><span><b id="cdM">00</b><small>دقيقة</small></span><i>:</i><span><b id="cdS">00</b><small>ثانية</small></span>
+          </span>
         </a>
       </div>
     </section>
@@ -1501,6 +1516,7 @@ function renderCalendar(){
       if(e.i==='Holiday')return `<div class="${cls.join(' ')}">${row}<span></span></div>`;
       return `<details class="cal-item" data-k="${esc(e.d+e.t)}"${(openState.has(e.d+e.t)?openState.get(e.d+e.t):e.i==='High')?' open':''}><summary class="${cls.join(' ')}">${row}<span class="chev" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></summary><div class="cal-more">${guideHtml(e)}</div></details>`;}).join('')+`</div>`).join('');
   // hero card
+  NEXT_HI=nextHi?nextHi.ts:0;tickNewsCd();
   if(nextHi){const p=kwParts(nextHi.ts);document.getElementById('stNews').textContent=nextHi.c+' · '+nextHi.t;
     document.getElementById('stNewsSub').textContent=AR_DAYS[p.wd]+' '+p.hh+':'+p.mm+' بتوقيت الكويت · '+(nextHi.ts>now?'بعد '+dur(nextHi.ts-now):'الحين');}
   else{document.getElementById('stNews').textContent='ما فيه أخبار قوية قريبة';document.getElementById('stNewsSub').textContent='';}
@@ -1768,6 +1784,18 @@ loadRecap();setInterval(loadRecap,15*60000);
     <g opacity=".10">${g}</g>
     <path d="${d}" fill="none" stroke="#3DCB4F" stroke-width="1.6" opacity=".28" vector-effect="non-scaling-stroke"/>`;
 })();
+
+/* ============ Live countdown to the next high-impact news ============ */
+var NEXT_HI=0;
+function tickNewsCd(){
+  const box=document.getElementById('stNewsCd');if(!box)return;
+  const left=NEXT_HI-Date.now();
+  if(!NEXT_HI||left<=0){box.hidden=true;return;}
+  const t=Math.floor(left/1000),h=Math.floor(t/3600),m=Math.floor(t%3600/60),sec=t%60,pad=n=>String(n).padStart(2,'0');
+  document.getElementById('cdH').textContent=pad(Math.min(h,99));document.getElementById('cdM').textContent=pad(m);document.getElementById('cdS').textContent=pad(sec);
+  box.classList.toggle('soon',left<15*60000);box.hidden=false;
+}
+setInterval(tickNewsCd,1000);
 
 /* ============ Lot calculator: open/close bar ============ */
 (function(){

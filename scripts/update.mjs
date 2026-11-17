@@ -265,6 +265,12 @@ const WEEK_FEEDS = {
   metals: gnews('(الذهب OR الفضة) (أوقية OR الأوقية OR الأونصة OR "المعدن الأصفر" OR "المعدن النفيس" OR "الملاذ الآمن") when:7d'),
   crypto: gnews('(بتكوين OR البيتكوين OR "العملات الرقمية" OR "العملات المشفرة" OR إيثريوم) when:7d')
 };
+// a headline must actually be about that market (Google also matches words inside the article)
+const TOPIC_RE = {
+  stocks: /الأسهم|أسهم|سهم|وول ستريت(?! جورنال)|ناسداك|داو جونز|ستاندرد|إس آند بي|إنفيديا|أبل|تسلا|مايكروسوفت|أمازون|ميتا|ألفابت|غوغل|جوجل|أنثروبيك|أوبن إيه آي|أرباح|البورصة الأمريكية|السوق الأمريكية|الفيدرالي|سندات الخزانة/,
+  metals: /الذهب|الفضة|المعدن/,
+  crypto: /بتكوين|بيتكوين|العملات الرقمية|العملات المشفرة|إيثريوم|إيثيريوم|إيثر|كريبتو|سولانا|الأصول الرقمية/
+};
 const LOCAL_PRICE = /عيار|جنيه|جنيها|ريال|درهم|دينار|ليرة|الليرة|بالأسواق المحلية|محلات|الصاغة|المصوغات|سبيكة|سبائك|الجرام|للجرام|بالجرام/;
 async function recap() {
   const path = 'data/recap.json';
@@ -309,8 +315,11 @@ async function recap() {
   out.headlines = {};
   for (const [k, url] of Object.entries(WEEK_FEEDS)) {
     let items = [];
-    try { items = parseRss(await get(url)); } catch (e) { console.log('recap news', k, String(e.message || e)); }
-    items = items.filter(x => goodTitle(x.t) && !LOCAL_MKT.test(x.t));
+    // the week's top stories (relevance) plus the latest 24 h, so the list never goes stale
+    for (const u of [url, url.replace('when%3A7d', 'when%3A1d')]) {
+      try { items = items.concat(parseRss(await get(u))); } catch (e) { console.log('recap news', k, String(e.message || e)); }
+    }
+    items = items.filter(x => goodTitle(x.t) && !LOCAL_MKT.test(x.t) && TOPIC_RE[k].test(x.t));
     if (k === 'metals') items = items.filter(x => !LOCAL_PRICE.test(x.t));
     // drop stale headlines whose quoted price is far from today's (republished old articles)
     const px = Object.fromEntries((out.perf || []).map(p => [p.k, p.c]));
@@ -323,13 +332,19 @@ async function recap() {
     const COMMON = new Set(['الذهب', 'الفضة', 'أسعار', 'سعر', 'دولار', 'الدولار', 'دولارا', 'دولاراً', 'بيتكوين', 'البيتكوين', 'بتكوين', 'العملات', 'المشفرة', 'الرقمية', 'الأسهم', 'الأمريكية', 'الأونصة', 'الأوقية', 'ارتفاع', 'تراجع', 'يرتفع', 'يتراجع', 'ترتفع', 'تتراجع', 'الأسواق', 'الأسبوع', 'اليوم', 'مستوى', 'وسط', 'بعد', 'خلال']);
     const words = t => new Set(t.replace(/[^\p{L}\p{N} ]/gu, ' ').split(/\s+/).filter(w => w.length >= 4 && !COMMON.has(w)));
     const picked = [];
-    for (const x of items.filter(x => Date.parse(x.d) >= now - 8 * 86400000)) {
+    const recent = items.filter(x => now - Date.parse(x.d) < 30 * 3600000).sort((a, b) => Date.parse(b.d) - Date.parse(a.d));
+    const pool = [...recent.slice(0, 8), ...items.filter(x => Date.parse(x.d) >= now - 8 * 86400000)]; // fresh ones get first pick
+    let fresh = 0;
+    for (const x of pool) {
+      if (picked.some(p => p.x.t === x.t)) continue;
+      const isFresh = now - Date.parse(x.d) < 30 * 3600000;
+      if (isFresh && fresh >= 3) continue; // at most 3 from the last day, the rest are the week's top stories
       const w = words(x.t);
       if (picked.some(p => { let n = 0; w.forEach(z => { if (p.w.has(z)) n++; }); return n >= 2 || n / Math.max(1, Math.min(w.size, p.w.size)) > 0.34; })) continue;
       if ([...w].some(z => picked.filter(p => p.w.has(z)).length >= 2)) continue; // one story can't take over the list
-      picked.push({ x, w }); if (picked.length === 6) break;
+      picked.push({ x, w }); if (isFresh) fresh++; if (picked.length === 6) break;
     }
-    items = picked.map(({ x }) => ({ ...x, s: cleanSrc(x.s) }));
+    items = picked.map(({ x }) => ({ ...x, s: cleanSrc(x.s) })).sort((a, b) => Date.parse(b.d) - Date.parse(a.d));
     out.headlines[k] = items.length ? items : (old.headlines?.[k] || []);
   }
   return writeIfChanged(path, out);
