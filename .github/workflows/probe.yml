@@ -1,0 +1,23 @@
+name: probe
+on:
+  push:
+    branches: [fonts-tmp2]
+permissions:
+  contents: write
+jobs:
+  p:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: |
+          git config user.name "github-actions[bot]"; git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -q --orphan fonts-out && git rm -rfq . && mkdir out && cd out
+          for fam in 'IBM+Plex+Sans+Arabic:wght@400;500;600;700' 'Montserrat:wght@500;600;700;800;900'; do
+            curl -s -A 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/534.30 (KHTML, like Gecko) Safari/534.30' "https://fonts.googleapis.com/css2?family=$fam&display=swap" >> fonts.css
+          done
+          grep -o 'https://fonts.gstatic.com[^)]*' fonts.css | sort -u | while read u; do curl -s -O "$u"; done
+          npm i -s qrcode@1.5.4 >/dev/null 2>&1; node -e "require('qrcode').toString('https://traderholic.github.io',{type:'svg',margin:0,errorCorrectionLevel:'M',color:{dark:'#0D1014',light:'#FFFFFF'}},(e,s)=>require('fs').writeFileSync('qr.svg',s))"
+          rm -rf node_modules package*.json; ls -la; cd ..
+          git add out && git commit -qm "fonts" && git push origin fonts-out
