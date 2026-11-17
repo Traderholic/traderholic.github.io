@@ -345,7 +345,10 @@ async function recap() {
       picked.push({ x, w }); if (isFresh) fresh++; if (picked.length === 6) break;
     }
     items = picked.map(({ x }) => ({ ...x, s: cleanSrc(x.s) })).sort((a, b) => Date.parse(b.d) - Date.parse(a.d));
-    out.headlines[k] = items.length ? items : (old.headlines?.[k] || []);
+    // if a feed answered thin (e.g. one query refused), top up with last run's picks from this week
+    for (const x of old.headlines?.[k] || []) { if (items.length >= 6) break; if (now - Date.parse(x.d) < 8 * 86400000 && !items.some(y => y.t === x.t || y.u === x.u)) items.push(x); }
+    items.sort((a, b) => Date.parse(b.d) - Date.parse(a.d));
+    out.headlines[k] = items;
   }
   return writeIfChanged(path, out);
 }
