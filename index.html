@@ -383,6 +383,35 @@ main{overflow-x:clip}
 .nn-cd.soon i{animation:blink 1s infinite}
 @media (max-width:560px){.news-next{padding-left:16px}.nn-cd{position:static;transform:none;align-self:flex-start;margin-top:8px}}
 
+/* recap: results + earnings */
+.rc-hint{margin:-4px 0 2px;font-size:13px;color:var(--dim);line-height:1.6}
+.rc-tbl{display:flex;flex-direction:column}
+.rc-row{display:grid;grid-template-columns:62px minmax(0,1fr);gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.rc-row:last-child{border-bottom:0}
+.rc-row .when{align-self:start;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:6px 4px}
+.rc-row.hi .when{border-color:#5A3029}
+.rc-row .when b{font-size:12.5px}.rc-row .when small{font-family:var(--en);font-weight:800;font-size:13px;color:var(--muted)}
+.rc-row .what{display:flex;flex-direction:column;gap:5px;min-width:0}
+.rc-row .ev{font-family:var(--en);font-weight:700;font-size:14.5px;direction:ltr;text-align:right}
+.rc-row .ev em{font-style:normal;font-size:11px;font-weight:800;color:var(--dim);margin-left:4px}
+.rc-row .num{font-size:13.5px;color:var(--muted)}
+.rc-row .num b{font-family:var(--en);color:#FFD24A;font-size:15px}
+.vd{display:inline-block;font-size:11.5px;font-weight:800;padding:2px 8px;border-radius:999px;margin-right:4px}
+.vd.up{background:rgba(255,210,74,.12);color:#FFD24A}.vd.dn{background:rgba(122,162,247,.14);color:#9FB8FF}.vd.eq{background:var(--surface-2);color:var(--muted)}
+.fxs{display:flex;flex-wrap:wrap;gap:6px}
+.fxs i{font-style:normal;font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;border:1px solid var(--line)}
+.fxs i.pos{color:var(--green);border-color:var(--green-line)}.fxs i.neg{color:#F48C78;border-color:#5A3029}.fxs i.neu{color:var(--muted)}
+.rc-empty-box{border:1px dashed var(--line-2);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:8px;color:var(--muted);font-size:14px;line-height:1.7}
+.rc-empty-box p{margin:0}.rc-empty-box b{color:var(--fg);font-family:var(--en)}
+.rc-empty-box a{color:var(--green);font-weight:700;text-decoration:none;font-size:13.5px}
+.rc-erl{display:flex;flex-direction:column}
+.er{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.er:last-child{border-bottom:0}
+.er .tk{font-family:var(--en);font-weight:900;font-size:13px;text-align:center;padding:7px 4px;border-radius:9px;background:linear-gradient(135deg,rgba(61,203,79,.16),rgba(61,203,79,.04));border:1px solid var(--green-line);color:var(--green)}
+.er .nm{font-family:var(--en);font-weight:700;font-size:14px;direction:ltr;text-align:right;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.er .nm small{display:block;font-size:11.5px;color:var(--dim);font-weight:600}
+.er .dt{display:flex;flex-direction:column;align-items:flex-end;font-size:13px}.er .dt small{color:var(--dim);font-size:12px}
+
 /* contact */
 .contact{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px;align-items:center;background:var(--green-soft);border:1.5px solid var(--green);border-radius:var(--r-lg);padding:26px}
 @media (max-width:760px){.contact{grid-template-columns:minmax(0,1fr);text-align:center;justify-items:center}}
@@ -841,24 +870,22 @@ a.scard{text-decoration:none;color:inherit}
         <div>
           <span class="tag">WEEKLY RECAP</span>
           <h2 id="rcTitle">ملخص الأسبوع</h2>
-          <p class="sub" id="rcSub">أداء الأسهم الأمريكية والذهب والفضة والكريبتو، وأبرز النتائج والعناوين، وأهم اللي جاي.</p>
+          <p class="sub" id="rcSub">أداء الأسهم الأمريكية والذهب والفضة والكريبتو هالأسبوع، وحصاد الأخبار الاقتصادية، ونتائج الشركات الجاية.</p>
         </div>
       </div>
       <div class="rc-story panel" id="rcStory"><p class="wfallback">جاري تحميل الملخص…</p></div>
       <div class="rc-perf" id="rcPerf"></div>
       <div class="rc-two">
-        <div class="panel rc-box"><h3><span class="dot"></span>أبرز نتائج الأسبوع</h3><div id="rcRes"></div></div>
-        <div class="panel rc-box"><h3><span class="dot o"></span><span id="rcNextT">أهم أحداث الأسبوع الجاي</span></h3><div id="rcNext"></div>
-          <h4>نتائج الشركات الأمريكية الكبرى</h4><div id="rcEarn"></div></div>
-      </div>
-      <div class="panel rc-box">
-        <div class="rc-head"><h3><span class="dot g"></span>أبرز عناوين الأسبوع</h3>
-          <div class="seg" role="group" aria-label="سوق العناوين">
-            <button type="button" data-rch="stocks" aria-pressed="true">الأسهم الأمريكية</button>
-            <button type="button" data-rch="metals" aria-pressed="false">الذهب والفضة</button>
-            <button type="button" data-rch="crypto" aria-pressed="false">الكريبتو</button>
-          </div></div>
-        <div id="rcNews"></div>
+        <div class="panel rc-box">
+          <h3><span class="dot"></span>حصاد الأسبوع</h3>
+          <p class="rc-hint">أرقام الأخبار الاقتصادية القوية اللي صدرت هالأسبوع، وأثرها المعتاد.</p>
+          <div id="rcRes"></div>
+        </div>
+        <div class="panel rc-box">
+          <h3><span class="dot o"></span>نتائج الشركات الكبرى الجاية</h3>
+          <p class="rc-hint">أرباح الشركات الأمريكية الكبرى خلال الأيام الجاية، وتحرّك الأسهم والناسداك بقوة.</p>
+          <div id="rcEarn"></div>
+        </div>
       </div>
       <p class="note" id="rcUpd"></p>
     </section>
@@ -1531,6 +1558,7 @@ async function loadCalendarData(){
   }catch(_){CAL=[];}
   try{const r2=await fetch('data/summaries.json?v='+Math.floor(Date.now()/10000),{cache:'no-store'});if(r2.ok)SUMS=await r2.json();}catch(_){}
   renderCalendar();renderAlert();
+  if(typeof RECAP!=='undefined'&&RECAP)try{renderRecap();}catch(_){}
 }
 segGroup('imp',v=>{calImp=v;renderCalendar();});
 // Poll fast (every 15 s) around a release so the actual figure shows up as soon as it lands, otherwise every 2 minutes.
@@ -1668,7 +1696,7 @@ loadSentiment();setInterval(loadSentiment,15*60000);
 
 /* ============ Weekly recap ============ */
 const RC_GROUPS={stocks:['الأسهم الأمريكية','#7AA2F7'],metals:['المعادن','#E8C547'],crypto:['الكريبتو','#F2A23C'],usd:['الدولار','#A9B1BB']};
-let RECAP=null,rcNewsKey='stocks';
+let RECAP=null;
 const sgn=v=>(v>0?'+':v<0?'−':'')+Math.abs(v).toFixed(2)+'%';
 const pctHtml=v=>v==null?'<span class="pct">—</span>':`<span class="pct ${v>0?'up':v<0?'dn':''}">${sgn(v)}</span>`;
 function fmtPx(k,v){if(v==null)return'—';if(k==='TOTAL')return '$'+(v/1e12).toFixed(2)+'T';
@@ -1681,7 +1709,6 @@ function renderRecap(){
   const live=!(j.week.final)&&now<=to+86400000;
   document.getElementById('rcTitle').textContent=live?'ملخص الأسبوع لحد الحين':'ملخص الأسبوع';
   document.getElementById('rcSub').innerHTML=`من <b>${kwDayLabel(from)}</b> إلى <b>${kwDayLabel(to)}</b>${live?' · الأرقام تتحدّث مع السوق':''}. الأداء محسوب على آخر 7 أيام.`;
-  document.getElementById('rcNextT').textContent=live?'أهم الأحداث الجاية (7 أيام)':'أهم أحداث الأسبوع الجاي';
   const P=Object.fromEntries((j.perf||[]).map(x=>[x.k,x]));
   // story
   const perf=(j.perf||[]).filter(x=>x.w!=null&&x.k!=='TOTAL');
@@ -1701,36 +1728,33 @@ function renderRecap(){
   document.getElementById('rcPerf').innerHTML=(j.perf||[]).map(x=>{const g=RC_GROUPS[x.g]||['',''];const w=x.w||0,wd=Math.abs(w)/max*50;
     return `<div class="rc-card" style="--gc:${g[1]}"><span class="g">${g[0]}</span><span class="n">${esc(x.n)}</span>${pctHtml(x.w).replace('class="pct','class="w pct')}<span class="c">${fmtPx(x.k,x.c)}</span>
       <span class="m">آخر شهر: ${pctHtml(x.m)}</span><span class="bar"><i style="${w>=0?'left:50%':'right:50%'};width:${wd.toFixed(1)}%;background:${w>=0?'var(--green)':'#F48C78'}"></i></span></div>`;}).join('');
-  // results
-  const res=(j.results||[]).filter(e=>e.a);
-  document.getElementById('rcRes').innerHTML=res.length?res.map(e=>{const t=Date.parse(e.d),p=kwParts(t);const r=resultOf(e),gd=guideFor(Object.assign({},e,{ts:t}));
-    const word=r&&r.dir!=='na'?({up:'أعلى من المتوقع',down:'أقل من المتوقع',eq:'مطابق للمتوقع'}[r.dir]):'';
-    const fx=r&&(r.dir==='up'||r.dir==='down')&&gd.g.up!==null?chips(r.dir==='up'?gd.up:gd.down):'';
-    return `<div class="rc-res"><div class="top"><span>${AR_DAYS[p.wd]} ${p.hh}:${p.mm}</span><span class="cu">${esc(e.c)}</span><b>${esc(e.t)}</b></div>
-      <div class="nums">الفعلي <b><bdi dir="ltr">${esc(e.a)}</bdi></b>${e.f?` · المتوقع <bdi dir="ltr">${esc(e.f)}</bdi>`:''}${word?` · <span style="color:${r.dir==='eq'?'var(--muted)':'#FFD24A'};font-weight:700">${word}</span>`:''}</div>${fx}</div>`;}).join('')
-    :'<p class="rc-empty">لسّا ما صدرت أخبار قوية هالأسبوع.</p>';
-  // next events grouped by day
-  const nx=(j.next||[]).filter(e=>Date.parse(e.d)>now);let lastDay='',html='';
-  nx.forEach(e=>{const t=Date.parse(e.d),p=kwParts(t),day=kwDayLabel(t);if(day!==lastDay){html+=`<div class="rc-day">${day}</div>`;lastDay=day;}
-    const d=DESC.find(([re])=>re.test(e.t));
-    html+=`<div class="rc-ev"><span class="tm">${p.hh}:${p.mm}</span><span class="cu">${esc(e.c)}</span><span class="ti">${esc(e.t)}${e.f||e.p?`<small>${e.f?'المتوقع <bdi dir="ltr">'+esc(e.f)+'</bdi>':''}${e.f&&e.p?' · ':''}${e.p?'السابق <bdi dir="ltr">'+esc(e.p)+'</bdi>':''}</small>`:''}</span></div>`;});
-  document.getElementById('rcNext').innerHTML=html||'<p class="rc-empty">جدول الأسبوع الجاي ينزل خلال الويكند.</p>';
+  // results: this week's released figures, live from the calendar, plus what the recap kept after the calendar rolled over
+  const seenK=new Set(),res=[];
+  [...CAL.filter(e=>e.a&&e.ts>=from&&e.ts<=to+2*86400000&&(e.i==='High'||(e.i==='Medium'&&e.c==='USD'))),...(j.results||[])].forEach(e=>{const k=e.d+'|'+e.c+'|'+e.t;if(seenK.has(k)||!e.a)return;seenK.add(k);res.push(e);});
+  res.sort((a,b)=>Date.parse(b.d)-Date.parse(a.d));
+  if(res.length){
+    document.getElementById('rcRes').innerHTML='<div class="rc-tbl">'+res.map(e=>{const t=Date.parse(e.d),p=kwParts(t),ee=Object.assign({},e,{ts:t}),r=resultOf(ee),gd=guideFor(ee);
+      const dir=r&&r.dir!=='na'?r.dir:'';
+      const verdict=dir==='up'?'<span class="vd up">أعلى من المتوقع</span>':dir==='down'?'<span class="vd dn">أقل من المتوقع</span>':dir==='eq'?'<span class="vd eq">مثل المتوقع</span>':'';
+      const fx=(dir==='up'||dir==='down')&&gd.g.up!==null?(dir==='up'?gd.up:gd.down).slice(0,e.c==='USD'?4:2).map(([n,c])=>`<i class="${c}">${n.replace(/ \(.*\)/,'')} ${c==='pos'?'▲':c==='neg'?'▼':'–'}</i>`).join(''):'';
+      return `<div class="rc-row${e.i==='High'?' hi':''}"><div class="when"><b>${AR_DAYS[p.wd]}</b><small>${p.hh}:${p.mm}</small></div>
+        <div class="what"><span class="ev"><em>${esc(e.c)}</em> ${esc(e.t)}</span><span class="num">الفعلي <b><bdi dir="ltr">${esc(e.a)}</bdi></b>${e.f?` · المتوقع <bdi dir="ltr">${esc(e.f)}</bdi>`:''} ${verdict}</span>${fx?`<span class="fxs">${fx}</span>`:''}</div></div>`;}).join('')+'</div>';
+  }else{
+    const nx=CAL.find(e=>e.i==='High'&&e.ts>now&&!SPEECH_RE.test(e.t));
+    document.getElementById('rcRes').innerHTML='<div class="rc-empty-box"><p>لسّا ما صدر خبر قوي هالأسبوع.</p>'+(nx?`<p>أول خبر قوي: <b dir="ltr">${esc(nx.c+' · '+nx.t)}</b><br>${kwDayLabel(nx.ts)} الساعة ${kwParts(nx.ts).hh}:${kwParts(nx.ts).mm} بتوقيت الكويت</p><a href="#calendar">روح للأخبار المهمة ←</a>`:'')+'</div>';
+  }
+  // earnings
   const er=(j.earnings||[]).filter(e=>Date.parse(e.d)>now-12*3600000);
-  document.getElementById('rcEarn').innerHTML=er.length?'<div class="rc-earn">'+er.map(e=>{const p=kwParts(Date.parse(e.d));return `<span><b>${esc(e.s)}</b><small>${AR_DAYS[p.wd]} ${p.d} ${AR_MONTHS[p.m]}</small></span>`;}).join('')+'</div>'
-    :'<p class="rc-empty">ما فيه نتائج لشركات كبرى بالأيام الجاية.</p>';
-  renderRcNews();
-  if(j.updated)document.getElementById('rcUpd').textContent='المصادر: TradingView للأسعار والأحداث، والعناوين من المواقع الإخبارية. آخر تحديث: '+ago(Date.parse(j.updated))+'.';
-}
-function renderRcNews(){
-  const list=(RECAP?.headlines?.[rcNewsKey])||[];
-  document.getElementById('rcNews').innerHTML=list.length?'<div class="rc-news">'+list.map((x,i)=>`<a href="${esc(x.u)}" target="_blank" rel="noopener"><span class="i">${String(i+1).padStart(2,'0')}</span><span><span class="t">${esc(x.t)}</span><span class="s">${esc(x.s||'')} · ${ago(Date.parse(x.d))}</span></span></a>`).join('')+'</div>'
-    :'<p class="rc-empty">العناوين تتحدّث، ارجع بعد شوي.</p>';
+  const fmtCap=v=>v>=1e12?(v/1e12).toFixed(2)+'T':v>=1e9?Math.round(v/1e9)+'B':'';
+  document.getElementById('rcEarn').innerHTML=er.length?'<div class="rc-erl">'+er.map(e=>{const p=kwParts(Date.parse(e.d));
+      return `<div class="er"><span class="tk">${esc(e.s)}</span><span class="nm">${esc(e.n)}${e.cap?`<small dir="ltr">$${fmtCap(e.cap)}</small>`:''}</span><span class="dt"><b>${AR_DAYS[p.wd]}</b><small>${p.d} ${AR_MONTHS[p.m]}</small></span></div>`;}).join('')+'</div>'
+    :'<div class="rc-empty-box"><p>ما فيه نتائج لشركات كبرى خلال الأيام الجاية.</p></div>';
+  if(j.updated)document.getElementById('rcUpd').textContent='الأسعار والأرقام من TradingView. آخر تحديث: '+ago(Date.parse(j.updated))+'.';
 }
 async function loadRecap(){
   try{const r=await fetch('data/recap.json?v='+Math.floor(Date.now()/300000),{cache:'no-store'});if(!r.ok)throw 0;RECAP=await r.json();renderRecap();}
   catch(_){document.getElementById('rcStory').innerHTML='<p class="rc-empty">الملخص يتجهّز، ارجع بعد شوي.</p>';}
 }
-segGroup('rch',v=>{rcNewsKey=v;renderRcNews();});
 loadRecap();setInterval(loadRecap,15*60000);
 
 /* ============ Push notifications (OneSignal) ============ */

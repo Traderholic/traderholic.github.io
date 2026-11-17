@@ -190,19 +190,25 @@ function parseRss(xml, fallbackSource) {
 const LOCAL_MKT = /شارك برأيك|(?:في|فى) (?:مصر|السعودية|الإمارات|الكويت|الأردن|المغرب|العراق|الجزائر|سوريا|لبنان|اليمن|قطر|عمان|عُمان|البحرين|تونس|ليبيا|السودان|فلسطين)|بالمصنعية|محلياً|المحلية/;
 const cleanSrc = x => (x || '').replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/$/, '').split(/ : | - | \| /)[0].trim();
 const goodTitle = t => { const ws = t.split(/\s+/).filter(Boolean); if (ws.length < 5) return false; const lat = (t.match(/[A-Za-z]/g) || []).length, ar = (t.match(/[\u0600-\u06FF]/g) || []).length; return ar > lat * 1.5; };
+const bnews = q => `https://www.bing.com/news/search?q=${encodeURIComponent(q.replace(/\s*when:\S+/g, '').replace(/[()"]/g, ' ').replace(/\bOR\b/g, ' '))}&format=rss&setlang=ar&cc=SA&qft=sortbydate%3d%221%22`;
 const gnews = q => `https://news.google.com/rss/search?q=${encodeURIComponent(q)}&hl=ar&gl=SA&ceid=SA%3Aar`;
 const FEEDS = {
   gold: {
     primary: [gnews('(الذهب OR الفضة) (أوقية OR الأوقية OR الأونصة OR "المعدن الأصفر" OR الفيدرالي OR الدولار OR "المعدن النفيس" OR "الملاذ الآمن") when:2d')],
     exclude: /عيار|جنيه|جنيها|ريال|درهم|دينار|ليرة|الليرة|بالأسواق المحلية|محلات|الصاغة|المصوغات|سبيكة|سبائك|الجرام|للجرام|بالجرام/,
+    bing: [bnews('الذهب الأونصة'), bnews('الفضة الأونصة')],
+    must: /الذهب|الفضة|المعدن/,
     fallback: [{ url: 'https://www.fxstreet.com/rss/news', source: 'FXStreet', filter: /gold|xau|silver|xag/i }]
   },
   crypto: {
     primary: [gnews('(بتكوين OR البيتكوين OR "العملات الرقمية" OR "العملات المشفرة" OR إيثريوم) when:2d')],
+    bing: [bnews('بيتكوين'), bnews('العملات المشفرة')],
+    must: /بتكوين|بيتكوين|العملات الرقمية|العملات المشفرة|إيثريوم|إيثيريوم|كريبتو|الأصول الرقمية|سولانا/,
     fallback: [{ url: 'https://cointelegraph.com/rss', source: 'Cointelegraph' }]
   },
   markets: {
     primary: [gnews('("الفيدرالي الأمريكي" OR "وول ستريت" OR "الأسهم الأمريكية" OR "التضخم الأمريكي" OR "الفائدة الأمريكية" OR "مؤشر الدولار") when:2d')],
+    bing: [bnews('وول ستريت الأسهم الأمريكية'), bnews('الفيدرالي الأمريكي الفائدة')],
     fallback: [{ url: 'https://www.cnbc.com/id/100003114/device/rss/rss.html', source: 'CNBC' }]
   }
 };
@@ -213,7 +219,8 @@ async function news() {
   const cutoff = Date.now() - 72 * 3600 * 1000;
   for (const [key, cfg] of Object.entries(FEEDS)) {
     let items = [];
-    for (const url of cfg.primary) { try { items.push(...parseRss(await get(url))); } catch (e) { console.log('news', key, String(e.message || e)); } }
+    // two independent sources every time (Google News + Bing News), so one refusing never leaves the section stale
+    for (const url of [...cfg.primary, ...(cfg.bing || [])]) { try { items.push(...parseRss(await get(url))); } catch (e) { console.log('news', key, String(e.message || e).slice(0, 120)); } }
     if (items.length < 6) {
       for (const f of cfg.fallback) {
         try { let more = parseRss(await get(f.url), f.source); if (f.filter) more = more.filter(x => f.filter.test(x.t)); items.push(...more); }
@@ -221,22 +228,25 @@ async function news() {
       }
     }
     if (cfg.exclude) items = items.filter(x => !cfg.exclude.test(x.t) && !LOCAL_MKT.test(x.t));
+    if (!cfg.exclude) items = items.filter(x => !LOCAL_MKT.test(x.t));
+    if (cfg.must) items = items.filter(x => cfg.must.test(x.t) || !/[\u0600-\u06FF]/.test(x.t));
     items = items.filter(x => goodTitle(x.t) || !/[\u0600-\u06FF]/.test(x.t));
-    items.forEach(x => { x.s = cleanSrc(x.s); });
+    items.forEach(x => { x.s = cleanSrc(x.s).replace(/ on MSN$/, ''); });
     const seen = new Set();
     items = items.filter(x => Date.parse(x.d) >= cutoff && Date.parse(x.d) <= Date.now() + 600000)
       .sort((a, b) => b.d.localeCompare(a.d))
       .filter(x => { const k = x.t.replace(/[^\p{L}\p{N}]/gu, '').slice(0, 60); if (seen.has(k)) return false; seen.add(k); return true; })
       .slice(0, 30);
     out[key] = items.length ? items : (old[key] || []);
-    console.log('news', key, items.length);
+    const newest = out[key][0] ? Math.round((Date.now() - Date.parse(out[key][0].d)) / 60000) : -1;
+    console.log('news', key, items.length, 'newest', newest, 'min ago');
   }
   await writeIfChanged(path, out);
 }
 
 /* ---------------- Weekly recap ----------------
    Week performance (TradingView scanner), the week's key results (kept even after the calendar rolls over),
-   key events and big-tech earnings for the coming days, and the week's top headlines per market. */
+   and big-tech earnings for the coming days. */
 const KW = 3 * 3600000;
 const kwDate = t => new Date(t + KW);
 function recapWeek(now = Date.now()) {
@@ -260,18 +270,6 @@ async function scan(market, tickers, columns) {
   if (!r.ok) throw new Error('scan ' + r.status);
   const j = await r.json(); return new Map((j.data || []).map(x => [x.s, x.d]));
 }
-const WEEK_FEEDS = {
-  stocks: gnews('("وول ستريت" OR "الأسهم الأمريكية" OR ناسداك OR "ستاندرد آند بورز" OR "داو جونز" OR إنفيديا OR "أرباح الشركات") when:7d'),
-  metals: gnews('(الذهب OR الفضة) (أوقية OR الأوقية OR الأونصة OR "المعدن الأصفر" OR "المعدن النفيس" OR "الملاذ الآمن") when:7d'),
-  crypto: gnews('(بتكوين OR البيتكوين OR "العملات الرقمية" OR "العملات المشفرة" OR إيثريوم) when:7d')
-};
-// a headline must actually be about that market (Google also matches words inside the article)
-const TOPIC_RE = {
-  stocks: /الأسهم|أسهم|سهم|وول ستريت(?! جورنال)|ناسداك|داو جونز|ستاندرد|إس آند بي|إنفيديا|أبل|تسلا|مايكروسوفت|أمازون|ميتا|ألفابت|غوغل|جوجل|أنثروبيك|أوبن إيه آي|أرباح|البورصة الأمريكية|السوق الأمريكية|الفيدرالي|سندات الخزانة/,
-  metals: /الذهب|الفضة|المعدن/,
-  crypto: /بتكوين|بيتكوين|العملات الرقمية|العملات المشفرة|إيثريوم|إيثيريوم|إيثر|كريبتو|سولانا|الأصول الرقمية/
-};
-const LOCAL_PRICE = /عيار|جنيه|جنيها|ريال|درهم|دينار|ليرة|الليرة|بالأسواق المحلية|محلات|الصاغة|المصوغات|سبيكة|سبائك|الجرام|للجرام|بالجرام/;
 async function recap() {
   const path = 'data/recap.json';
   const old = (await readJson(path)) || {};
@@ -289,67 +287,13 @@ async function recap() {
   if (old.week?.from === out.week.from) (old.results || []).forEach(e => keep.set(e.d + '|' + e.c + '|' + e.t, e));
   cal.forEach(e => { const t = Date.parse(e.d); if (t >= wk.from && t <= Math.min(now, wk.to + 2 * 86400000) && e.a && (e.i === 'High' || (e.i === 'Medium' && e.c === 'USD'))) keep.set(e.d + '|' + e.c + '|' + e.t, { t: e.t, c: e.c, d: e.d, i: e.i, f: e.f, p: e.p, a: e.a }); });
   out.results = [...keep.values()].sort((a, b) => a.d.localeCompare(b.d));
-  // 3) coming events: next 8 days. High events from our calendar, filled in with TradingView's high-importance events.
   const until = now + 8 * 86400000;
-  const next = cal.filter(e => e.i === 'High' && Date.parse(e.d) > now && Date.parse(e.d) < until).map(e => ({ t: e.t, c: e.c, d: e.d, f: e.f, p: e.p, src: 'ff' }));
-  try {
-    const tv = await fetchTV(now, until);
-    const fmt = (v, u, s) => v == null ? '' : (Math.round(v * 1000) / 1000) + (u === '%' ? '%' : '') + (s || '');
-    for (const x of tv) {
-      if (x.importance !== 1 || !['USD', 'EUR', 'GBP', 'JPY', 'CNY'].includes(x.currency)) continue;
-      // outside the US keep only the releases that move markets
-      if (x.currency !== 'USD' && !/Inflation|CPI|GDP|Interest Rate|Rate Decision|Unemployment|Retail Sales|PMI|ZEW|Ifo|Employment Change/i.test(x.title)) continue;
-      const t = Date.parse(x.date); if (!(t > now && t < until)) continue;
-      if (next.some(e => e.c === x.currency && Math.abs(Date.parse(e.d) - t) < 15 * 60000)) continue;
-      next.push({ t: x.title.trim(), c: x.currency, d: new Date(t).toISOString(), f: fmt(x.forecast, x.unit, x.scale), p: fmt(x.previous, x.unit, x.scale), src: 'tv' });
-    }
-  } catch (e) { console.log('recap tv', String(e.message || e)); }
-  out.next = next.sort((a, b) => a.d.localeCompare(b.d)).slice(0, 30);
   // 4) big-tech earnings in the next 8 days
   try {
     const m = await scan('america', MEGA, ['description', 'earnings_release_next_date', 'earnings_per_share_forecast_next_fq', 'market_cap_basic']);
     out.earnings = MEGA.map(s => { const d = m.get(s); if (!d || !d[1]) return null; const t = d[1] * 1000; if (t < now - 12 * 3600000 || t > until) return null;
       return { s: s.split(':')[1], n: d[0], d: new Date(t).toISOString(), eps: d[2], cap: d[3] }; }).filter(Boolean).sort((a, b) => a.d.localeCompare(b.d) || b.cap - a.cap);
   } catch (e) { console.log('recap earnings', String(e.message || e)); out.earnings = old.earnings || []; }
-  // 5) top headlines of the week per market
-  out.headlines = {};
-  for (const [k, url] of Object.entries(WEEK_FEEDS)) {
-    let items = [];
-    // the week's top stories (relevance) plus the latest 24 h, so the list never goes stale
-    for (const u of [url, url.replace('when%3A7d', 'when%3A1d')]) {
-      try { items = items.concat(parseRss(await get(u))); } catch (e) { console.log('recap news', k, String(e.message || e)); }
-    }
-    items = items.filter(x => goodTitle(x.t) && !LOCAL_MKT.test(x.t) && TOPIC_RE[k].test(x.t));
-    if (k === 'metals') items = items.filter(x => !LOCAL_PRICE.test(x.t));
-    // drop stale headlines whose quoted price is far from today's (republished old articles)
-    const px = Object.fromEntries((out.perf || []).map(p => [p.k, p.c]));
-    items = items.filter(x => {
-      if (k === 'crypto' && px.BTC) { const m = x.t.match(/(\d{2,3}(?:[.,]\d+)?)\s*ألف/); if (m && /بتكوين|البيتكوين|بيتكوين/.test(x.t)) { const v = parseFloat(m[1].replace(',', '.')) * 1000; if (Math.abs(v - px.BTC) / px.BTC > 0.2) return false; } }
-      if (k === 'metals' && px.XAU) { const m = x.t.match(/(\d[\d,]{3,5})\s*دولار/); if (m && /الذهب|الأونصة|الأوقية/.test(x.t)) { const v = parseFloat(m[1].replace(/,/g, '')); if (v > 1000 && Math.abs(v - px.XAU) / px.XAU > 0.15) return false; } }
-      return true;
-    });
-    // keep the list varied: skip a headline that mostly repeats one already picked
-    const COMMON = new Set(['الذهب', 'الفضة', 'أسعار', 'سعر', 'دولار', 'الدولار', 'دولارا', 'دولاراً', 'بيتكوين', 'البيتكوين', 'بتكوين', 'العملات', 'المشفرة', 'الرقمية', 'الأسهم', 'الأمريكية', 'الأونصة', 'الأوقية', 'ارتفاع', 'تراجع', 'يرتفع', 'يتراجع', 'ترتفع', 'تتراجع', 'الأسواق', 'الأسبوع', 'اليوم', 'مستوى', 'وسط', 'بعد', 'خلال']);
-    const words = t => new Set(t.replace(/[^\p{L}\p{N} ]/gu, ' ').split(/\s+/).filter(w => w.length >= 4 && !COMMON.has(w)));
-    const picked = [];
-    const recent = items.filter(x => now - Date.parse(x.d) < 30 * 3600000).sort((a, b) => Date.parse(b.d) - Date.parse(a.d));
-    const pool = [...recent.slice(0, 8), ...items.filter(x => Date.parse(x.d) >= now - 8 * 86400000)]; // fresh ones get first pick
-    let fresh = 0;
-    for (const x of pool) {
-      if (picked.some(p => p.x.t === x.t)) continue;
-      const isFresh = now - Date.parse(x.d) < 30 * 3600000;
-      if (isFresh && fresh >= 3) continue; // at most 3 from the last day, the rest are the week's top stories
-      const w = words(x.t);
-      if (picked.some(p => { let n = 0; w.forEach(z => { if (p.w.has(z)) n++; }); return n >= 2 || n / Math.max(1, Math.min(w.size, p.w.size)) > 0.34; })) continue;
-      if ([...w].some(z => picked.filter(p => p.w.has(z)).length >= 2)) continue; // one story can't take over the list
-      picked.push({ x, w }); if (isFresh) fresh++; if (picked.length === 6) break;
-    }
-    items = picked.map(({ x }) => ({ ...x, s: cleanSrc(x.s) })).sort((a, b) => Date.parse(b.d) - Date.parse(a.d));
-    // if a feed answered thin (e.g. one query refused), top up with last run's picks from this week
-    for (const x of old.headlines?.[k] || []) { if (items.length >= 6) break; if (now - Date.parse(x.d) < 8 * 86400000 && !items.some(y => y.t === x.t || y.u === x.u)) items.push(x); }
-    items.sort((a, b) => Date.parse(b.d) - Date.parse(a.d));
-    out.headlines[k] = items;
-  }
   return writeIfChanged(path, out);
 }
 
@@ -621,7 +565,7 @@ if (process.argv.includes('--summary-test')) {
       await sentiment().catch(e => console.log('sentiment failed', e));
       await publish('data: recap and sentiment');
     }
-    if (Date.now() - lastNews > 10 * 60000) {
+    if (Date.now() - lastNews > 5 * 60000) {
       lastNews = Date.now();
       await news().catch(e => console.log('news failed', e));
       await publish('data: news update');
