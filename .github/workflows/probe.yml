@@ -1,0 +1,18 @@
+name: probe
+on:
+  push:
+    branches: [dbg6]
+jobs:
+  p:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          UA='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36'
+          curl -s -m 25 -A "$UA" -H 'Accept-Language: en-US' "https://www.forexfactory.com/calendar?day=nov17.2026" -o ff.html
+          python3 - <<'PY'
+          import re
+          s=open('ff.html').read()
+          i=s.find('"name":"Core Retail Sales')
+          print("SNIP", s[i-300:i+1800])
+          print("ACTUALS", re.findall(r'"name":"([^"]+)"[^{}]*?"currency":"(\w+)"[^{}]*?"actual":"([^"]*)"[^{}]*?"forecast":"([^"]*)"[^{}]*?"previous":"([^"]*)"', s)[:30])
+          PY
