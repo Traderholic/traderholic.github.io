@@ -488,19 +488,22 @@ function pickHeadlines(items, since, max, skip = new Set(), mustWire = false, na
 // Headlines for summaries: Google News first, then Bing News, then the fast FX wires (a runner IP can get blocked by one of them).
 async function fetchSummaryHeadlines(q, kw) {
   const plain = q.replace(/\s*when:\S+/g, '');
+  // InvestingLive (formerly ForexLive) posts central-bank remarks within a minute or two, so it is always read first;
+  // the search engines add depth. FXStreet answers runners with 403, so it is not used.
   const tries = [
+    ['https://investinglive.com/feed/news', 'InvestingLive'],
     [`https://news.google.com/rss/search?q=${encodeURIComponent(q)}&hl=en-US&gl=US&ceid=US%3Aen`, null],
-    [`https://www.bing.com/news/search?q=${encodeURIComponent(plain)}&format=rss&qft=sortbydate%3d%221%22`, null],
-    ['https://www.forexlive.com/feed/news', 'ForexLive'], ['https://www.fxstreet.com/rss/news', 'FXStreet']
+    [`https://www.bing.com/news/search?q=${encodeURIComponent(plain)}&format=rss&qft=sortbydate%3d%221%22`, null]
   ];
+  let engines = 0;
   let all = [];
   for (const [url, src] of tries) {
     try {
       let items = parseRss(await get(url), src || '');
       items.forEach(x => { if (!x.s) { try { x.s = new URL(x.u).hostname.replace(/^www\./, ''); } catch { /* keep empty */ } } x.s = x.s.replace(/<[^>]*>/g, ''); });
-      if (src) items = items.filter(x => kw.test(x.t));
+      items = items.filter(x => kw.test(x.t)); // every source: only headlines about this event (searches also return sports, other people)
       all = all.concat(items);
-      if (!src && items.length >= 5) break; // a search engine answered well; no need for the wires
+      if (!src && items.length >= 5 && ++engines) break; // one search engine answered well; no need for the second
     } catch (err) { console.log('summary src', String(err.message || err).slice(0, 120)); }
   }
   return all;
@@ -520,22 +523,25 @@ async function summaries() {
   for (const [d, e] of slots) {
     const t = Date.parse(d), key = keyOf(e), cur = store[key];
     const isTalk = IMPACT[0].re.test(e.t) || IMPACT[1].re.test(e.t);
-    // stage 1 as soon as there are 2+ fresh headlines (talks) or after 6 min (data); stage 2 update after 40 min for talks
-    const stage = !cur ? 1 : (isTalk && cur.stage === 1 && now - t > 40 * 60000) ? 2 : 0;
+    // stage 1 as soon as there is 1 relevant headline (talks) or 2 after 6 min (data); stage 2 update after 15 min for talks
+    const stage = !cur ? 1 : (isTalk && cur.stage === 1 && now - t > 15 * 60000) ? 2 : 0;
     if (!stage) continue;
     if (!isTalk && now - t < 6 * 60000) continue;
     if (now - (SUM_LAST.get(key + stage) || 0) < 60000) continue; // at most one news query a minute per event
     SUM_LAST.set(key + stage, now);
     let items = [];
     const nm0 = (e.t.match(/([A-Z][a-z]+) (?:Speaks|Testifies|Speech)/) || [])[1];
-    const kw = new RegExp([nm0, { USD: 'Fed|FOMC|Federal Reserve', EUR: 'ECB|Lagarde', GBP: 'BoE|Bank of England|Bailey', JPY: 'BoJ|Bank of Japan|Ueda' }[e.c] || 'Fed'].filter(Boolean).join('|') + (isTalk ? '' : '|' + (TOPIC.find(([re]) => re.test(e.t)) || [, ''])[1].split(' ').join('|')), 'i');
+    const POLICY = 'rate|inflation|policy|econom|labou?r|jobs|prices|hike|cut|growth|recession|tariff|yields?|currency|sterling|dollar|euro|yen';
+    const kw0 = new RegExp([nm0, { USD: 'Fed|FOMC|Federal Reserve', EUR: 'ECB|Lagarde', GBP: 'BoE|Bank of England|Bailey', JPY: 'BoJ|Bank of Japan|Ueda' }[e.c] || 'Fed'].filter(Boolean).join('|') + (isTalk ? '' : '|' + (TOPIC.find(([re]) => re.test(e.t)) || [, ''])[1].split(' ').join('|')), 'i');
+    const bankRe = { USD: /\bFed\b|FOMC|Federal Reserve/i, EUR: /\bECB\b|European Central Bank/i, GBP: /\bBoE\b|\bBOE\b|Bank of England/i, JPY: /\bBoJ\b|\bBOJ\b|Bank of Japan/i }[e.c] || /\bFed\b/;
+    const kw = isTalk ? { test: t => bankRe.test(t) || (!!nm0 && t.includes(nm0) && new RegExp(POLICY, 'i').test(t)) } : kw0;
     items = await fetchSummaryHeadlines(summaryQuery(e), kw);
     if (!items.length) continue;
     const skip = new Set((cur?.items || []).map(x => x.en));
     const nm = (e.t.match(/([A-Z][a-z]+) (?:Speaks|Testifies|Speech)/) || [])[1] || '';
     const picked = pickHeadlines(items, t - 3 * 60000, 3, skip, !isTalk, nm);
     console.log('summary check', stage, e.t, 'headlines', items.length, 'picked', picked.length);
-    if (picked.length < 2) { if (stage === 2 && now - t > 80 * 60000) { cur.stage = 3; changed = true; } continue; }
+    if (picked.length < (isTalk ? 1 : 2)) { if (stage === 2 && now - t > 80 * 60000) { cur.stage = 3; changed = true; } continue; }
     const out = [];
     for (const x of picked) out.push({ en: x.t, ar: (await translateAr(x.t)) || x.t, s: x.s, u: x.u, d: x.d });
     const entry = cur || { t: e.t, c: e.c, d: e.d, items: [] };
