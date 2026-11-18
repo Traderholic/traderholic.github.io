@@ -526,7 +526,8 @@ async function summaries() {
     // stage 1 as soon as there is 1 relevant headline (talks) or 2 after 6 min (data); stage 2 update after 15 min for talks
     const stage = !cur ? 1 : (isTalk && cur.stage === 1 && now - t > 15 * 60000) ? 2 : 0;
     if (!stage) continue;
-    if (!isTalk && now - t < 6 * 60000) continue;
+    const isDoc = !isTalk && /Minutes|Statement/i.test(e.t); // text releases (FOMC minutes, policy statement): headlines land within ~1-3 min
+    if (!isTalk && now - t < (isDoc ? 2 : 6) * 60000) continue;
     if (now - (SUM_LAST.get(key + stage) || 0) < 60000) continue; // at most one news query a minute per event
     SUM_LAST.set(key + stage, now);
     let items = [];
@@ -534,14 +535,15 @@ async function summaries() {
     const POLICY = 'rate|inflation|policy|econom|labou?r|jobs|prices|hike|cut|growth|recession|tariff|yields?|currency|sterling|dollar|euro|yen';
     const kw0 = new RegExp([nm0, { USD: 'Fed|FOMC|Federal Reserve', EUR: 'ECB|Lagarde', GBP: 'BoE|Bank of England|Bailey', JPY: 'BoJ|Bank of Japan|Ueda' }[e.c] || 'Fed'].filter(Boolean).join('|') + (isTalk ? '' : '|' + (TOPIC.find(([re]) => re.test(e.t)) || [, ''])[1].split(' ').join('|')), 'i');
     const bankRe = { USD: /\bFed\b|FOMC|Federal Reserve/i, EUR: /\bECB\b|European Central Bank/i, GBP: /\bBoE\b|\bBOE\b|Bank of England/i, JPY: /\bBoJ\b|\bBOJ\b|Bank of Japan/i }[e.c] || /\bFed\b/;
-    const kw = isTalk ? { test: t => bankRe.test(t) || (!!nm0 && t.includes(nm0) && new RegExp(POLICY, 'i').test(t)) } : kw0;
+    const kw = isTalk ? { test: t => bankRe.test(t) || (!!nm0 && t.includes(nm0) && new RegExp(POLICY, 'i').test(t)) }
+      : isDoc ? { test: t => bankRe.test(t) && /minutes|statement|officials|policymakers/i.test(t) } : kw0;
     items = await fetchSummaryHeadlines(summaryQuery(e), kw);
     if (!items.length) continue;
     const skip = new Set((cur?.items || []).map(x => x.en));
     const nm = (e.t.match(/([A-Z][a-z]+) (?:Speaks|Testifies|Speech)/) || [])[1] || '';
     const picked = pickHeadlines(items, t - 3 * 60000, 3, skip, !isTalk, nm);
     console.log('summary check', stage, e.t, 'headlines', items.length, 'picked', picked.length);
-    if (picked.length < (isTalk ? 1 : 2)) { if (stage === 2 && now - t > 80 * 60000) { cur.stage = 3; changed = true; } continue; }
+    if (picked.length < (isTalk || isDoc ? 1 : 2)) { if (stage === 2 && now - t > 80 * 60000) { cur.stage = 3; changed = true; } continue; }
     const out = [];
     for (const x of picked) out.push({ en: x.t, ar: (await translateAr(x.t)) || x.t, s: x.s, u: x.u, d: x.d });
     const entry = cur || { t: e.t, c: e.c, d: e.d, items: [] };
