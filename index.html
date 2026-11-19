@@ -1527,7 +1527,12 @@ function renderCalendar(){
   if(calImp==='high')list=list.filter(e=>e.i==='High'||e.i==='Holiday');
   else if(calImp==='med')list=list.filter(e=>e.i!=='Low');
   const nextHi=CAL.find(e=>e.i==='High'&&e.ts>=now-5*60000);
-  if(!list.length){box.innerHTML='<p class="wfallback">ما فيه أخبار بهالمستوى في الأيام الجاية.</p>';return;}
+  // hero card (updated before any early return so it never stays on a dash)
+  NEXT_HI=nextHi?nextHi.ts:0;tickNewsCd();
+  if(nextHi){const p=kwParts(nextHi.ts);document.getElementById('stNews').textContent=nextHi.c+' · '+nextHi.t;
+    document.getElementById('stNewsSub').textContent=AR_DAYS[p.wd]+' '+p.hh+':'+p.mm+' بتوقيت الكويت · '+(nextHi.ts>now?'بعد '+dur(nextHi.ts-now):'الحين');}
+  else{document.getElementById('stNews').textContent='ما فيه أخبار قوية باقي هالأسبوع';document.getElementById('stNewsSub').textContent='جدول الأسبوع الجاي يظهر هنا أول ما ينزل';}
+  if(!list.length){box.innerHTML=calImp==='all'?'<p class="wfallback">ما فيه أخبار باقي هالأسبوع. جدول الأسبوع الجاي يظهر هنا أول ما ينزل.</p>':'<p class="wfallback">ما فيه أخبار '+(calImp==='high'?'عالية التأثير':'متوسطة أو عالية التأثير')+' باقي هالأسبوع.<br>اختر «الكل» فوق عشان تشوف باقي الأخبار.</p>';return;}
   const groups=[];list.forEach(e=>{const p=kwParts(e.ts),k=p.y+'-'+p.m+'-'+p.d;let g=groups[groups.length-1];if(!g||g.k!==k){g={k,p,items:[]};groups.push(g);}g.items.push(e);});
   box.innerHTML=groups.map(g=>`<div class="cal-day"><div class="cal-dh"><span class="cal-date"><b>${g.p.d}</b><span>${AR_MONTHS[g.p.m]}</span></span><span class="dname">${AR_DAYS[g.p.wd]}</span>${g.k===todayKey?'<span class="today">اليوم</span>':''}<span class="cnt">${g.items.length===1?'خبر واحد':g.items.length===2?'خبرين':g.items.length+(g.items.length<11?' أخبار':' خبر')}</span></div>`+
     g.items.map(e=>{const p=kwParts(e.ts),cls=['cal-row',IMP[e.i]||'lo'];if(e.ts<now-5*60000)cls.push('past');if(nextHi&&e===nextHi)cls.push('next');
@@ -1542,11 +1547,6 @@ function renderCalendar(){
       const row=`<span class="tm">${e.i==='Holiday'?'—':p.hh+':'+p.mm}</span><span class="cur"><i class="imp ${IMP[e.i]||'lo'}" aria-label="${e.i}"></i>${esc(e.c)}</span><span class="ttl">${esc(e.t)}${soon}</span>${fpv}`;
       if(e.i==='Holiday')return `<div class="${cls.join(' ')}">${row}<span></span></div>`;
       return `<details class="cal-item" data-k="${esc(e.d+e.t)}"${(openState.has(e.d+e.t)?openState.get(e.d+e.t):e.i==='High')?' open':''}><summary class="${cls.join(' ')}">${row}<span class="chev" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></summary><div class="cal-more">${guideHtml(e)}</div></details>`;}).join('')+`</div>`).join('');
-  // hero card
-  NEXT_HI=nextHi?nextHi.ts:0;tickNewsCd();
-  if(nextHi){const p=kwParts(nextHi.ts);document.getElementById('stNews').textContent=nextHi.c+' · '+nextHi.t;
-    document.getElementById('stNewsSub').textContent=AR_DAYS[p.wd]+' '+p.hh+':'+p.mm+' بتوقيت الكويت · '+(nextHi.ts>now?'بعد '+dur(nextHi.ts-now):'الحين');}
-  else{document.getElementById('stNews').textContent='ما فيه أخبار قوية قريبة';document.getElementById('stNewsSub').textContent='';}
 }
 var SUMS={};
 var IMPACT_TALK=/Speaks|Testif|Press Conference|Statement|Minutes|Funds Rate|Rate Decision|Interest Rate|Bank Rate|Refinancing Rate|Policy Rate/i;
