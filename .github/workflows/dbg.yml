@@ -1,0 +1,12 @@
+name: dbg
+on: push
+jobs:
+  d:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          curl -s --compressed -m 20 -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36' -H 'Accept-Language: en-US' 'https://www.forexfactory.com/calendar?week=nov22.2026' > w.html
+          wc -c w.html
+          grep -o '{"id":[0-9]*,"ebaseId"[^{}]*}' w.html | head -3
+          grep -o '"impactName":"[a-z]*"' w.html | sort | uniq -c
+          grep -o '"dateline":[0-9]*' w.html | sort -u | head -2; grep -o '"dateline":[0-9]*' w.html | sort -u | tail -2
