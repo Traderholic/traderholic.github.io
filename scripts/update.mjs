@@ -25,16 +25,23 @@ async function writeIfChanged(path, obj, ignoreKey = 'updated') {
 const CURRENCIES = new Set(['USD', 'EUR', 'GBP', 'CNY', 'JPY', 'All']);
 const keyOf = e => e.d + '|' + e.c + '|' + e.t;
 async function fetchFF() {
-  const events = [];
+  const events = []; let nextN = 0;
   for (const wk of ['thisweek', 'nextweek']) {
     try {
       const arr = JSON.parse(await get(`https://nfs.faireconomy.media/ff_calendar_${wk}.json`));
+      if (wk === 'nextweek') nextN = arr.length;
       for (const e of arr) {
         if (!e?.date || !e?.title || !CURRENCIES.has(e.country)) continue;
         const t = Date.parse(e.date); if (Number.isNaN(t)) continue;
         events.push({ t: e.title.trim(), c: e.country, d: new Date(t).toISOString(), i: e.impact || 'Low', f: (e.forecast || '').trim(), p: (e.previous || '').trim() });
       }
     } catch (err) { console.log('calendar', wk, String(err.message || err)); }
+  }
+  // The next-week feed is often missing until the week starts; the ForexFactory week page already lists it,
+  // so subscribers see next week's schedule over the weekend instead of an empty calendar.
+  if (!nextN && events.length) {
+    const last = Math.max(...events.map(e => Date.parse(e.d)));
+    for (const e of fetchFFWeek(nextWeekSunday())) if (Date.parse(e.d) > last + 3600000 && CURRENCIES.has(e.c)) events.push(e);
   }
   const seen = new Set();
   return events.filter(e => { const k = keyOf(e); if (seen.has(k)) return false; seen.add(k); return true; }).sort((a, b) => a.d.localeCompare(b.d));
@@ -110,6 +117,28 @@ function matchTV(ff, tvList, used) {
 }
 // ForexFactory's own calendar page carries the actual figure seconds after release (same titles as our list).
 const FF_MON = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+function nextWeekSunday() {
+  // the Sunday (New York calendar) that starts next week
+  const ny = new Date(Date.now() - 5 * 3600000);
+  return new Date(Date.UTC(ny.getUTCFullYear(), ny.getUTCMonth(), ny.getUTCDate() + 7 - ny.getUTCDay()));
+}
+function fetchFFWeek(sun) {
+  const url = `https://www.forexfactory.com/calendar?week=${FF_MON[sun.getUTCMonth()]}${sun.getUTCDate()}.${sun.getUTCFullYear()}`;
+  const out = [];
+  try {
+    const html = execFileSync('curl', ['-s', '--compressed', '-m', '20', '-A', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36', '-H', 'Accept-Language: en-US', url], { maxBuffer: 1 << 24 }).toString();
+    const IMPN = { high: 'High', medium: 'Medium', low: 'Low', holiday: 'Holiday' };
+    const un = x => x.replace(/\\\//g, '/').replace(/\\u0026/g, '&').replace(/\\"/g, '"');
+    for (const m of html.matchAll(/\{"id":\d+,"ebaseId":\d+,[^{}]*\}/g)) {
+      const o = m[0], g = k => (o.match(new RegExp('"' + k + '":"((?:[^"\\\\]|\\\\.)*)"')) || [])[1];
+      const dl = +(o.match(/"dateline":(\d+)/) || [])[1], name = g('name'), cur = g('currency'), imp = IMPN[g('impactName')];
+      if (!dl || !name || !cur || !imp) continue;
+      out.push({ t: un(name).trim(), c: cur, d: new Date(dl * 1000).toISOString(), i: imp, f: un(g('forecast') || '').trim(), p: un(g('previous') || '').trim() });
+    }
+    console.log('ff week page', url, out.length);
+  } catch (e) { console.log('ff week page', String(e.message || e).slice(0, 100)); }
+  return out;
+}
 async function fetchFFActuals(days) {
   const out = new Map();
   for (const t of days) {
@@ -577,7 +606,9 @@ async function publish(msg) {
   return false;
 }
 await mkdir('data', { recursive: true });
-if (process.argv.includes('--ff-test')) {
+if (process.argv.includes('--week-test')) {
+  const w = fetchFFWeek(nextWeekSunday()).filter(e => CURRENCIES.has(e.c)); console.log('next week', nextWeekSunday().toISOString(), w.length); for (const e of w.filter(e => e.i !== 'Low')) console.log(e.d, e.i, e.c, e.t, e.f, e.p);
+} else if (process.argv.includes('--ff-test')) {
   // check the ForexFactory page source: node scripts/update.mjs --ff-test
   const m = await fetchFFActuals([Date.now() - 6 * 3600000]); console.log('ff size', m.size); for (const [k, v] of [...m].slice(0, 40)) console.log(k, v);
 } else if (process.argv.includes('--summary-test')) {
