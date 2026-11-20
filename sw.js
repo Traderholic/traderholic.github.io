@@ -1,6 +1,6 @@
 // Trader Holic service worker: lets the site install as an app and open offline.
 // Pages and data are always fetched fresh first; the cache is only a fallback.
-const CACHE = 'th-v5';
+const CACHE = 'th-v6';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './assets/favicon.svg', './icons/icon-192.png', './icons/icon-512.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => {

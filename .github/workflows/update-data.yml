@@ -1,32 +1,30 @@
 name: Update market data
 
 # One long-lived job watches the calendar and news and pushes changes immediately.
-# The hourly schedule starts a fresh job (cancelling the old one), so a skipped or late
-# schedule never leaves the site without a watcher: each job can run for 5.5 hours.
+# Each job watches for 5.5 hours (longer if a release is due, never handing over mid-release).
+# The hourly schedule keeps one job queued behind it, so the next one starts the moment the
+# current one ends; a running job is never cancelled. New script code is picked up by the
+# watcher itself (it restarts in-process), so pushes to scripts/ need no new job.
 on:
   schedule:
     - cron: '7 * * * *'
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - 'scripts/**'
-      - '.github/workflows/update-data.yml'
 
 permissions:
   contents: write
 
 concurrency:
   group: update-data
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 345
+    timeout-minutes: 358
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: main
           fetch-depth: 20
       - uses: actions/setup-node@v4
         with:

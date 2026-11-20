@@ -1,6 +1,7 @@
 // Trader Holic — data refresher (runs on GitHub Actions every 15 minutes).
 // Writes data/calendar.json (economic calendar) and data/news.json (latest headlines).
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
 
 const UA = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36';
 async function get(url) {
@@ -625,9 +626,29 @@ if (process.argv.includes('--week-test')) {
   await sentiment().catch(e => console.log('sentiment failed', e));
 } else {
   const end = Date.now() + (Number(process.env.WATCH_MINUTES) || 330) * 60000;
+  // Never hand over to the next job around a release: from 15 min before a High/Medium event until
+  // 45 min after a High one (results + summaries), keep watching (job timeout leaves room for this).
+  const busy = () => {
+    try {
+      const now = Date.now();
+      return JSON.parse(readFileSync('data/calendar.json', 'utf8')).events.some(e => {
+        const t = Date.parse(e.d); if (e.i !== 'High' && e.i !== 'Medium') return false;
+        return t > now - (e.i === 'High' ? 45 : 10) * 60000 && t < now + 15 * 60000;
+      });
+    } catch { return false; }
+  };
+  const codeHash = () => { try { return createHash('sha1').update(readFileSync('scripts/update.mjs')).digest('hex'); } catch { return ''; } };
+  const startHash = codeHash();
   let lastNews = 0, lastSlow = 0;
-  while (Date.now() < end) {
+  while (Date.now() < end || (busy() && Date.now() < end + 25 * 60000)) {
     try { sh('git pull -q --rebase origin main'); } catch (e) { console.log('pull failed', String(e.message || e).slice(0, 200)); }
+    if (codeHash() !== startHash && !busy()) {
+      // new code was pushed: continue in a fresh process right away (no gap, no waiting for the next job)
+      const rem = Math.max(1, Math.round((end - Date.now()) / 60000));
+      console.log('code changed, restarting watcher for', rem, 'min');
+      try { execFileSync('node', ['scripts/update.mjs', '--watch'], { stdio: 'inherit', env: { ...process.env, WATCH_MINUTES: String(rem) } }); } catch (e) { console.log('restart failed', String(e.message || e).slice(0, 200)); }
+      process.exit(0);
+    }
     const changed = await calendar().catch(e => { console.log('calendar failed', e); return false; });
     const pushed = await pushAlerts().catch(e => { console.log('push failed', e); return false; });
     if (changed || pushed) await publish('data: calendar update');
