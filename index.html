@@ -129,6 +129,9 @@ section.block{padding-block:40px}
 
 /* sessions */
 .sessions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.sessions.stocks{grid-template-columns:minmax(0,1fr)}
+.ses-h{margin:18px 0 10px;font-size:17px;color:var(--muted);font-weight:800}
+.sess .meta{font-size:13px;color:var(--dim);font-weight:600;line-height:1.7}
 @media (max-width:760px){.sessions{grid-template-columns:minmax(0,1fr)}}
 .sess{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:18px;display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden}
 .sess.open{border-color:var(--green-line);background:linear-gradient(180deg,#14231A 0%,var(--surface) 70%)}
@@ -136,10 +139,10 @@ section.block{padding-block:40px}
 .sess h3{margin:0;font-size:22px}
 .sess .city{font-size:14px;color:var(--dim);font-weight:600}
 .sess .hours{font-family:var(--en);font-weight:800;font-size:20px;direction:ltr;text-align:right;font-variant-numeric:tabular-nums}
-.sess .cd{font-family:var(--en);direction:ltr;text-align:right;font-size:13px;font-weight:700;letter-spacing:1.5px;color:var(--dim)}
+.sess .cd{font-size:14px;font-weight:700;color:var(--dim)}
 .sess .cd b{letter-spacing:0;font-size:16px}
 .pill.en{font-family:var(--en);letter-spacing:2px;font-size:11px;font-weight:800}
-#stNextSub{font-family:var(--en);text-align:right}
+#stNextSub{text-align:right}
 .sess .cd b{font-family:var(--en);color:var(--fg);font-variant-numeric:tabular-nums}
 .sess.open .cd b{color:var(--green)}
 .sess .bar{position:absolute;inset:0 0 auto 0;height:3px}
@@ -705,7 +708,7 @@ a.scard{text-decoration:none;color:inherit}
           <span class="s" id="stMarketSub"></span>
         </div>
         <div class="scard">
-          <span class="k">الجلسة القادمة</span>
+          <span class="k">جلسة الفوركس القادمة</span>
           <span class="v" id="stNext">—</span>
           <span class="s" id="stNextSub"></span>
         </div>
@@ -793,14 +796,17 @@ a.scard{text-decoration:none;color:inherit}
         <div>
           <span class="tag">MARKET SESSIONS</span>
           <h2 id="sesTitle">أوقات الجلسات بتوقيت الكويت</h2>
-          <p class="sub">الأوقات تتعدّل تلقائياً مع التوقيت الصيفي والشتوي في لندن ونيويورك. أقوى سيولة وقت <b>التداخل بين أوروبا وأمريكا</b>.</p>
+          <p class="sub"><b>جلسات الفوركس والذهب</b> غير عن <b>دوام الأسهم الأمريكية</b>، وكل وحدة لها وقتها تحت. الأوقات تتعدّل تلقائياً مع التوقيت الصيفي والشتوي. أقوى سيولة بالفوركس وقت <b>التداخل بين أوروبا وأمريكا</b>.</p>
         </div>
       </div>
       <div id="weekendBanner" class="banner" hidden>
         <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
         <span id="weekendText"></span>
       </div>
+      <h3 class="ses-h">جلسات الفوركس والذهب</h3>
       <div class="sessions" id="sessCards"></div>
+      <h3 class="ses-h">سوق الأسهم الأمريكية</h3>
+      <div class="sessions stocks" id="stkCards"></div>
       <div class="timeline" aria-label="خط زمني لجلسات اليوم بتوقيت الكويت">
         <div class="tl-rows" id="tlRows"></div>
         <div class="tl-axis"><span></span><div class="ticks"><span>00</span><span>03</span><span>06</span><span>09</span><span>12</span><span>15</span><span>18</span><span>21</span><span>24</span></div></div>
@@ -1138,8 +1144,8 @@ function tzOffsetMin(tz,date){
   const asUTC=Date.UTC(+p.year,+p.month-1,+p.day,+p.hour%24,+p.minute,+p.second);
   return Math.round((asUTC-date.getTime())/60000);
 }
-function zonedToUtc(y,m,d,h,tz){
-  const guess=Date.UTC(y,m-1,d,h);
+function zonedToUtc(y,m,d,h,tz,mi=0){
+  const guess=Date.UTC(y,m-1,d,h,mi);
   let off=tzOffsetMin(tz,new Date(guess));let t=guess-off*60000;
   const off2=tzOffsetMin(tz,new Date(t));if(off2!==off)t=guess-off2*60000;
   return t;
@@ -1150,13 +1156,13 @@ function durEn(ms){const m=Math.max(0,Math.round(ms/60000));const h=Math.floor(m
 const kwDayEn=t=>new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Kuwait',weekday:'short'}).format(new Date(t));
 function arDays(n){return n===1?'يوم':n===2?'يومين':n<=10?n+' أيام':n+' يوم';}
 function dur(ms){const m=Math.max(0,Math.round(ms/60000));const d=Math.floor(m/1440),h=Math.floor(m%1440/60),mm=m%60;
-  if(d>0)return arDays(d)+(h?' و'+h+' س':'');return h>0?(h+' س '+mm+' د'):(mm+' د');}
+  if(d>0)return arDays(d)+(h?' و'+h+' س':'');return h>0?(h+' س'+(mm?' '+mm+' د':'')):(mm+' د');}
 
 /* ============ Sessions ============ */
 const SESSIONS=[
-  {id:'asia',name:'آسيا',city:'طوكيو',tz:'Asia/Tokyo',open:9,close:18,color:'#E8C547'},
-  {id:'europe',name:'أوروبا',city:'لندن',tz:'Europe/London',open:8,close:17,color:'#3DCB4F'},
-  {id:'us',name:'أمريكا',city:'نيويورك',tz:'America/New_York',open:8,close:17,color:'#E0715B'}
+  {id:'asia',name:'آسيا',city:'جلسة طوكيو · فوركس وذهب',tz:'Asia/Tokyo',open:9,close:18,color:'#E8C547'},
+  {id:'europe',name:'أوروبا',city:'جلسة لندن · فوركس وذهب',tz:'Europe/London',open:8,close:17,color:'#3DCB4F'},
+  {id:'us',name:'أمريكا',city:'جلسة نيويورك · فوركس وذهب',tz:'America/New_York',open:8,close:17,color:'#E0715B'}
 ];
 function instances(s,now){
   const seen=new Set(),out=[];
@@ -1186,13 +1192,51 @@ const cards=document.getElementById('sessCards');
 cards.innerHTML=SESSIONS.map(s=>`
   <article class="sess" id="s-${s.id}">
     <span class="bar" style="background:${s.color}"></span>
-    <div class="top"><div><h3>${s.name}</h3><span class="city">${s.city}</span></div><span class="pill off en" data-st>CLOSED</span></div>
+    <div class="top"><div><h3>${s.name}</h3><span class="city">${s.city}</span></div><span class="pill off" data-st>مغلقة</span></div>
     <div class="hours" data-h>--:-- – --:--</div>
     <div class="cd" data-cd></div>
   </article>`).join('');
+document.getElementById('stkCards').innerHTML=`
+  <article class="sess" id="s-stocks">
+    <span class="bar" style="background:#5B9BE0"></span>
+    <div class="top"><div><h3>الأسهم الأمريكية</h3><span class="city">بورصة نيويورك وناسداك</span></div><span class="pill off" data-st>مغلقة</span></div>
+    <div class="hours" data-h>--:-- – --:--</div>
+    <div class="cd" data-cd></div>
+    <div class="meta" data-meta></div>
+  </article>`;
 const tlRows=document.getElementById('tlRows');
 tlRows.innerHTML=SESSIONS.map(s=>`<div class="tl-row"><span>${s.name}</span><div class="tl-track" data-tl="${s.id}"></div></div>`).join('')+
-  `<div class="tl-row"><span>التداخل</span><div class="tl-track" data-tl="overlap"></div></div>`;
+  `<div class="tl-row"><span>التداخل</span><div class="tl-track" data-tl="overlap"></div></div>`+
+  `<div class="tl-row"><span>الأسهم</span><div class="tl-track" data-tl="stocks"></div></div>`;
+// US stock market regular hours: 9:30–16:00 New York, closed on US market holidays, 13:00 close on early-close days
+var STK_TXT='';
+function stockDay(iso){const h=(typeof HOLIDAYS!=='undefined'&&HOLIDAYS||[]).find(x=>x.c==='us'&&x.d===iso);return !h?'open':/مبكر/.test(h.k)?'early':/مغلق/.test(h.k)?'closed':'open';}
+function stockInstances(now){
+  const seen=new Set(),out=[];
+  for(let k=-2;k<=6;k++){
+    const p=partsIn('America/New_York',new Date(now+k*864e5));
+    const key=p.year+p.month+p.day;if(seen.has(key))continue;seen.add(key);
+    if(p.weekday==='Sat'||p.weekday==='Sun')continue;
+    const kind=stockDay(p.year+'-'+p.month+'-'+p.day);if(kind==='closed')continue;
+    out.push({open:zonedToUtc(+p.year,+p.month,+p.day,9,'America/New_York',30),close:zonedToUtc(+p.year,+p.month,+p.day,kind==='early'?13:16,'America/New_York'),early:kind==='early'});
+  }
+  return out.sort((a,b)=>a.open-b.open);
+}
+function renderStocks(now,kwMid,dayEnd){
+  const inst=stockInstances(now),cur=inst.find(i=>now>=i.open&&now<i.close),nxt=inst.find(i=>i.open>now);
+  const nyP=partsIn('America/New_York',new Date(now)),nyIso=nyP.year+'-'+nyP.month+'-'+nyP.day,hol=(HOLIDAYS||[]).find(x=>x.c==='us'&&x.d===nyIso&&stockDay(nyIso)==='closed');
+  STK_TXT=!cur&&hol?'الأسهم الأمريكية مغلقة اليوم ('+hol.n.replace(/\s*\(.*\)/,'')+')':cur?'الأسهم الأمريكية مفتوحة لين '+kwFmt(cur.close):nxt?'الأسهم الأمريكية تفتح '+(kwDayName(nxt.open)!==kwDayName(now)?kwDayName(nxt.open)+' ':'')+kwFmt(nxt.open):'';
+  const el=document.getElementById('s-stocks'),st=el.querySelector('[data-st]'),ref=cur||nxt||inst[inst.length-1];
+  el.querySelector('[data-h]').textContent=kwFmt(ref.open)+' – '+kwFmt(ref.close);
+  if(cur){el.classList.add('open');st.className='pill';st.textContent='مفتوحة';
+    el.querySelector('[data-cd]').innerHTML='تقفل بعد <b>'+dur(cur.close-now)+'</b>'+(cur.early?' · إغلاق مبكر اليوم':'');}
+  else{el.classList.remove('open');st.className='pill off';st.textContent='مغلقة';
+    el.querySelector('[data-cd]').innerHTML=nxt?('تفتح بعد <b>'+dur(nxt.open-now)+'</b>'+(kwDayName(nxt.open)!==kwDayName(now)?' · يوم '+kwDayName(nxt.open):'')+(nxt.early?' · إغلاق مبكر '+kwFmt(nxt.close):'')):'';
+    if(hol)el.querySelector('[data-cd]').innerHTML='مغلقة اليوم بسبب '+hol.n.replace(/\s*\(.*\)/,'')+' · '+el.querySelector('[data-cd]').innerHTML;}
+  el.querySelector('[data-meta]').textContent='الدوام الرسمي 9:30 الصبح لين 4:00 العصر بتوقيت نيويورك. يعني بالكويت '+kwFmt(ref.open)+' لين '+kwFmt(ref.close)+(ref.early?' (إغلاق مبكر)':'')+'. السوق يقفل السبت والأحد وفي العطل الأمريكية.';
+  const segs=[];inst.forEach(i=>{const a=Math.max(i.open,kwMid),b=Math.min(i.close,dayEnd);if(b>a)segs.push([a,b]);});
+  tlRows.querySelector('[data-tl="stocks"]').innerHTML=segs.map(([a,b])=>`<span class="tl-seg" style="left:${(a-kwMid)/864e5*100}%;width:${(b-a)/864e5*100}%;background:#5B9BE0"></span>`).join('');
+}
 
 function renderSessions(){
   const now=Date.now();
@@ -1210,12 +1254,12 @@ function renderSessions(){
     el.querySelector('[data-h]').textContent=kwFmt(ref.open)+' – '+kwFmt(ref.close);
     const st=el.querySelector('[data-st]');
     if(cur){
-      el.classList.add('open');st.className='pill en';st.textContent='OPEN';
-      el.querySelector('[data-cd]').innerHTML='CLOSES IN <b>'+durEn(cur.close-now)+'</b>';
+      el.classList.add('open');st.className='pill';st.textContent='مفتوحة';
+      el.querySelector('[data-cd]').innerHTML='تقفل بعد <b>'+dur(cur.close-now)+'</b>';
       openNames.push(s.name);
     }else{
-      el.classList.remove('open');st.className='pill off en';st.textContent='CLOSED';
-      el.querySelector('[data-cd]').innerHTML=nxt?('OPENS IN <b>'+durEn(nxt.open-now)+'</b>'+(nxt.open-now>864e5*0.75?' · '+kwDayEn(nxt.open).toUpperCase():'')):'';
+      el.classList.remove('open');st.className='pill off';st.textContent='مغلقة';
+      el.querySelector('[data-cd]').innerHTML=nxt?('تفتح بعد <b>'+dur(nxt.open-now)+'</b>'+(kwDayName(nxt.open)!==kwDayName(now)?' · يوم '+kwDayName(nxt.open):'')):'';
     }
     if(nxt&&(!nextOpen||nxt.open<nextOpen.t))nextOpen={t:nxt.open,name:s.name};
     // timeline segments for the Kuwait calendar day
@@ -1225,6 +1269,7 @@ function renderSessions(){
     const tr=tlRows.querySelector(`[data-tl="${s.id}"]`);
     tr.innerHTML=segs.map(([a,b])=>`<span class="tl-seg" style="left:${(a-kwMid)/864e5*100}%;width:${(b-a)/864e5*100}%;background:${s.color}"></span>`).join('');
   });
+  renderStocks(now,kwMid,dayEnd);
   // overlap Europe × US
   const ov=[];(todays.europe||[]).forEach(([a,b])=>(todays.us||[]).forEach(([c,d])=>{const x=Math.max(a,c),y=Math.min(b,d);if(y>x)ov.push([x,y]);}));
   tlRows.querySelector('[data-tl="overlap"]').innerHTML=ov.map(([a,b])=>`<span class="tl-seg tl-overlap" style="left:${(a-kwMid)/864e5*100}%;width:${(b-a)/864e5*100}%"></span>`).join('');
@@ -1245,9 +1290,10 @@ function renderSessions(){
     wb.hidden=true;dot.classList.remove('off');
     if(openNames.length){
       const ovNow=ov.some(([a,b])=>now>=a&&now<b);
-      setStatus('مفتوحة: '+openNames.join(' + '),ovNow?'وقت التداخل: أعلى سيولة في اليوم':'السوق نشط');
+      setStatus('فوركس مفتوح: '+openNames.join(' + '),ovNow?'وقت التداخل: أعلى سيولة في اليوم':'السوق نشط');
     }else setStatus('بين الجلسات','سيولة منخفضة نسبياً');
   }
+  if(STK_TXT){const sb=document.getElementById('stMarketSub');sb.textContent=(sb.textContent?sb.textContent+' · ':'')+STK_TXT;}
   if(nextOpen){const sameDay=kwDayName(nextOpen.t)===kwDayName(now)&&nextOpen.t-now<864e5;document.getElementById('stNext').textContent=nextOpen.name+' · '+(sameDay?'':kwDayName(nextOpen.t)+' ')+kwFmt(nextOpen.t);document.getElementById('stNextSub').textContent='تفتح بعد '+dur(nextOpen.t-now);document.getElementById('stNextSub').dir='rtl';}
 }
 function setStatus(v,s){document.getElementById('stMarket').textContent=v;document.getElementById('stMarketSub').textContent=s;}
@@ -1261,7 +1307,7 @@ setInterval(tickClock,1000);setInterval(renderSessions,30000);
 
 /* ============ Holidays ============ */
 // c: us | uk | eu | cn  — e: optional end date (inclusive)
-const HOLIDAYS=[
+var HOLIDAYS=[
   {d:'2026-11-26',c:'us',n:'عيد الشكر (Thanksgiving)',k:'السوق الأمريكي مغلق'},
   {d:'2026-11-27',c:'us',n:'اليوم التالي لعيد الشكر',k:'إغلاق مبكر 1:00 ظهراً بتوقيت نيويورك'},
   {d:'2026-12-24',c:'us',n:'ليلة الكريسماس',k:'إغلاق مبكر 1:00 ظهراً بتوقيت نيويورك'},
@@ -1322,6 +1368,7 @@ function renderHolidays(){
   if(next){document.getElementById('stHol').textContent=next.n;document.getElementById('stHolSub').textContent=FLAG[next.c]+' · '+(daysUntil(next.d)<=0?'اليوم':daysUntil(next.d)===1?'بكرة':'بعد '+arDays(daysUntil(next.d)));}
 }
 segGroup('hf',v=>{holFilter=v;holAll=false;renderHolidays();});
+renderSessions(); // again now that the holiday list exists (stock market closures)
 document.getElementById('holMore').addEventListener('click',()=>{holAll=!holAll;renderHolidays();});
 renderHolidays();
 
