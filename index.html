@@ -719,7 +719,7 @@ a.scard{text-decoration:none;color:inherit}
           <span class="v" id="stNews" dir="auto">—</span>
           <span class="s" id="stNewsSub"></span>
           <span class="nn-cd" id="stNewsCd" aria-label="العد التنازلي للخبر" hidden>
-            <span><b id="cdH">00</b><small>ساعة</small></span><i>:</i><span><b id="cdM">00</b><small>دقيقة</small></span><i>:</i><span><b id="cdS">00</b><small>ثانية</small></span>
+            <span><b id="cdH">00</b><small id="cdHl">ساعة</small></span><i>:</i><span><b id="cdM">00</b><small id="cdMl">دقيقة</small></span><i>:</i><span><b id="cdS">00</b><small id="cdSl">ثانية</small></span>
           </span>
         </a>
       </div>
@@ -1148,7 +1148,9 @@ const kwFmt=t=>{const d=new Date(t+KW_OFFSET*60000);return String(d.getUTCHours(
 const kwDayName=t=>new Intl.DateTimeFormat('ar',{timeZone:'Asia/Kuwait',weekday:'long'}).format(new Date(t));
 function durEn(ms){const m=Math.max(0,Math.round(ms/60000));const h=Math.floor(m/60),mm=m%60;return h>0?(h+'h '+String(mm).padStart(2,'0')+'m'):(mm+'m');}
 const kwDayEn=t=>new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Kuwait',weekday:'short'}).format(new Date(t));
-function dur(ms){const m=Math.max(0,Math.round(ms/60000));const h=Math.floor(m/60),mm=m%60;return h>0?(h+' س '+mm+' د'):(mm+' د');}
+function arDays(n){return n===1?'يوم':n===2?'يومين':n<=10?n+' أيام':n+' يوم';}
+function dur(ms){const m=Math.max(0,Math.round(ms/60000));const d=Math.floor(m/1440),h=Math.floor(m%1440/60),mm=m%60;
+  if(d>0)return arDays(d)+(h?' و'+h+' س':'');return h>0?(h+' س '+mm+' د'):(mm+' د');}
 
 /* ============ Sessions ============ */
 const SESSIONS=[
@@ -1246,7 +1248,7 @@ function renderSessions(){
       setStatus('مفتوحة: '+openNames.join(' + '),ovNow?'وقت التداخل: أعلى سيولة في اليوم':'السوق نشط');
     }else setStatus('بين الجلسات','سيولة منخفضة نسبياً');
   }
-  if(nextOpen){document.getElementById('stNext').textContent=nextOpen.name+' · '+kwFmt(nextOpen.t);document.getElementById('stNextSub').textContent='Opens in '+durEn(nextOpen.t-now);document.getElementById('stNextSub').dir='ltr';}
+  if(nextOpen){const sameDay=kwDayName(nextOpen.t)===kwDayName(now)&&nextOpen.t-now<864e5;document.getElementById('stNext').textContent=nextOpen.name+' · '+(sameDay?'':kwDayName(nextOpen.t)+' ')+kwFmt(nextOpen.t);document.getElementById('stNextSub').textContent='تفتح بعد '+dur(nextOpen.t-now);document.getElementById('stNextSub').dir='rtl';}
 }
 function setStatus(v,s){document.getElementById('stMarket').textContent=v;document.getElementById('stMarketSub').textContent=s;}
 
@@ -1308,7 +1310,7 @@ function renderHolidays(){
     const [y,m,d]=h.d.split('-').map(Number);const du=daysUntil(h.d);
     const range=h.e?(' – '+Number(h.e.slice(8))+' '+MONTHS[Number(h.e.slice(5,7))-1]):'';
     const soon=du<=7;
-    const when=du<=0?'اليوم':du===1?'بكرة':'بعد '+du+' يوم';
+    const when=du<=0?'اليوم':du===1?'بكرة':'بعد '+arDays(du);
     return `<div class="hitem${soon?' soon':''}"><div class="hdate"><b>${d}</b><span>${MONTHS[m-1]} ${y}</span></div>
       <div class="hinfo"><span class="n">${h.n}</span><span class="m"><span class="flag ${h.c==='uk'?'uk':h.c}">${FLAG[h.c]}</span>${h.k}${range?' · لين'+range:''}</span>
       <span class="m">${soon?'<span class="pill warn">'+when+'</span>':when}</span></div></div>`;
@@ -1317,7 +1319,7 @@ function renderHolidays(){
   more.hidden=list.length<=8;more.textContent=holAll?'عرض أقل':'عرض كل العطل ('+list.length+')';
   // hero card: nearest US/EU/UK closure
   const next=upcoming()[0];
-  if(next){document.getElementById('stHol').textContent=next.n;document.getElementById('stHolSub').textContent=FLAG[next.c]+' · '+(daysUntil(next.d)<=0?'اليوم':'بعد '+daysUntil(next.d)+' يوم');}
+  if(next){document.getElementById('stHol').textContent=next.n;document.getElementById('stHolSub').textContent=FLAG[next.c]+' · '+(daysUntil(next.d)<=0?'اليوم':daysUntil(next.d)===1?'بكرة':'بعد '+arDays(daysUntil(next.d)));}
 }
 segGroup('hf',v=>{holFilter=v;holAll=false;renderHolidays();});
 document.getElementById('holMore').addEventListener('click',()=>{holAll=!holAll;renderHolidays();});
@@ -1815,8 +1817,11 @@ function tickNewsCd(){
   const box=document.getElementById('stNewsCd');if(!box)return;
   const left=NEXT_HI-Date.now();
   if(!NEXT_HI||left<=0){box.hidden=true;return;}
-  const t=Math.floor(left/1000),h=Math.floor(t/3600),m=Math.floor(t%3600/60),sec=t%60,pad=n=>String(n).padStart(2,'0');
-  document.getElementById('cdH').textContent=pad(Math.min(h,99));document.getElementById('cdM').textContent=pad(m);document.getElementById('cdS').textContent=pad(sec);
+  const t=Math.floor(left/1000),d=Math.floor(t/86400),h=Math.floor(t/3600),m=Math.floor(t%3600/60),sec=t%60,pad=n=>String(n).padStart(2,'0');
+  const set=(id,v,l)=>{document.getElementById(id).textContent=v;document.getElementById(id+'l').textContent=l;};
+  // a day or more away: days : hours : minutes (hours never pass 23); under a day: hours : minutes : seconds
+  if(d>=1){set('cdH',pad(d),'يوم');set('cdM',pad(h%24),'ساعة');set('cdS',pad(m),'دقيقة');}
+  else{set('cdH',pad(h),'ساعة');set('cdM',pad(m),'دقيقة');set('cdS',pad(sec),'ثانية');}
   box.classList.toggle('soon',left<15*60000);box.hidden=false;
 }
 setInterval(tickNewsCd,1000);
