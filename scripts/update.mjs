@@ -187,7 +187,13 @@ async function calendar() {
     if (fresh.length) {
       const prevA = new Map(events.filter(e => e.a).map(e => [keyOf(e), e.a]));
       fresh.forEach(e => { const a = prevA.get(keyOf(e)); if (a) e.a = a; });
-      events = fresh; ffFresh = new Date().toISOString();
+      // Safety net: a source glitch must never wipe upcoming days off the calendar. If a future day that
+      // was listed before has no events at all in the new data, keep the previously listed events of that day.
+      const nyDay = e => new Date(Date.parse(e.d) - 5 * 3600000).toISOString().slice(0, 10);
+      const freshDays = new Set(fresh.map(nyDay)), nowT = Date.now();
+      const kept = events.filter(e => Date.parse(e.d) > nowT && !freshDays.has(nyDay(e)));
+      if (kept.length) console.log('calendar: kept', kept.length, 'upcoming events missing from the new data', [...new Set(kept.map(nyDay))].join(','));
+      events = fresh.concat(kept).sort((a, b) => a.d.localeCompare(b.d)); ffFresh = new Date().toISOString();
     } else console.log('calendar: FF fetch empty, keeping old schedule');
   } else console.log('calendar: FF fresh, only checking actuals');
   if (!events.length) return;
