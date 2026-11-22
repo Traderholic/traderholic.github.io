@@ -26,11 +26,10 @@ async function writeIfChanged(path, obj, ignoreKey = 'updated') {
 const CURRENCIES = new Set(['USD', 'EUR', 'GBP', 'CNY', 'JPY', 'All']);
 const keyOf = e => e.d + '|' + e.c + '|' + e.t;
 async function fetchFF() {
-  const events = []; let nextN = 0;
+  const events = [];
   for (const wk of ['thisweek', 'nextweek']) {
     try {
       const arr = JSON.parse(await get(`https://nfs.faireconomy.media/ff_calendar_${wk}.json`));
-      if (wk === 'nextweek') nextN = arr.length;
       for (const e of arr) {
         if (!e?.date || !e?.title || !CURRENCIES.has(e.country)) continue;
         const t = Date.parse(e.date); if (Number.isNaN(t)) continue;
@@ -38,11 +37,21 @@ async function fetchFF() {
       }
     } catch (err) { console.log('calendar', wk, String(err.message || err)); }
   }
-  // The next-week feed is often missing until the week starts; the ForexFactory week page already lists it,
-  // so subscribers see next week's schedule over the weekend instead of an empty calendar.
-  if (!nextN && events.length) {
-    const last = Math.max(...events.map(e => Date.parse(e.d)));
-    for (const e of fetchFFWeek(nextWeekSunday())) if (Date.parse(e.d) > last + 3600000 && CURRENCIES.has(e.c)) events.push(e);
+  // The JSON feeds lag behind: 'nextweek' is often missing and on Sunday 'thisweek' can still be the
+  // week that just ended. ForexFactory's week page always has the right week, so for the current and the
+  // next week, whichever the feeds do not cover is filled from that page.
+  const DAY = 864e5;
+  for (const S of [weekSunday(0), weekSunday(1)]) {
+    const s0 = S.getTime() + DAY, s1 = S.getTime() + 6 * DAY; // Monday..Saturday of that week
+    if (events.some(e => { const t = Date.parse(e.d); return t >= s0 && t < s1; })) continue;
+    const have = new Set(events.map(keyOf));
+    let n = 0;
+    for (const e of fetchFFWeek(S)) {
+      const t = Date.parse(e.d);
+      if (t < S.getTime() - DAY / 2 || t >= S.getTime() + 7 * DAY + DAY / 2 || !CURRENCIES.has(e.c) || have.has(keyOf(e))) continue;
+      events.push(e); n++;
+    }
+    console.log('calendar week from page', S.toISOString().slice(0, 10), n);
   }
   const seen = new Set();
   return events.filter(e => { const k = keyOf(e); if (seen.has(k)) return false; seen.add(k); return true; }).sort((a, b) => a.d.localeCompare(b.d));
@@ -118,10 +127,10 @@ function matchTV(ff, tvList, used) {
 }
 // ForexFactory's own calendar page carries the actual figure seconds after release (same titles as our list).
 const FF_MON = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
-function nextWeekSunday() {
-  // the Sunday (New York calendar) that starts next week
+function weekSunday(k) {
+  // the Sunday (New York calendar date) that starts the current week (k=0) or the one after it (k=1)
   const ny = new Date(Date.now() - 5 * 3600000);
-  return new Date(Date.UTC(ny.getUTCFullYear(), ny.getUTCMonth(), ny.getUTCDate() + 7 - ny.getUTCDay()));
+  return new Date(Date.UTC(ny.getUTCFullYear(), ny.getUTCMonth(), ny.getUTCDate() - ny.getUTCDay() + 7 * k));
 }
 function fetchFFWeek(sun) {
   const url = `https://www.forexfactory.com/calendar?week=${FF_MON[sun.getUTCMonth()]}${sun.getUTCDate()}.${sun.getUTCFullYear()}`;
@@ -607,8 +616,11 @@ async function publish(msg) {
   return false;
 }
 await mkdir('data', { recursive: true });
-if (process.argv.includes('--week-test')) {
-  const w = fetchFFWeek(nextWeekSunday()).filter(e => CURRENCIES.has(e.c)); console.log('next week', nextWeekSunday().toISOString(), w.length); for (const e of w.filter(e => e.i !== 'Low')) console.log(e.d, e.i, e.c, e.t, e.f, e.p);
+if (process.argv.includes('--cal-test')) {
+  const ev = await fetchFF(); const by = {}; ev.forEach(e => { by[e.d.slice(0, 10)] = (by[e.d.slice(0, 10)] || 0) + 1; }); console.log(by);
+  for (const e of ev.filter(e => e.i === 'High' && Date.parse(e.d) > Date.now())) console.log('HIGH', e.d, e.c, e.t, e.f, e.p);
+} else if (process.argv.includes('--week-test')) {
+  const w = fetchFFWeek(weekSunday(0)).filter(e => CURRENCIES.has(e.c)); console.log('this week', weekSunday(0).toISOString(), w.length); for (const e of w.filter(e => e.i !== 'Low')) console.log(e.d, e.i, e.c, e.t, e.f, e.p);
 } else if (process.argv.includes('--ff-test')) {
   // check the ForexFactory page source: node scripts/update.mjs --ff-test
   const m = await fetchFFActuals([Date.now() - 6 * 3600000]); console.log('ff size', m.size); for (const [k, v] of [...m].slice(0, 40)) console.log(k, v);
