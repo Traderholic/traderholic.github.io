@@ -187,7 +187,13 @@ async function calendar() {
     if (fresh.length) {
       const prevA = new Map(events.filter(e => e.a).map(e => [keyOf(e), e.a]));
       fresh.forEach(e => { const a = prevA.get(keyOf(e)); if (a) e.a = a; });
-      events = fresh; ffFresh = new Date().toISOString();
+      // Safety net: a source glitch must never wipe upcoming days off the calendar. If a future day that
+      // was listed before has no events at all in the new data, keep the previously listed events of that day.
+      const nyDay = e => new Date(Date.parse(e.d) - 5 * 3600000).toISOString().slice(0, 10);
+      const freshDays = new Set(fresh.map(nyDay)), nowT = Date.now();
+      const kept = events.filter(e => Date.parse(e.d) > nowT && !freshDays.has(nyDay(e)));
+      if (kept.length) console.log('calendar: kept', kept.length, 'upcoming events missing from the new data', [...new Set(kept.map(nyDay))].join(','));
+      events = fresh.concat(kept).sort((a, b) => a.d.localeCompare(b.d)); ffFresh = new Date().toISOString();
     } else console.log('calendar: FF fetch empty, keeping old schedule');
   } else console.log('calendar: FF fresh, only checking actuals');
   if (!events.length) return;
@@ -618,7 +624,7 @@ async function publish(msg) {
 await mkdir('data', { recursive: true });
 if (process.argv.includes('--cal-test')) {
   const ev = await fetchFF(); const by = {}; ev.forEach(e => { by[e.d.slice(0, 10)] = (by[e.d.slice(0, 10)] || 0) + 1; }); console.log(by);
-  for (const e of ev.filter(e => e.i === 'High' && Date.parse(e.d) > Date.now())) console.log('HIGH', e.d, e.c, e.t, e.f, e.p);
+  for (const e of ev.filter(e => e.i !== 'Low' && Date.parse(e.d) > Date.now() - 864e5 && Date.parse(e.d) < Date.now() + 8 * 864e5)) console.log('EV|' + e.d + '|' + e.i + '|' + e.c + '|' + e.t);
 } else if (process.argv.includes('--week-test')) {
   const w = fetchFFWeek(weekSunday(0)).filter(e => CURRENCIES.has(e.c)); console.log('this week', weekSunday(0).toISOString(), w.length); for (const e of w.filter(e => e.i !== 'Low')) console.log(e.d, e.i, e.c, e.t, e.f, e.p);
 } else if (process.argv.includes('--ff-test')) {
