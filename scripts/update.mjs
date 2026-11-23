@@ -624,7 +624,7 @@ async function publish(msg) {
 await mkdir('data', { recursive: true });
 if (process.argv.includes('--cal-test')) {
   const ev = await fetchFF(); const by = {}; ev.forEach(e => { by[e.d.slice(0, 10)] = (by[e.d.slice(0, 10)] || 0) + 1; }); console.log(by);
-  for (const e of ev.filter(e => e.i === 'High' && Date.parse(e.d) > Date.now())) console.log('HIGH', e.d, e.c, e.t, e.f, e.p);
+  for (const e of ev.filter(e => e.i !== 'Low' && Date.parse(e.d) > Date.now() - 864e5 && Date.parse(e.d) < Date.now() + 8 * 864e5)) console.log('EV|' + e.d + '|' + e.i + '|' + e.c + '|' + e.t);
 } else if (process.argv.includes('--week-test')) {
   const w = fetchFFWeek(weekSunday(0)).filter(e => CURRENCIES.has(e.c)); console.log('this week', weekSunday(0).toISOString(), w.length); for (const e of w.filter(e => e.i !== 'Low')) console.log(e.d, e.i, e.c, e.t, e.f, e.p);
 } else if (process.argv.includes('--ff-test')) {
