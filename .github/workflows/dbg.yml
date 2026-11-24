@@ -4,7 +4,7 @@ jobs:
   d:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 22 }
-      - run: node scripts/update.mjs --cal-test
+      - run: |
+          curl -s --compressed -m 20 -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36' -H 'Accept-Language: en-US' 'https://www.forexfactory.com/calendar?day=nov25.2026' > d.html
+          grep -o '"name":"[^"]*"[^{}]*"impactName":"[a-z]*"' d.html | sed -E 's/"name":"([^"]*)".*"impactName":"([a-z]*)"/\1 => \2/' | sort -u
+          curl -s https://nfs.faireconomy.media/ff_calendar_thisweek.json | grep -o '{"title":"Unemployment Claims"[^}]*}'
