@@ -1209,7 +1209,7 @@ tlRows.innerHTML=SESSIONS.map(s=>`<div class="tl-row"><span>${s.name}</span><div
   `<div class="tl-row"><span>التداخل</span><div class="tl-track" data-tl="overlap"></div></div>`+
   `<div class="tl-row"><span>الأسهم</span><div class="tl-track" data-tl="stocks"></div></div>`;
 // US stock market regular hours: 9:30–16:00 New York, closed on US market holidays, 13:00 close on early-close days
-var STK_TXT='';
+var STK_TXT='',STK_HOL=false;
 function stockDay(iso){const h=(typeof HOLIDAYS!=='undefined'&&HOLIDAYS||[]).find(x=>x.c==='us'&&x.d===iso);return !h?'open':/مبكر/.test(h.k)?'early':/مغلق/.test(h.k)?'closed':'open';}
 function stockInstances(now){
   const seen=new Set(),out=[];
@@ -1225,6 +1225,7 @@ function stockInstances(now){
 function renderStocks(now,kwMid,dayEnd){
   const inst=stockInstances(now),cur=inst.find(i=>now>=i.open&&now<i.close),nxt=inst.find(i=>i.open>now);
   const nyP=partsIn('America/New_York',new Date(now)),nyIso=nyP.year+'-'+nyP.month+'-'+nyP.day,hol=(HOLIDAYS||[]).find(x=>x.c==='us'&&x.d===nyIso&&stockDay(nyIso)==='closed');
+  STK_HOL=!!hol;
   STK_TXT=!cur&&hol?'الأسهم الأمريكية مغلقة اليوم ('+hol.n.replace(/\s*\(.*\)/,'')+')':cur?'الأسهم الأمريكية مفتوحة لين '+kwFmt(cur.close):nxt?'الأسهم الأمريكية تفتح '+(kwDayName(nxt.open)!==kwDayName(now)?kwDayName(nxt.open)+' ':'')+kwFmt(nxt.open):'';
   const el=document.getElementById('s-stocks'),st=el.querySelector('[data-st]'),ref=cur||nxt||inst[inst.length-1];
   el.querySelector('[data-h]').textContent=kwFmt(ref.open)+' – '+kwFmt(ref.close);
@@ -1290,7 +1291,7 @@ function renderSessions(){
     wb.hidden=true;dot.classList.remove('off');
     if(openNames.length){
       const ovNow=ov.some(([a,b])=>now>=a&&now<b);
-      setStatus('فوركس مفتوح: '+openNames.join(' + '),ovNow?'وقت التداخل: أعلى سيولة في اليوم':'السوق نشط');
+      setStatus('فوركس مفتوح: '+openNames.join(' + '),STK_HOL?'سيولة ضعيفة بسبب العطلة الأمريكية':ovNow?'وقت التداخل: أعلى سيولة في اليوم':'السوق نشط');
     }else setStatus('بين الجلسات','سيولة منخفضة نسبياً');
   }
   if(STK_TXT){const sb=document.getElementById('stMarketSub');sb.textContent=(sb.textContent?sb.textContent+' · ':'')+STK_TXT;}
