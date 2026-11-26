@@ -588,7 +588,9 @@ async function summaries() {
     const nm = (e.t.match(/([A-Z][a-z]+) (?:Speaks|Testifies|Speech)/) || [])[1] || '';
     const picked = pickHeadlines(items, t - 3 * 60000, 3, skip, !isTalk, nm);
     console.log('summary check', stage, e.t, 'headlines', items.length, 'picked', picked.length);
-    if (picked.length < (isTalk || isDoc ? 1 : 2)) { if (stage === 2 && now - t > 80 * 60000) { cur.stage = 3; changed = true; } continue; }
+    // data releases: one headline from a top wire is enough (it is usually out within minutes); otherwise wait for two
+    const topWire = picked.some(x => /Bloomberg|Reuters|Associated Press|\bAP\b|CNBC|Wall Street Journal|MarketWatch|Dow Jones/i.test(x.s || ''));
+    if (picked.length < (isTalk || isDoc || topWire ? 1 : 2)) { if (stage === 2 && now - t > 80 * 60000) { cur.stage = 3; changed = true; } continue; }
     const out = [];
     for (const x of picked) out.push({ en: x.t, ar: (await translateAr(x.t)) || x.t, s: x.s, u: x.u, d: x.d });
     const entry = cur || { t: e.t, c: e.c, d: e.d, items: [] };

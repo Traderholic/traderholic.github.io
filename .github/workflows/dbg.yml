@@ -4,8 +4,7 @@ jobs:
   d:
     runs-on: ubuntu-latest
     steps:
-      - env:
-          K: ${{ secrets.ONESIGNAL_API_KEY }}
-        run: |
-          curl -s -H "Authorization: Key $K" "https://api.onesignal.com/notifications/6f715e61-7f99-4ed4-9780-9e0cc966310d?app_id=1f110837-f8e4-4bb0-b7c1-c7b6b1c41105" | python3 -c "import sys,json;d=json.load(sys.stdin);print({k:d.get(k) for k in ['successful','failed','errored','converted','remaining','queued_at','completed_at','received','platform_delivery_stats','included_segments']})"
-          curl -s -H "Authorization: Key $K" "https://api.onesignal.com/apps/1f110837-f8e4-4bb0-b7c1-c7b6b1c41105" | python3 -c "import sys,json;d=json.load(sys.stdin);print('players',d.get('players'),'messageable',d.get('messageable_players'))"
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: node scripts/update.mjs --cal-test
