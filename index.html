@@ -1292,7 +1292,7 @@ function renderSessions(){
     if(openNames.length){
       const ovNow=ov.some(([a,b])=>now>=a&&now<b);
       setStatus('فوركس مفتوح: '+openNames.join(' + '),STK_HOL?'سيولة ضعيفة بسبب العطلة الأمريكية':ovNow?'وقت التداخل: أعلى سيولة في اليوم':'السوق نشط');
-    }else setStatus('بين الجلسات','سيولة منخفضة نسبياً');
+    }else setStatus('فوركس مفتوح · بين الجلسات','سيولة منخفضة نسبياً لين تفتح آسيا');
   }
   if(STK_TXT){const sb=document.getElementById('stMarketSub');sb.textContent=(sb.textContent?sb.textContent+' · ':'')+STK_TXT;}
   if(!fx){const no=nextFxOpen(now);if(no)nextOpen={t:no,name:'افتتاح الفوركس والذهب'};}
