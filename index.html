@@ -1187,9 +1187,13 @@ function fxOpen(now){
 function fxHalts(){
   const out=[];
   (typeof HOLIDAYS!=='undefined'&&HOLIDAYS||[]).forEach(h=>{
-    if(h.c!=='us'||!/مغلق/.test(h.k))return;
+    if(h.c!=='us')return;
     const [y,m,d]=h.d.split('-').map(Number),wd=new Date(Date.UTC(y,m-1,d)).getUTCDay();
     if(wd===0||wd===6)return;
+    // Friday early-close day (day after Thanksgiving): CME gold halts early at 13:45 New York and is back with the
+    // normal Sunday open; spot forex keeps trading until the normal Friday close.
+    if(/مبكر/.test(h.k)){if(wd===5)out.push({from:zonedToUtc(y,m,d,13,'America/New_York',45),to:zonedToUtc(y,m,d+2,17,'America/New_York'),name:h.n.replace(/\s*\(.*\)/,''),gold:true});return;}
+    if(!/مغلق/.test(h.k))return;
     const full=/الكريسماس|رأس السنة|الجمعة العظيمة/.test(h.n);
     const prev=new Date(Date.UTC(y,m-1,d-1)),py=prev.getUTCFullYear(),pm=prev.getUTCMonth()+1,pd=prev.getUTCDate();
     const from=!full?zonedToUtc(y,m,d,13,'America/New_York')
@@ -1299,7 +1303,8 @@ function renderSessions(){
   // weekend banner + hero status
   const wb=document.getElementById('weekendBanner');
   const dot=document.getElementById('mktDot');
-  const halt=fxHalts().find(x=>now>=x.from&&now<x.to),haltSoon=fxHalts().find(x=>x.from>now&&x.from-now<18*36e5);
+  const allHalts=fxHalts(),goldHalt=allHalts.find(x=>x.gold&&now>=x.from&&now<x.to);
+  const halt=allHalts.find(x=>!x.gold&&now>=x.from&&now<x.to),haltSoon=allHalts.find(x=>x.from>now&&x.from-now<18*36e5);
   if(fx&&halt){
     wb.hidden=false;
     document.getElementById('weekendText').textContent='تداول الذهب والفوركس متوقف عند أغلب شركات التداول بسبب عطلة '+halt.name+' في أمريكا، ويرجع تقريباً '+(kwDayName(halt.to)!==kwDayName(now)?kwDayName(halt.to)+' ':'')+'الساعة '+kwFmt(halt.to)+' بتوقيت الكويت (بعد '+dur(halt.to-now)+'). الوقت بالضبط يختلف شوي من شركة لشركة. البتكوين شغّال 24/7.';
@@ -1317,7 +1322,12 @@ function renderSessions(){
       const ovNow=ov.some(([a,b])=>now>=a&&now<b);
       setStatus('فوركس مفتوح: '+openNames.join(' + '),STK_HOL?'سيولة ضعيفة بسبب العطلة الأمريكية':ovNow?'وقت التداخل: أعلى سيولة في اليوم':'السوق نشط');
     }else setStatus('فوركس مفتوح · بين الجلسات','سيولة منخفضة نسبياً لين تفتح آسيا');
-    if(haltSoon){const sb=document.getElementById('stMarketSub');sb.textContent='التداول يتوقف '+(kwDayName(haltSoon.from)!==kwDayName(now)?kwDayName(haltSoon.from)+' ':'اليوم ')+kwFmt(haltSoon.from)+' بسبب عطلة '+haltSoon.name+' · '+sb.textContent;}
+    if(goldHalt){
+      wb.hidden=false;
+      document.getElementById('weekendText').textContent='تداول الذهب وقف بدري اليوم عند أغلب شركات التداول بسبب '+goldHalt.name+' في أمريكا، ويرجع '+kwDayName(goldHalt.to)+' الساعة '+kwFmt(goldHalt.to)+' بتوقيت الكويت. الفوركس شغّال لين الإغلاق العادي. الوقت بالضبط يختلف شوي من شركة لشركة.';
+      const sb=document.getElementById('stMarketSub');sb.textContent='الذهب وقف بدري اليوم · '+sb.textContent;
+    }
+    if(haltSoon){const sb=document.getElementById('stMarketSub');sb.textContent=(haltSoon.gold?'تداول الذهب يوقف بدري ':'التداول يتوقف ')+(kwDayName(haltSoon.from)!==kwDayName(now)?kwDayName(haltSoon.from)+' ':'اليوم ')+kwFmt(haltSoon.from)+' بسبب '+(haltSoon.gold?'':'عطلة ')+haltSoon.name+' · '+sb.textContent;}
   }
   if(STK_TXT){const sb=document.getElementById('stMarketSub');sb.textContent=(sb.textContent?sb.textContent+' · ':'')+STK_TXT;}
   if(!fx){const no=nextFxOpen(now);if(no)nextOpen={t:no,name:'افتتاح الفوركس والذهب'};}
