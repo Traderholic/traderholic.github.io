@@ -4,7 +4,8 @@ jobs:
   d:
     runs-on: ubuntu-latest
     steps:
-      - run: |
-          for f in '"close","update_mode","market_status","is_trading","lp_time","change"' '"close","update_mode"' ; do
-          curl -s -X POST https://scanner.tradingview.com/global/scan -H 'Content-Type: application/json' -H 'Origin: https://www.tradingview.com' -d '{"symbols":{"tickers":["OANDA:XAUUSD","FX:EURUSD","TVC:SILVER","NASDAQ:AAPL"]},"columns":['"$f"']}'; echo; done
-          date -u
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/update.mjs --cal-test
